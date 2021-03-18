@@ -25,9 +25,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # The name of the project
 name = "pybabylonjs"
 
-# Get the version
-version = get_version(pjoin(name, "_version.py"))
-
 
 # Representative files that should exist after a successful build
 jstargets = [
@@ -59,7 +56,11 @@ cmdclass["jsdeps"] = combine_commands(
 setup_args = dict(
     name=name,
     description="BabylonJS widget",
-    version=version,
+    use_scm_version={
+        "version_scheme": "guess-next-dev",
+        "local_scheme": "dirty-tag",
+        "write_to": "pybabylonjs/version.py",
+    },
     scripts=glob(pjoin("scripts", "*")),
     cmdclass=cmdclass,
     packages=find_packages(),
