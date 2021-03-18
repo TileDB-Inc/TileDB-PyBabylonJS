@@ -1,0 +1,152 @@
+trigger:
+  tags:
+    include:
+      - v*
+  branches:
+    include:
+    - master
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    strategy:
+      matrix:
+        mac_36:
+          imageName: 'macOS-10.15'
+          python.version: '3.6'
+        mac_37:
+          imageName: 'macOS-10.15'
+          python.version: '3.7'
+        linux_py36:
+          imageName: 'ubuntu-16.04'
+          python.version: '3.6'
+        linux_py37:
+          imageName: 'ubuntu-16.04'
+          python.version: '3.7'
+    pool:
+      vmImage: $(imageName)
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+        architecture: 'x64'
+
+    - script: |
+        echo $(node -v)
+        npm install --global yarn
+      displayName: 'Install NodeJS and yarn'
+      condition: eq(variables['imageName'], 'macOS-10.15')
+
+    - script: |
+        sudo apt-get install curl
+        curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+        sudo apt-get install nodejs
+      displayName: 'Install NodeJS'
+      condition: eq(variables['imageName'], 'ubuntu-16.04')
+
+    - script: |
+        curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+        echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+        sudo apt update && sudo apt install yarn
+      displayName: 'Install yarn'
+      condition: eq(variables['imageName'], 'ubuntu-16.04')
+
+    - script: python -m pip install --upgrade ipywidgets traitlets pytest wheel jupyter_packaging
+      # pip installs release candidates by default:
+      #   https://github.com/pypa/pip/issues/4969
+      displayName: 'Install dependencies'
+
+    - script: python -m pip install --upgrade black
+      displayName: 'Install black (linter)'
+      condition: eq(variables['python.version'], '3.7')
+    - script: black --check .
+      displayName: 'Test Formating'
+      condition: eq(variables['python.version'], '3.7')
+
+    - script: python -m pip install --upgrade .
+      displayName: 'Test Install'
+      condition: ne(variables['Agent.OS'], 'Windows_NT')
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+      # Build the python distribution from source
+    - script: python setup.py bdist_wheel
+      displayName: 'Build wheel'
+      condition: ne(variables['Agent.OS'], 'Windows_NT')
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+    - bash: |
+        set -xeo pipefail
+        # Display log files if the build failed
+        echo "Dumping log files for failed build"
+        echo "----------------------------------"
+        for f in $(find $BUILD_REPOSITORY_LOCALPATH/build -name *.log);
+          do echo "------"
+              echo $f
+              echo "======"
+              cat $f
+          done;
+      condition: failed() # only run this job if the build step failed
+      displayName: "Print log files (failed build only)"
+- stage: Deploy
+  dependsOn: Build
+  condition: and(succeeded('Build'), startsWith(variables['Build.SourceBranch'], 'refs/tag'))
+  jobs:
+  - job: Deploy_pip_package
+    pool:
+      vmImage: 'ubuntu-16.04'
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.7'
+        architecture: 'x64'
+
+    - script: 'pip install twine wheel setuptools setuptools_scm jupyter_packaging'
+      displayName: 'Install twine/wheel'
+
+      # Build the python distribution from source
+    - script: python setup.py bdist_wheel
+      displayName: 'Build wheel'
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+    - task: TwineAuthenticate@1
+      displayName: 'Twine Authenticate'
+      inputs:
+        pythonUploadServiceConnection: 'pypi-upload'
+
+    - script: python -m twine upload -r "pypi-upload" --config-file $(PYPIRC_PATH) dist/*.whl
+      displayName: 'Upload to Pypi'
+
+  - job: Deploy_npm_package
+    pool:
+      vmImage: 'ubuntu-16.04'
+
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'
+    - script: |
+        echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        yarn
+      displayName: 'Install dependencies'
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+    - script: |
+        yarn build
+      displayName: 'Build'
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+    - script: |
+        echo $(./node_modules/.bin/git-tag-version)
+        yarn publish --new-version $(./node_modules/.bin/git-tag-version) --no-git-tag-version --access public
+      env:
+        GITHUB_TOKEN: $(GITHUB_TOKEN)
+        NPM_TOKEN: $(NPM_TOKEN)
+      displayName: 'Release'

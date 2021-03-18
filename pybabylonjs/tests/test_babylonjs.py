@@ -11,4 +11,4 @@ from ..pybabylonjs import BabylonJS
 
 def test_babylonjs_creation_blank():
     w = BabylonJS()
-    assert w.value == 'Hello World'
+    assert w.value == "Hello World"

@@ -16,12 +16,12 @@ from ._frontend import module_name, module_version
 
 
 class BabylonJS(DOMWidget):
-    """BabylonJS
-    """
-    _model_name = Unicode('BabylonJSModel').tag(sync=True)
+    """BabylonJS"""
+
+    _model_name = Unicode("BabylonJSModel").tag(sync=True)
     _model_module = Unicode(module_name).tag(sync=True)
     _model_module_version = Unicode(module_version).tag(sync=True)
-    _view_name = Unicode('BabylonJSView').tag(sync=True)
+    _view_name = Unicode("BabylonJSView").tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
 
@@ -29,12 +29,12 @@ class BabylonJS(DOMWidget):
     width = CInt(700).tag(sync=True)
     height = CInt(500).tag(sync=True)
     query = Dict().tag(sync=True)
-    token = Unicode(os.getenv('TILEDB_REST_TOKEN', '')).tag(sync=True)
+    token = Unicode(os.getenv("TILEDB_REST_TOKEN", "")).tag(sync=True)
     uri = Unicode().tag(sync=True)
     value = Dict().tag(sync=True)
     z_scale = Float(0.5).tag(sync=True)
- 
-    @validate('value')
+
+    @validate("value")
     def _valid_value(self, proposal):
         if proposal.value:
             reqd = ['X', 'Y', 'Z', 'Red', 'Green', 'Blue'] 

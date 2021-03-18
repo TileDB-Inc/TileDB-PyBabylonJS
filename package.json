@@ -1,5 +1,5 @@
 {
-  "name": "PyBabylonJS",
+  "name": "@tiledb-inc/pybabylonjs",
   "version": "0.1.0",
   "description": "BabylonJS widget",
   "keywords": [
