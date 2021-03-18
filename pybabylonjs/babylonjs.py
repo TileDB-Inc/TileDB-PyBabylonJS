@@ -37,26 +37,26 @@ class BabylonJS(DOMWidget):
     @validate("value")
     def _valid_value(self, proposal):
         if proposal.value:
-            reqd = ['X', 'Y', 'Z', 'Red', 'Green', 'Blue'] 
+            reqd = ["X", "Y", "Z", "Red", "Green", "Blue"]
 
-            if not all(key in proposal.value.keys() for key in reqd):  
+            if not all(key in proposal.value.keys() for key in reqd):
                 raise TraitError(f"Missing one of {reqd} in input")
 
             data = {}
-            data['X'] = proposal.value['X'].tolist() 
-            data['Y'] = proposal.value['Y'].tolist()
-            data['Z'] = proposal.value['Z'].tolist()
-            data['Red'] = proposal.value['Red'].tolist()
-            data['Green'] = proposal.value['Green'].tolist()
-            data['Blue'] = proposal.value['Blue'].tolist()
+            data["X"] = proposal.value["X"].tolist()
+            data["Y"] = proposal.value["Y"].tolist()
+            data["Z"] = proposal.value["Z"].tolist()
+            data["Red"] = proposal.value["Red"].tolist()
+            data["Green"] = proposal.value["Green"].tolist()
+            data["Blue"] = proposal.value["Blue"].tolist()
 
             self.extents = [
-                min(data['X']),
-                max(data['X']),
-                min(data['Y']),
-                max(data['Y']),
-                min(data['Z']),
-                max(data['Z'])
+                min(data["X"]),
+                max(data["X"]),
+                min(data["Y"]),
+                max(data["Y"]),
+                min(data["Z"]),
+                max(data["Z"]),
             ]
 
             return json.dumps(data)
