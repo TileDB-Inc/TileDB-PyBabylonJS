@@ -8,5 +8,5 @@
 Information about the frontend package of the widgets.
 """
 
-module_name = "PyBabylonJS"
+module_name = "@tiledb-inc/pybabylonjs"
 module_version = ">=0.1.0"
