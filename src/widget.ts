@@ -31,6 +31,7 @@ export class BabylonJSModel extends DOMWidgetModel {
       uri: '',
       width: 700,
       height: 500,
+      wheel_precision: 50.0,
       z_scale: 0.5
     };
   }
@@ -80,6 +81,7 @@ export class BabylonJSView extends DOMWidgetView {
     const data = JSON.parse(this.model.get('value'));    
     const extents = this.model.get('extents');
     const z_scale = this.model.get('z_scale');
+    const wheel_precision = this.model.get('wheel_precision');
     const num_coords = data.X.length
     const minx = extents[0];
     const maxx = extents[1];
@@ -87,6 +89,8 @@ export class BabylonJSView extends DOMWidgetView {
     const maxy = extents[3];
     const minz = extents[4];
     const maxz = extents[5];
+
+    camera.wheelPrecision = wheel_precision
 
     const pcs = new BABYLON.PointsCloudSystem("pcs", 1, scene, { updatable: false });
   

@@ -32,6 +32,7 @@ class BabylonJS(DOMWidget):
     token = Unicode(os.getenv("TILEDB_REST_TOKEN", "")).tag(sync=True)
     uri = Unicode().tag(sync=True)
     value = Dict().tag(sync=True)
+    wheel_precision = Float(50.0).tag(sync=True)
     z_scale = Float(0.5).tag(sync=True)
 
     @validate("value")
