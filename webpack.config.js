@@ -40,7 +40,7 @@ module.exports = [
   },
 
   /**
-   * Embeddable PyBabylonJS bundle
+   * Embeddable @tiledb-inc/pybabylonjs bundle
    *
    * This bundle is almost identical to the notebook extension bundle. The only
    * difference is in the configuration of the webpack public path for the
@@ -55,8 +55,8 @@ module.exports = [
         filename: 'index.js',
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'amd',
-        library: "PyBabylonJS",
-        publicPath: 'https://unpkg.com/PyBabylonJS@' + version + '/dist/'
+        library: "@tiledb-inc/pybabylonjs",
+        publicPath: 'https://unpkg.com/@tiledb-inc/pybabylonjs@' + version + '/dist/'
     },
     devtool: 'source-map',
     module: {
@@ -77,7 +77,7 @@ module.exports = [
     output: {
       filename: 'embed-bundle.js',
       path: path.resolve(__dirname, 'docs', 'source', '_static'),
-      library: "PyBabylonJS",
+      library: "@tiledb-inc/pybabylonjs",
       libraryTarget: 'amd'
     },
     module: {
