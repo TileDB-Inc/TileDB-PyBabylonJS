@@ -1,114 +1,94 @@
-#!/usr/bin/env python
-# coding: utf-8
+"""
+pybabylonjs setup
+"""
+import json
+import sys
+from pathlib import Path
 
-# Copyright (c) Jupyter Development Team.
-# Distributed under the terms of the Modified BSD License.
+import setuptools
 
-from __future__ import print_function
-from glob import glob
-import os
-from os.path import join as pjoin
-from setuptools import setup, find_packages
-
-
-from jupyter_packaging import (
-    create_cmdclass,
-    install_npm,
-    ensure_targets,
-    combine_commands,
-    get_version,
-)
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-
+HERE = Path(__file__).parent.resolve()
 
 # The name of the project
 name = "pybabylonjs"
 
+lab_path = (HERE / name.replace("-", "_") / "labextension")
 
 # Representative files that should exist after a successful build
-jstargets = [
-    pjoin(HERE, name, "nbextension", "index.js"),
-    pjoin(HERE, "lib", "plugin.js"),
+ensured_targets = [
+    str(lab_path / "package.json"),
+    str(lab_path / "static/style.js")
 ]
 
-
-package_data_spec = {name: ["nbextension/**js*", "labextension/**"]}
-
+labext_name = "@tiledb-inc/pybabylonjs"
 
 data_files_spec = [
-    ("share/jupyter/nbextensions/pybabylonjs", "pybabylonjs/nbextension", "**"),
-    ("share/jupyter/labextensions/PyBabylonJS", "pybabylonjs/labextension", "**"),
-    ("share/jupyter/labextensions/PyBabylonJS", ".", "install.json"),
-    ("etc/jupyter/nbconfig/notebook.d", ".", "PyBabylonJS.json"),
+    ("share/jupyter/labextensions/%s" % labext_name, str(lab_path.relative_to(HERE)), "**"),
+    ("share/jupyter/labextensions/%s" % labext_name, str("."), "install.json"),
 ]
 
+long_description = (HERE / "README.md").read_text()
 
-cmdclass = create_cmdclass(
-    "jsdeps", package_data_spec=package_data_spec, data_files_spec=data_files_spec
-)
-cmdclass["jsdeps"] = combine_commands(
-    install_npm(HERE, build_cmd="build:prod"),
-    ensure_targets(jstargets),
-)
-
+# Get the package info from package.json
+pkg_json = json.loads((HERE / "package.json").read_bytes())
 
 setup_args = dict(
     name=name,
-    description="BabylonJS widget",
     use_scm_version={
         "version_scheme": "guess-next-dev",
         "local_scheme": "dirty-tag",
         "write_to": "pybabylonjs/version.py",
     },
-    scripts=glob(pjoin("scripts", "*")),
-    cmdclass=cmdclass,
-    packages=find_packages(),
-    author="TileDB, Inc.",
-    author_email="support@tiledb.com",
-    url="https://github.com/TileDB-Inc/PyBabylonJS",
-    license="MIT",
-    platforms="Linux, Mac OS X, Windows",
-    keywords=["Jupyter", "Widgets", "IPython"],
-    classifiers=[
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: BSD License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Framework :: Jupyter",
-    ],
+    url=pkg_json["homepage"],
+    author=pkg_json["author"]["name"],
+    author_email=pkg_json["author"]["email"],
+    description=pkg_json["description"],
+    license=pkg_json["license"],
+    license_file="LICENSE",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    packages=setuptools.find_packages(),
+    zip_safe=False,
     include_package_data=True,
     python_requires=">=3.6",
+    platforms="Linux, Mac OS X, Windows",
+    keywords=["Jupyter", "JupyterLab", "JupyterLab3"],
     install_requires=[
         "ipywidgets>=7.0.0",
     ],
-    extras_require={
-        "test": [
-            "pytest>=4.6",
-            "pytest-cov",
-            "nbval",
-        ],
-        "examples": [
-            # Any requirements for the examples to run
-        ],
-        "docs": [
-            "jupyter_sphinx",
-            "nbsphinx",
-            "nbsphinx-link",
-            "pytest_check_links",
-            "pypandoc",
-            "recommonmark",
-            "sphinx>=1.5",
-            "sphinx_rtd_theme",
-        ],
-    },
-    entry_points={},
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Framework :: Jupyter",
+        "Framework :: Jupyter :: JupyterLab",
+        "Framework :: Jupyter :: JupyterLab :: 3",
+        "Framework :: Jupyter :: JupyterLab :: Extensions",
+        "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
+    ],
 )
 
+try:
+    from jupyter_packaging import (
+        wrap_installers,
+        npm_builder,
+        get_data_files
+    )
+    post_develop = npm_builder(
+        build_cmd="install:extension", source_dir="src", build_dir=lab_path
+    )
+    setup_args["cmdclass"] = wrap_installers(post_develop=post_develop, ensured_targets=ensured_targets)
+    setup_args["data_files"] = get_data_files(data_files_spec)
+except ImportError as e:
+    import logging
+    logging.basicConfig(format="%(levelname)s: %(message)s")
+    logging.warning("Build tool `jupyter-packaging` is missing. Install it with pip or conda.")
+    if not ("--name" in sys.argv or "--version" in sys.argv):
+        raise e
+
 if __name__ == "__main__":
-    setup(**setup_args)
+    setuptools.setup(**setup_args)

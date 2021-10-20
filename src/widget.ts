@@ -4,18 +4,17 @@
 import {
   DOMWidgetModel,
   DOMWidgetView,
-  ISerializers,
+  ISerializers
 } from '@jupyter-widgets/base';
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
-import * as BABYLON from "@babylonjs/core";
+import * as BABYLON from '@babylonjs/core';
 
 // Import the CSS
 import '../css/widget.css';
 
-
 export class BabylonJSModel extends DOMWidgetModel {
-  defaults() {
+  defaults(): any {
     return {
       ...super.defaults(),
       _model_name: BabylonJSModel.model_name,
@@ -37,7 +36,7 @@ export class BabylonJSModel extends DOMWidgetModel {
   }
 
   static serializers: ISerializers = {
-    ...DOMWidgetModel.serializers,
+    ...DOMWidgetModel.serializers
   };
 
   static model_name = 'BabylonJSModel';
@@ -49,10 +48,13 @@ export class BabylonJSModel extends DOMWidgetModel {
 }
 
 export class BabylonJSView extends DOMWidgetView {
-  render() {
+  canvas?: HTMLCanvasElement;
+  engine?: BABYLON.Engine;
+
+  render(): void {
     const loadingScreen = document.createElement('div');
     loadingScreen.id = 'loadingScreen';
-    
+
     this.canvas = document.createElement('canvas');
     this.canvas.classList.add('renderCanvas');
     this.el.appendChild(this.canvas);
@@ -67,22 +69,29 @@ export class BabylonJSView extends DOMWidgetView {
 
     const scene = this.createScene();
 
-    this.engine.runRenderLoop(function () {
+    this.engine.runRenderLoop(() => {
       scene.render();
     });
   }
 
-  protected createScene() {
-    var scene = new BABYLON.Scene(this.engine);
-    new BABYLON.PointLight("Point", new BABYLON.Vector3(5, 10, 5), scene);
-    const camera = new BABYLON.ArcRotateCamera("Camera", 1, 0.8, 3, new BABYLON.Vector3(0, 0, 0), scene);
+  protected createScene(): BABYLON.Scene {
+    const scene = new BABYLON.Scene(this.engine as BABYLON.Engine);
+    new BABYLON.PointLight('Point', new BABYLON.Vector3(5, 10, 5), scene);
+    const camera = new BABYLON.ArcRotateCamera(
+      'Camera',
+      1,
+      0.8,
+      3,
+      new BABYLON.Vector3(0, 0, 0),
+      scene
+    );
     camera.attachControl(this.canvas, true);
 
-    const data = JSON.parse(this.model.get('value'));    
+    const data = JSON.parse(this.model.get('value'));
     const extents = this.model.get('extents');
     const z_scale = this.model.get('z_scale');
     const wheel_precision = this.model.get('wheel_precision');
-    const num_coords = data.X.length
+    const num_coords = data.X.length;
     const minx = extents[0];
     const maxx = extents[1];
     const miny = extents[2];
@@ -90,35 +99,39 @@ export class BabylonJSView extends DOMWidgetView {
     const minz = extents[4];
     const maxz = extents[5];
 
-    camera.wheelPrecision = wheel_precision
+    camera.wheelPrecision = wheel_precision;
 
-    const pcs = new BABYLON.PointsCloudSystem("pcs", 1, scene, { updatable: false });
-  
-    const myLoader = function(particle:any, i:number, s:string) {
+    const pcs = new BABYLON.PointsCloudSystem('pcs', 1, scene, {
+      updatable: false
+    });
+
+    const myLoader = function (particle: any, i: number, s: string) {
       particle.position = new BABYLON.Vector3(
         (data.X[i] - minx) / (maxx - minx),
         (data.Y[i] - miny) / (maxy - miny),
-        ((data.Z[i] - minz) / (maxz - minz)) * z_scale);
+        ((data.Z[i] - minz) / (maxz - minz)) * z_scale
+      );
 
-      particle.color = new BABYLON.Color3(data.Red[i], data.Green[i], data.Blue[i]);
+      particle.color = new BABYLON.Color3(
+        data.Red[i],
+        data.Green[i],
+        data.Blue[i]
+      );
     };
 
-    pcs.addPoints(num_coords, myLoader)
+    pcs.addPoints(num_coords, myLoader);
     pcs.buildMeshAsync();
 
     return scene;
-  };
-
-  protected resizeCanvas() {
-    this.canvas.setAttribute('width', this.model.get('width'));
-    this.canvas.setAttribute('height', this.model.get('height'));
-    this.engine.resize();
   }
 
-  protected query_changed() {
+  protected resizeCanvas(): void {
+    this.canvas?.setAttribute('width', this.model.get('width'));
+    this.canvas?.setAttribute('height', this.model.get('height'));
+    this.engine?.resize();
+  }
+
+  protected query_changed(): void {
     // TODO
   }
-
-  canvas: HTMLCanvasElement;
-  engine: BABYLON.Engine;
 }
