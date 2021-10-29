@@ -19,10 +19,10 @@ stages:
           imageName: 'macOS-10.15'
           python.version: '3.7'
         linux_py36:
-          imageName: 'ubuntu-16.04'
+          imageName: 'ubuntu-20.04'
           python.version: '3.6'
         linux_py37:
-          imageName: 'ubuntu-16.04'
+          imageName: 'ubuntu-20.04'
           python.version: '3.7'
     pool:
       vmImage: $(imageName)
