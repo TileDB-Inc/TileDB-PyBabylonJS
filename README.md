@@ -1,8 +1,8 @@
 
 # TileDB-PyBabylonJS
 
-[![Build Status](https://travis-ci.org/TileDB-Inc/PyBabylonJS.svg?branch=master)](https://travis-ci.org/TileDB-Inc/pybabylonjs)
 [![codecov](https://codecov.io/gh/TileDB-Inc/PyBabylonJS/branch/master/graph/badge.svg)](https://codecov.io/gh/TileDB-Inc/PyBabylonJS)
+[![Build Status](https://dev.azure.com/TileDB-Inc/CI/_apis/build/status/TileDB-Inc.TileDB-PyBabylonJS?branchName=main)](https://dev.azure.com/TileDB-Inc/CI/_build/latest?definitionId=37&branchName=main)
 
 
 BabylonJS widget
