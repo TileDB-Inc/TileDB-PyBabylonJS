@@ -134,24 +134,24 @@ stages:
       env:
         NPM_TOKEN: $(NPM_TOKEN)
     
-    # - script: |
-    #     currentVersion=$(./node_modules/.bin/git-tag-version)
-    #     latestGitTag=$(git describe --tags --abbrev=0)
-    #     latestGitTag="${latestGitTag:1}"
-    #     echo $currentVersion
-    #     echo $latestGitTag
-    #     if [[ $latestGitTag == *"beta"* ]];
-    #     then
-    #     echo "Publishing beta version";
-    #     yarn publish --new-version $latestGitTag --no-git-tag-version --access public --tag beta
-    #     else
-    #     echo "Publishing new version";
-    #     yarn publish --new-version $(./node_modules/.bin/git-tag-version) --no-git-tag-version --access public
-    #     fi
-    #   env:
-    #     GITHUB_TOKEN: $(GITHUB_TOKEN)
-    #     NPM_TOKEN: $(NPM_TOKEN)
-    #   displayName: 'Release to npm'
+    - script: |
+        currentVersion=$(./node_modules/.bin/git-tag-version)
+        latestGitTag=$(git describe --tags --abbrev=0)
+        latestGitTag="${latestGitTag:1}"
+        echo $currentVersion
+        echo $latestGitTag
+        if [[ $latestGitTag == *"beta"* ]];
+        then
+        echo "Publishing beta version";
+        yarn publish --new-version $latestGitTag --no-git-tag-version --access public --tag beta
+        else
+        echo "Publishing new version";
+        yarn publish --new-version $(./node_modules/.bin/git-tag-version) --no-git-tag-version --access public
+        fi
+      env:
+        GITHUB_TOKEN: $(GITHUB_TOKEN)
+        NPM_TOKEN: $(NPM_TOKEN)
+      displayName: 'Release to npm'
 
       # Build the python distribution from source
     - script: python -m build
