@@ -40,6 +40,10 @@ setup_args = dict(
         "local_scheme": "dirty-tag",
         "write_to": "pybabylonjs/version.py",
     },
+    setup_requires=[
+        "setuptools-scm>=1.5.4",
+        "setuptools-scm-git-archive",
+    ],
     url=pkg_json["homepage"],
     author=pkg_json["author"]["name"],
     author_email=pkg_json["author"]["email"],
