@@ -7,6 +7,8 @@
 """
 BabylonJS Jupyter Widget
 """
+import logging
+logger = logging.Logger("logger", 20)
 
 from ipywidgets import DOMWidget
 import json
@@ -59,6 +61,23 @@ class BabylonJS(DOMWidget):
                 min(data["Z"]),
                 max(data["Z"]),
             ]
+
+            if len(proposal.value.keys()) == 7:
+                for key in proposal.value.keys():
+                    if key not in reqd:
+                        data["dim4"] = proposal.value[key].tolist()
+                        break
+                if "dim4" in data.keys():
+                    self.extents = [
+                        min([val for dat in data["X"] for val in dat]),
+                        max([val for dat in data["X"] for val in dat]),
+                        min([val for dat in data["Y"] for val in dat]),
+                        max([val for dat in data["Y"] for val in dat]),
+                        min([val for dat in data["Z"] for val in dat]),
+                        max([val for dat in data["Z"] for val in dat]),
+                        min(data["dim4"]),
+                        max(data["dim4"])
+                    ]
 
             return json.dumps(data)
         else:

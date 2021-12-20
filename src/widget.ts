@@ -9,6 +9,7 @@ import {
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
 import * as BABYLON from '@babylonjs/core';
+import * as GUI from 'babylonjs-gui';
 
 // Import the CSS
 import '../css/widget.css';
@@ -50,6 +51,7 @@ export class BabylonJSModel extends DOMWidgetModel {
 export class BabylonJSView extends DOMWidgetView {
   canvas?: HTMLCanvasElement;
   engine?: BABYLON.Engine;
+  fourD: boolean = false;
 
   render(): void {
     const loadingScreen = document.createElement('div');
@@ -101,26 +103,70 @@ export class BabylonJSView extends DOMWidgetView {
 
     camera.wheelPrecision = wheel_precision;
 
-    const pcs = new BABYLON.PointsCloudSystem('pcs', 1, scene, {
+    var pcs = new BABYLON.PointsCloudSystem('pcs', 1, scene, {
       updatable: false
     });
 
-    const myLoader = function (particle: any, i: number, s: string) {
-      particle.position = new BABYLON.Vector3(
-        (data.X[i] - minx) / (maxx - minx),
-        (data.Y[i] - miny) / (maxy - miny),
-        ((data.Z[i] - minz) / (maxz - minz)) * z_scale
-      );
+    if ("dim4" in data) {
+      const slider = new GUI.Slider("dim4");
+      slider.height = "20px";
+      slider.width = "100px";
+      slider.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+      slider.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+      slider.minimum = 0;
+      slider.maximum = data.dim4.length - 1;
+      slider.step = 1;
+      slider.value = 0;
 
-      particle.color = new BABYLON.Color3(
-        data.Red[i],
-        data.Green[i],
-        data.Blue[i]
-      );
-    };
+      const fourDLoader = function(dim4_i: number, particle: any, i: number, s: string) {
+            particle.position = new BABYLON.Vector3(
+              (data.X[dim4_i][i] - minx) / (maxx - minx),
+              (data.Y[dim4_i][i] - miny) / (maxy - miny),
+              ((data.Z[dim4_i][i] - minz) / (maxz - minz)) * z_scale
+            );
 
-    pcs.addPoints(num_coords, myLoader);
-    pcs.buildMeshAsync();
+            particle.color = new BABYLON.Color3(
+              data.Red[dim4_i][i],
+              data.Green[dim4_i][i],
+              data.Blue[dim4_i][i]
+            );
+      };
+
+      const reloadPcsAtDim4Idx = function(value: number) {
+          pcs.dispose();
+          pcs = new BABYLON.PointsCloudSystem("pcs", 1, scene, {updatable: false});
+          const loaderAtDim4Idx = fourDLoader.bind(null, value);
+          const num_coords_at_idx = data.X[value].length;
+          pcs.addPoints(num_coords_at_idx, loaderAtDim4Idx);
+          pcs.buildMeshAsync();
+      };
+
+      slider.onValueChangedObservable.add(reloadPcsAtDim4Idx);
+      
+      const advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("ui", true, scene);
+      advancedTexture.addControl(slider);
+
+      const initialLoader = fourDLoader.bind(null, 0);
+      pcs.addPoints(data.X[0].length, initialLoader);
+      pcs.buildMeshAsync();
+    } else {
+      const myLoader = function (particle: any, i: number, s: string) {
+        particle.position = new BABYLON.Vector3(
+          (data.X[i] - minx) / (maxx - minx),
+          (data.Y[i] - miny) / (maxy - miny),
+          ((data.Z[i] - minz) / (maxz - minz)) * z_scale
+        );
+
+        particle.color = new BABYLON.Color3(
+          data.Red[i],
+          data.Green[i],
+          data.Blue[i]
+        );
+      };
+
+      pcs.addPoints(num_coords, myLoader);
+      pcs.buildMeshAsync();
+    }
 
     return scene;
   }
