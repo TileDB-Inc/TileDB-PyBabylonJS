@@ -8,14 +8,16 @@
 BabylonJS Jupyter Widget
 """
 import logging
+
+from pandas.core.algorithms import isin
 logger = logging.Logger("logger", 20)
 
 from ipywidgets import DOMWidget
 import json
 import os
-from traitlets import CInt, Float, Dict, List, TraitError, Unicode, validate
+from traitlets import CInt, Float, Dict, List, Bool, TraitError, Unicode, validate
 from ._frontend import module_name, module_version
-
+import pandas as pd
 
 class BabylonJS(DOMWidget):
     """BabylonJS"""
@@ -36,6 +38,7 @@ class BabylonJS(DOMWidget):
     value = Dict().tag(sync=True)
     wheel_precision = Float(50.0).tag(sync=True)
     z_scale = Float(0.5).tag(sync=True)
+    add = Bool(False, help="For use with 4D datasets with slider; set add to True to consecutively add sets of xyz pts as slider is moved to the right").tag(sync=True)
 
     @validate("value")
     def _valid_value(self, proposal):
@@ -46,38 +49,53 @@ class BabylonJS(DOMWidget):
                 raise TraitError(f"Missing one of {reqd} in input")
 
             data = {}
-            data["X"] = proposal.value["X"].tolist()
-            data["Y"] = proposal.value["Y"].tolist()
-            data["Z"] = proposal.value["Z"].tolist()
-            data["Red"] = proposal.value["Red"].tolist()
-            data["Green"] = proposal.value["Green"].tolist()
-            data["Blue"] = proposal.value["Blue"].tolist()
-
-            self.extents = [
-                min(data["X"]),
-                max(data["X"]),
-                min(data["Y"]),
-                max(data["Y"]),
-                min(data["Z"]),
-                max(data["Z"]),
-            ]
 
             if len(proposal.value.keys()) == 7:
+                dim4_name = None
                 for key in proposal.value.keys():
                     if key not in reqd:
-                        data["dim4"] = proposal.value[key].tolist()
+                        dim4_name = key
                         break
-                if "dim4" in data.keys():
-                    self.extents = [
-                        min([val for dat in data["X"] for val in dat]),
-                        max([val for dat in data["X"] for val in dat]),
-                        min([val for dat in data["Y"] for val in dat]),
-                        max([val for dat in data["Y"] for val in dat]),
-                        min([val for dat in data["Z"] for val in dat]),
-                        max([val for dat in data["Z"] for val in dat]),
-                        min(data["dim4"]),
-                        max(data["dim4"])
-                    ]
+                
+                if dim4_name != None:
+                    try:
+                        fourD_agg_df = pd.DataFrame(proposal.value).groupby(dim4_name).agg(lambda x: list(x))
+                        data["X"] = fourD_agg_df["X"].to_list()
+                        data["Y"] = fourD_agg_df["Y"].to_list()
+                        data["Z"] = fourD_agg_df["Z"].to_list()
+                        data["Red"] = fourD_agg_df["Red"].to_list()
+                        data["Green"] = fourD_agg_df["Green"].to_list()
+                        data["Blue"] = fourD_agg_df["Blue"].to_list()
+                        data[dim4_name] = fourD_agg_df.index.astype(str).tolist()
+
+                        self.extents = [
+                            min([val for dat in data["X"] for val in dat]),
+                            max([val for dat in data["X"] for val in dat]),
+                            min([val for dat in data["Y"] for val in dat]),
+                            max([val for dat in data["Y"] for val in dat]),
+                            min([val for dat in data["Z"] for val in dat]),
+                            max([val for dat in data["Z"] for val in dat])
+                        ]
+
+                    except:
+                        logger.warn("passing 4d setup")
+            
+            if not data:
+                data["X"] = proposal.value["X"].to_list()
+                data["Y"] = proposal.value["Y"].to_list()
+                data["Z"] = proposal.value["Z"].to_list()
+                data["Red"] = proposal.value["Red"].to_list()
+                data["Green"] = proposal.value["Green"].to_list()
+                data["Blue"] = proposal.value["Blue"].to_list()
+
+                self.extents = [
+                    min(data["X"]),
+                    max(data["X"]),
+                    min(data["Y"]),
+                    max(data["Y"]),
+                    min(data["Z"]),
+                    max(data["Z"]),
+                ]                
 
             return json.dumps(data)
         else:
