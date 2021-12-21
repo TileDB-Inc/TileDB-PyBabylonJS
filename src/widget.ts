@@ -238,7 +238,7 @@ export class BabylonJSView extends DOMWidgetView {
         "Green": data.Green.flat(),
         "Blue": data.Blue.flat(),
       };
-      
+
       const initialLoader = function(particle: any, i: number, s: string) {
         particle.position = new BABYLON.Vector3(
           (data_flat.X[i] - minx) / (maxx - minx),
