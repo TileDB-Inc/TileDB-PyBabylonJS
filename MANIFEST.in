@@ -1,36 +1,20 @@
-include LICENSE.txt
-include README.md
+include LICENSE
+include *.md
+include pyproject.toml
 
-include setupbase.py
-include pytest.ini
-include .coverage.rc
-
-include tsconfig.json
 include package.json
-include webpack.config.js
-include pybabylonjs/labextension/*.tgz
+include install.json
+include ts*.json
+include yarn.lock
 
-# Documentation
-graft docs
-exclude docs/\#*
-prune docs/build
-prune docs/gh-pages
-prune docs/dist
-
-# Examples
-graft examples
-
-# Tests
-graft tests
-prune tests/build
+graft pybabylonjs/labextension
 
 # Javascript files
-graft pybabylonjs/nbextension
 graft src
-graft css
+graft style
 prune **/node_modules
-prune coverage
 prune lib
+prune binder
 
 # Patterns to exclude from any directory
 global-exclude *~

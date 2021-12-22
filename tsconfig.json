@@ -1,24 +1,26 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "composite": true,
     "declaration": true,
-    "esModuleInterop":true,
-    "lib": ["es2015", "dom"],
-    "module": "commonjs",
+    "esModuleInterop": true,
+    "incremental": true,
+    "jsx": "react",
+    "module": "esnext",
     "moduleResolution": "node",
     "noEmitOnError": true,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
-    "outDir": "lib",
+    "preserveWatchOutput": true,
     "resolveJsonModule": true,
+    "outDir": "lib",
     "rootDir": "src",
-    "skipLibCheck": true,
-    "sourceMap": true,
     "strict": true,
-    "strictPropertyInitialization": false,
-    "target": "es2015"
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "target": "es2017",
+    "types": []
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
+  "include": ["src/*"],
   "exclude": ["src/**/__tests__"]
 }

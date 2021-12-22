@@ -12,15 +12,15 @@ stages:
   - job: Build
     strategy:
       matrix:
-        mac_36:
+        mac_38:
           imageName: 'macOS-10.15'
-          python.version: '3.6'
+          python.version: '3.8'
         mac_37:
           imageName: 'macOS-10.15'
           python.version: '3.7'
-        linux_py36:
+        linux_py38:
           imageName: 'ubuntu-20.04'
-          python.version: '3.6'
+          python.version: '3.8'
         linux_py37:
           imageName: 'ubuntu-20.04'
           python.version: '3.7'
@@ -44,16 +44,16 @@ stages:
         curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
         sudo apt-get install nodejs
       displayName: 'Install NodeJS'
-      condition: eq(variables['imageName'], 'ubuntu-16.04')
+      condition: eq(variables['imageName'], 'ubuntu-20.04')
 
     - script: |
         curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
         echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
         sudo apt update && sudo apt install yarn
       displayName: 'Install yarn'
-      condition: eq(variables['imageName'], 'ubuntu-16.04')
+      condition: eq(variables['imageName'], 'ubuntu-20.04')
 
-    - script: python -m pip install --upgrade ipywidgets traitlets pytest wheel jupyter_packaging
+    - script: python -m pip install --upgrade ipywidgets traitlets pytest build jupyter-packaging==0.10.6 jupyterlab==3.2.3
       # pip installs release candidates by default:
       #   https://github.com/pypa/pip/issues/4969
       displayName: 'Install dependencies'
@@ -65,15 +65,26 @@ stages:
       displayName: 'Test Formating'
       condition: eq(variables['python.version'], '3.7')
 
-    - script: python -m pip install --upgrade .
-      displayName: 'Test Install'
-      condition: ne(variables['Agent.OS'], 'Windows_NT')
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'
+    - script: yarn
+      displayName: 'Install labextension dependencies'
       env:
         NPM_TOKEN: $(NPM_TOKEN)
 
+    - script: jlpm run build:prod
+      displayName: 'Build jupyterlab extension'
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+        architecture: 'x64'
       # Build the python distribution from source
-    - script: python setup.py bdist_wheel
-      displayName: 'Build wheel'
+    - script: python -m build
+      displayName: 'Build python'
       condition: ne(variables['Agent.OS'], 'Windows_NT')
       env:
         NPM_TOKEN: $(NPM_TOKEN)
@@ -95,22 +106,56 @@ stages:
   dependsOn: Build
   condition: and(succeeded('Build'), startsWith(variables['Build.SourceBranch'], 'refs/tag'))
   jobs:
-  - job: Deploy_pip_package
+  - job: Deploy_package
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-20.04'
 
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: '3.7'
+        versionSpec: '3.8'
         architecture: 'x64'
 
-    - script: 'pip install twine wheel setuptools setuptools_scm jupyter_packaging'
-      displayName: 'Install twine/wheel'
+    - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==3.2.3'
+      displayName: 'Install twine/build'
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'
+    - script: |
+        echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        yarn
+      displayName: 'Save npm token & install labextension dependencies'
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+    - script: jlpm run build:prod
+      displayName: 'Build jupyterlab extension'
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+    
+    - script: |
+        currentVersion=$(./node_modules/.bin/git-tag-version)
+        latestGitTag=$(git describe --tags --abbrev=0)
+        latestGitTag="${latestGitTag:1}"
+        echo $currentVersion
+        echo $latestGitTag
+        if [[ $latestGitTag == *"beta"* ]];
+        then
+        echo "Publishing beta version";
+        yarn publish --new-version $latestGitTag --no-git-tag-version --access public --tag beta
+        else
+        echo "Publishing new version";
+        yarn publish --new-version $(./node_modules/.bin/git-tag-version) --no-git-tag-version --access public
+        fi
+      env:
+        GITHUB_TOKEN: $(GITHUB_TOKEN)
+        NPM_TOKEN: $(NPM_TOKEN)
+      displayName: 'Release to npm'
 
       # Build the python distribution from source
-    - script: python setup.py bdist_wheel
-      displayName: 'Build wheel'
+    - script: python -m build
+      displayName: 'Build python'
       env:
         NPM_TOKEN: $(NPM_TOKEN)
 
@@ -120,33 +165,4 @@ stages:
         pythonUploadServiceConnection: 'pypi-upload'
 
     - script: python -m twine upload -r "pypi-upload" --config-file $(PYPIRC_PATH) dist/*.whl
-      displayName: 'Upload to Pypi'
-
-  - job: Deploy_npm_package
-    pool:
-      vmImage: 'ubuntu-16.04'
-
-    steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '12.x'
-    - script: |
-        echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        yarn
-      displayName: 'Install dependencies'
-      env:
-        NPM_TOKEN: $(NPM_TOKEN)
-
-    - script: |
-        yarn build
-      displayName: 'Build'
-      env:
-        NPM_TOKEN: $(NPM_TOKEN)
-
-    - script: |
-        echo $(./node_modules/.bin/git-tag-version)
-        yarn publish --new-version $(./node_modules/.bin/git-tag-version) --no-git-tag-version --access public
-      env:
-        GITHUB_TOKEN: $(GITHUB_TOKEN)
-        NPM_TOKEN: $(NPM_TOKEN)
-      displayName: 'Release'
+      displayName: 'Release to Pypi'
