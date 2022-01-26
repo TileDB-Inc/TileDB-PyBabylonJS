@@ -12,7 +12,7 @@ const EXTENSION_ID = 'PyBabylonJS:plugin';
 /**
  * The pybabylonjs plugin.
  */
-const pybabylonjsPlugin = {
+const pybabylonjsPlugin: any = {
   id: EXTENSION_ID,
   requires: [IJupyterWidgetRegistry],
   activate: activateWidgetExtension,
