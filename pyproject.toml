@@ -1,10 +1,10 @@
 [build-system]
-requires = ["jupyter_packaging~=0.10,<2", "jupyterlab~=3.1", "setuptools", "build"]
-build-backend = "setuptools.build_meta"
+requires = ["jupyter_packaging~=0.10,<2", "jupyterlab~=3.1"]
+build-backend = "jupyter_packaging.build_api"
 
 [tool.jupyter-packaging.options]
-skip-if-exists = ["tiledb-prompt-options/labextension/static/style.js"]
-ensured-targets = ["tiledb-prompt-options/labextension/static/style.js", "tiledb-prompt-options/labextension/package.json"]
+skip-if-exists = ["pybabylonjs/labextension/static/style.js"]
+ensured-targets = ["pybabylonjs/labextension/static/style.js", "pybabylonjs/labextension/package.json"]
 
 [tool.jupyter-packaging.builder]
 factory = "jupyter_packaging.npm_builder"
@@ -14,4 +14,4 @@ build_cmd = "build:prod"
 npm = ["jlpm"]
 
 [tool.check-manifest]
-ignore = ["tiledb-prompt-options/labextension/**", "yarn.lock", ".*", "package-lock.json"]
+ignore = ["pybabylonjs/labextension/**", "yarn.lock", ".*", "package-lock.json"]
