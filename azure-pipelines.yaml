@@ -133,7 +133,21 @@ stages:
       displayName: 'Build jupyterlab extension'
       env:
         NPM_TOKEN: $(NPM_TOKEN)
-    
+
+      # Build the python distribution from source
+    - script: python -m build
+      displayName: 'Build python'
+      env:
+        NPM_TOKEN: $(NPM_TOKEN)
+
+    - task: TwineAuthenticate@1
+      displayName: 'Twine Authenticate'
+      inputs:
+        pythonUploadServiceConnection: 'pypi-upload'
+
+    - script: python -m twine upload -r "pypi-upload" --config-file $(PYPIRC_PATH) dist/*.whl
+      displayName: 'Release to Pypi'
+
     - script: |
         currentVersion=$(./node_modules/.bin/git-tag-version)
         latestGitTag=$(git describe --tags --abbrev=0)
@@ -152,17 +166,3 @@ stages:
         GITHUB_TOKEN: $(GITHUB_TOKEN)
         NPM_TOKEN: $(NPM_TOKEN)
       displayName: 'Release to npm'
-
-      # Build the python distribution from source
-    - script: python -m build
-      displayName: 'Build python'
-      env:
-        NPM_TOKEN: $(NPM_TOKEN)
-
-    - task: TwineAuthenticate@1
-      displayName: 'Twine Authenticate'
-      inputs:
-        pythonUploadServiceConnection: 'pypi-upload'
-
-    - script: python -m twine upload -r "pypi-upload" --config-file $(PYPIRC_PATH) dist/*.whl
-      displayName: 'Release to Pypi'
