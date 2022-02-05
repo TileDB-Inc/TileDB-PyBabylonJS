@@ -1433,6 +1433,18 @@ axios@^0.21.1:
   dependencies:
     follow-redirects "^1.10.0"
 
+babylonjs-gui@^4.2.0:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/babylonjs-gui/-/babylonjs-gui-4.2.1.tgz#9bda181c7dc13f4aabe6e1d21a4813390769b137"
+  integrity sha512-MV3TjsmypUe62OhP497iMxm6Cx+ug7gVjr6h8IoNjlKRTo8fjbROiqd+EZxpJT8XmPl1YSVWeXVeamLVdnuV5A==
+  dependencies:
+    babylonjs "4.2.1"
+
+babylonjs@4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/babylonjs/-/babylonjs-4.2.1.tgz#202808ac89f7c6bd5f1efa848f2781360034967e"
+  integrity sha512-FQdJ2VTENUpUJQ30ddihwTjV6K94kglET0P7jV8OQzjA4eez3sotmG22Fn9+8yb069SA26KnrAGOI2sKMQ7BCw==
+
 backbone@1.2.3:
   version "1.2.3"
   resolved "https://registry.npmjs.org/backbone/-/backbone-1.2.3.tgz"
