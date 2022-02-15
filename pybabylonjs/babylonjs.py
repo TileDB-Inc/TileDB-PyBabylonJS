@@ -11,17 +11,17 @@ import logging
 
 logger = logging.Logger("logger")
 
-from ipywidgets import DOMWidget
+#from ipywidgets import DOMWidget
+from ipywidgets import DOMWidget, register
 import json
 import os
 from traitlets import CInt, Float, Dict, List, Bool, TraitError, Unicode, validate
 from ._frontend import module_name, module_version
 import pandas as pd
 
-
+@register
 class BabylonJS(DOMWidget):
     """BabylonJS"""
-
     _model_name = Unicode("BabylonJSModel").tag(sync=True)
     _model_module = Unicode(module_name).tag(sync=True)
     _model_module_version = Unicode(module_version).tag(sync=True)
@@ -42,7 +42,11 @@ class BabylonJS(DOMWidget):
         False,
         help="For use with 4D datasets with slider; set add to True to consecutively add sets of xyz pts as slider is moved to the right",
     ).tag(sync=True)
+    type = Unicode().tag(sync=True)
 
+    #if type == 'pointcloud':
+    print(type)
+    print(value)
     @validate("value")
     def _valid_value(self, proposal):
         if proposal.value:
