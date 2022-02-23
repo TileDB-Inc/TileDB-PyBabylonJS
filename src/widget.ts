@@ -11,6 +11,9 @@ import { MODULE_NAME, MODULE_VERSION } from './version';
 import * as BABYLON from '@babylonjs/core';
 import * as GUI from 'babylonjs-gui';
 
+//import * as d3 from 'd3';
+//d3.scaleLinear(); 
+
 // Import the CSS
 import '../css/widget.css';
 
@@ -81,15 +84,18 @@ export class BabylonPCView extends DOMWidgetView {
     const maxz = extents[5];
     const num_coords = data.X.length;    
     
-    //const wheel_precision = this.model.get('wheel_precision');
-    //const add_mode = this.model.get('add');
+    const time = values.time;
     const wheel_precision = 50.0;
-    const add_mode = false;
+    //const wheel_precision = this.model.get('wheel_precision');
+    
+    //const xtarget = (((minx + maxx) / 2) - minx) / (maxx - minx);
+    //const ytarget = (((miny + maxy) / 2) - miny) / (maxy - miny);
 
-    new BABYLON.PointLight('Point', new BABYLON.Vector3(5, 10, 5), scene);
-  
-    const xtarget = (((minx + maxx) / 2) - minx) / (maxx - minx);
-    const ytarget = (((miny + maxy) / 2) - miny) / (maxy - miny);
+    const xtarget = 0.5;
+    const ytarget = 0.5;
+
+    var light = new BABYLON.PointLight('Point', new BABYLON.Vector3(xtarget, -2*ytarget, 1), scene);
+    light.intensity = 0.8;
 
     const camera = new BABYLON.ArcRotateCamera(
       'Camera',
@@ -100,7 +106,7 @@ export class BabylonPCView extends DOMWidgetView {
       scene
     );
 
-    camera.setPosition(new BABYLON.Vector3(0, -2, 2));
+    camera.setPosition(new BABYLON.Vector3(xtarget, -2*ytarget, 1));
     camera.attachControl(this.canvas, true);
     camera.wheelPrecision = wheel_precision;
 
@@ -108,9 +114,9 @@ export class BabylonPCView extends DOMWidgetView {
       updatable: true
     });
 
-    var dim4_name: string = '';
+    var dim4_name: string = "GpsTime";
 
-    if (Object.keys(data).length === 7) {
+    if (time) {
       const panel = new GUI.StackPanel();
       panel.width = '200px';
       panel.height = '40px';
@@ -120,29 +126,21 @@ export class BabylonPCView extends DOMWidgetView {
       panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
       panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
 
-      for (var dim_key of Object.keys(data)) {
-        if (['X', 'Y', 'Z', 'Red', 'Green', 'Blue'].indexOf(dim_key) === -1) {
-          dim4_name = dim_key;
-          break;
-        }
-      }
-
       var header: any = null;
       var dim4_vals: any = null;
 
-      if (dim4_name.length > 0) {
-        dim4_vals = data[dim4_name];
-        header = new GUI.TextBlock();
-        header.text = dim4_vals[0];
-        header.height = '20px';
-        header.fontSize = '14px';
-        header.color = 'whitesmoke';
-        header.textHorizontalAlignment =
-          GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-        header.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-        header.paddingTop = '2px';
-        header.paddingBottom = '2px';
-      }
+      dim4_vals = data[dim4_name];
+
+      header = new GUI.TextBlock();
+      header.text = dim4_vals[0].toString();
+      header.height = '20px';
+      header.fontSize = '14px';
+      header.color = 'whitesmoke';
+      header.textHorizontalAlignment =
+        GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+      header.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+      header.paddingTop = '2px';
+      header.paddingBottom = '2px';
 
       const slider = new GUI.Slider(dim4_name);
       slider.height = '18px';
@@ -219,13 +217,13 @@ export class BabylonPCView extends DOMWidgetView {
         prev_value = value;
 
         if (header) {
-          header.text = dim4_vals[value];
+          header.text = dim4_vals[value].toString();
         }
 
         pcs.setParticles(start_ptl, end_ptl - 1);
       };
 
-      if (!add_mode) {
+      if (!time) {
         slider.onValueChangedObservable.add(noAddModeReloader);
       } else {
         slider.onValueChangedObservable.add(addModeReloader);
@@ -368,22 +366,17 @@ export class BabylonMBRSView extends DOMWidgetView {
     const maxx = extents[1];
     const miny = extents[2];
     const maxy = extents[3];
+    const minz = extents[4];
+    const maxz = extents[5];
 
     const wheel_precision = 50.0;
     
-    //const camera = new BABYLON.ArcRotateCamera("Camera", 3 * Math.PI / 4, Math.PI / 4, 4, BABYLON.Vector3.Zero(), scene);
-    //camera.attachControl(this.canvas, true);
-    //var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 0.5, 0), scene);
-    //light.intensity = 0.8;
-
-    //scene.clearColor = new BABYLON.Color4(0.2, 0.4, 0.8, 1.0);
-
-    new BABYLON.PointLight('Point', new BABYLON.Vector3(0, -2, 2), scene);
-    //new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, -2, 2), scene);
-
     const xtarget = (((minx + maxx) / 2) - minx) / (maxx - minx);
     const ytarget = (((miny + maxy) / 2) - miny) / (maxy - miny);
-    
+
+    var light = new BABYLON.PointLight('Point', new BABYLON.Vector3(xtarget, -2*ytarget, 1), scene);
+    light.intensity = 0.8;
+            
     const camera = new BABYLON.ArcRotateCamera(
       'Camera',
       1,
@@ -393,17 +386,16 @@ export class BabylonMBRSView extends DOMWidgetView {
       scene
     );
 
-    camera.setPosition(new BABYLON.Vector3(0, -2, 2));
+    camera.setPosition(new BABYLON.Vector3(xtarget, -2*ytarget, 1));
     camera.attachControl(this.canvas, true);
     camera.wheelPrecision = wheel_precision;
 
-    const mat = new BABYLON.StandardMaterial('mt1', scene);
-    //mat.disableLighting = true;
-    //mat.alpha = 0.9;
-
+    var mat = new BABYLON.StandardMaterial('mt1', scene);
+    mat.alpha = 0.9;
+   
     const SPS = new BABYLON.SolidParticleSystem("SPS", scene);
     const box = BABYLON.MeshBuilder.CreateBox("b", {height: 1, width: 1, depth: 1});
-    SPS.addShape(box, data.X.length); 
+    SPS.addShape(box, data.Xmin.length); 
     box.dispose(); //dispose of original model box
   
     SPS.buildMesh(); // finally builds and displays the SPS mesh
@@ -411,12 +403,12 @@ export class BabylonMBRSView extends DOMWidgetView {
     SPS.initParticles = () => {
       for (let p = 0; p < SPS.nbParticles; p++) {
           const particle = SPS.particles[p];
-          particle.position.x = data.X[p];
-          particle.position.y = data.Y[p];
-          particle.position.z = data.Z[p] * z_scale;
-          particle.scaling.x = data.W[p];
-          particle.scaling.y = data.D[p];
-          particle.scaling.z = data.H[p] * z_scale;
+          particle.position.x = ((data.Xmax[p]+data.Xmin[p])/2 - minx) / (maxx - minx);
+          particle.position.y = ((data.Ymax[p]+data.Ymin[p])/2 - miny) / (maxy - miny);
+          particle.position.z = (((data.Zmax[p]+data.Zmin[p])/2 - minz) / (maxz - minz)) * z_scale;
+          particle.scaling.x = (data.Xmax[p]-data.Xmin[p]) / (maxx - minx);
+          particle.scaling.y = (data.Ymax[p]-data.Ymin[p]) / (maxy - miny);
+          particle.scaling.z = ( (data.Zmax[p]-data.Zmin[p]) / (maxz - minz) ) * z_scale;
           particle.color = new BABYLON.Color4(0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6,0.9);
       }
     };

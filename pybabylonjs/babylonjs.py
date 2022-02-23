@@ -94,7 +94,7 @@ class BabylonMBRS(DOMWidget):
     @validate("value")
     def _valid_value(self, proposal):
         if proposal.value:
-            reqd = ["X", "Y", "Z", "H", "W", "D"]
+            reqd = ["Xmin", "Xmax", "Ymin", "Ymax", "Zmin", "Zmax"]
             if not all(key in proposal.value['data'] for key in reqd):
                 raise TraitError(f"Missing one of {reqd} in input")
         else:

@@ -2,13 +2,16 @@
 # Licensed under the MIT License.
 """Classes for setting up the visualization."""
 
-from .babylonjs import BabylonPC, BabylonMBRS
 from IPython.display import display
+from typing import Optional 
+
+import pandas as pd
+import tiledb
+
+from .babylonjs import BabylonPC, BabylonMBRS
+
 
 def fragment_mbrs(array):
-    
-    import pandas as pd
-    import tiledb
 
     fragments_info = tiledb.array_fragments(array,include_mbrs=True)
     
@@ -25,20 +28,13 @@ def fragment_mbrs(array):
                     'zmin': box[2][0], 'zmax': box[2][1]}
             df = df.append(box_dict, ignore_index=True)
 
-    df['H'] = (df['zmax']-df['zmin']) / (df['zmax'].max() - min(df['zmin']))
-    df['W'] = (df['xmax']-df['xmin']) / (df['xmax'].max() - df['xmin'].min()) 
-    df['D'] = (df['ymax']-df['ymin']) / (df['ymax'].max() - df['ymin'].min())
-    df['X'] = (df['xmin']-df['xmin'].min() ) / (df['xmax'].max() - df['xmin'].min())
-    df['Y'] = (df['ymin']-df['ymin'].min() ) / (df['ymax'].max() - df['ymin'].min())
-    df['Z'] = (df['zmin']-df['zmin'].min() ) / (df['zmax'].max() - df['zmin'].min())
-
     data = {
-    'X': df['X'],
-    'Y': df['Y'],
-    'Z': df['Z'],
-    'H': df['H'],
-    'W': df['W'],
-    'D': df['D'],
+    'Xmin': df['xmin'],
+    'Xmax': df['xmax'],
+    'Ymin': df['ymin'],
+    'Ymax': df['ymax'],
+    'Zmin': df['zmin'],
+    'Zmax': df['zmax'],
     }    
 
     extents = [ 
@@ -57,12 +53,26 @@ def pointcloud_schema(
         style: str,
         width: float,
         height: float,
-        z_scale: float):
+        z_scale: float,
+        time: Optional[bool] = None
+        ):
     """Create a Dict to be passed on to BabylonPC to create a 3D point cloud visualization.
     """
     
-    #TODO: add check if X,Y and Z exist
-    #TODO: check if works for 4D point cloud - add "add"
+    if time == True:
+        fourD_agg_df = (
+            pd.DataFrame(data)
+            .groupby("GpsTime", sort=False, as_index=False)
+            .agg(lambda x: list(x))
+        )
+        data = {
+                'X': fourD_agg_df["X"],
+                'Y': fourD_agg_df["Y"],
+                'Z': fourD_agg_df["Z"],
+                'Red': fourD_agg_df["Red"],
+                'Green': fourD_agg_df["Green"],
+                'Blue': fourD_agg_df["Blue"],
+                'GpsTime': fourD_agg_df["GpsTime"]}
 
     extents = [ 
                 min(data["X"].tolist()),
@@ -78,6 +88,7 @@ def pointcloud_schema(
                     height=height,
                     z_scale=z_scale,
                     extents=extents,
+                    time=time,
                     data=data)
     return s
 
@@ -113,10 +124,11 @@ class Visualize3D:
         width: float,
         height: float,
         z_scale: float,
+        time: Optional[bool] = None
     ):
         if style == 'pointcloud': 
             dataviz = BabylonPC()
-            dataviz.value = pointcloud_schema(data,style,width,height,z_scale)
+            dataviz.value = pointcloud_schema(data,style,width,height,z_scale,time)
             display(dataviz)
 
     @classmethod
