@@ -84,8 +84,8 @@ export class BabylonPCView extends DOMWidgetView {
     
     const time = values.time;
     
-    const xtarget = (((minx + maxx) / 2) - minx) / (maxx - minx);
-    const ytarget = (((miny + maxy) / 2) - miny) / (maxy - miny);
+    const xtarget = 0.5;
+    const ytarget = 0.5;
 
     var light = new BABYLON.PointLight('Point', new BABYLON.Vector3(xtarget, -2*ytarget, 1), scene);
     light.intensity = 0.8;
