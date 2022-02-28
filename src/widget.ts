@@ -11,9 +11,6 @@ import { MODULE_NAME, MODULE_VERSION } from './version';
 import * as BABYLON from '@babylonjs/core';
 import * as GUI from 'babylonjs-gui';
 
-//import * as d3 from 'd3';
-//d3.scaleLinear(); 
-
 // Import the CSS
 import '../css/widget.css';
 
@@ -74,6 +71,7 @@ export class BabylonPCView extends DOMWidgetView {
     
     const values = this.model.get('value');
     const z_scale = values.z_scale;
+    const wheel_precision = values.wheel_precision;
     const extents = values.extents;
     const data = values.data;
     const minx = extents[0];
@@ -85,14 +83,9 @@ export class BabylonPCView extends DOMWidgetView {
     const num_coords = data.X.length;    
     
     const time = values.time;
-    const wheel_precision = 50.0;
-    //const wheel_precision = this.model.get('wheel_precision');
     
-    //const xtarget = (((minx + maxx) / 2) - minx) / (maxx - minx);
-    //const ytarget = (((miny + maxy) / 2) - miny) / (maxy - miny);
-
-    const xtarget = 0.5;
-    const ytarget = 0.5;
+    const xtarget = (((minx + maxx) / 2) - minx) / (maxx - minx);
+    const ytarget = (((miny + maxy) / 2) - miny) / (maxy - miny);
 
     var light = new BABYLON.PointLight('Point', new BABYLON.Vector3(xtarget, -2*ytarget, 1), scene);
     light.intensity = 0.8;
@@ -361,6 +354,7 @@ export class BabylonMBRSView extends DOMWidgetView {
     const values = this.model.get('value');
     const data = values.data;
     const z_scale = values.z_scale;
+    const wheel_precision = values.wheel_precision;
     const extents = values.extents;
     const minx = extents[0];
     const maxx = extents[1];
@@ -369,8 +363,6 @@ export class BabylonMBRSView extends DOMWidgetView {
     const minz = extents[4];
     const maxz = extents[5];
 
-    const wheel_precision = 50.0;
-    
     const xtarget = (((minx + maxx) / 2) - minx) / (maxx - minx);
     const ytarget = (((miny + maxy) / 2) - miny) / (maxy - miny);
 

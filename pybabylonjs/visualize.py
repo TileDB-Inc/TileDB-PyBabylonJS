@@ -52,10 +52,11 @@ def fragment_mbrs(array):
 def pointcloud_schema(
         data: dict,
         style: str,
-        width: float,
-        height: float,
-        z_scale: float,
-        time: Optional[bool] = None
+        width: Optional[float] = 800,
+        height: Optional[float] = 600,
+        z_scale: Optional[float] = 0.2,
+        wheel_precision: Optional[float] = 50,
+        time: Optional[bool] = None,
         ):
     """Create a Dict to be passed on to BabylonPC to create a 3D point cloud visualization.
     """
@@ -88,6 +89,7 @@ def pointcloud_schema(
                     width=width,
                     height=height,
                     z_scale=z_scale,
+                    wheel_precision=wheel_precision,
                     extents=extents,
                     time=time,
                     data=data)
@@ -96,9 +98,10 @@ def pointcloud_schema(
 def mbrs_schema(
         array: str,
         style: str,
-        width: float,
-        height: float,
-        z_scale: float):
+        width: Optional[float] = 800,
+        height: Optional[float] = 600,
+        z_scale: Optional[float] = 0.2,
+        wheel_precision: Optional[float] = 50):
     """Create a Dict to be passed on to BabylonMBRS to create a 3D point cloud visualization.
     """
     
@@ -108,11 +111,12 @@ def mbrs_schema(
                     width=width,
                     height=height,
                     z_scale=z_scale,
+                    wheel_precision=wheel_precision,
                     extents=extents,
                     data=data)               
     return s
 
-class Visualize3D:
+class Show:
     """Create a 3D visualization.
 
     Parameters:
@@ -122,25 +126,27 @@ class Visualize3D:
     def from_dict(self,
         data: dict,
         style: str,
-        width: float,
-        height: float,
-        z_scale: float,
-        time: Optional[bool] = None
+        width: Optional[float] = 800,
+        height: Optional[float] = 600,
+        z_scale: Optional[float] = 0.2,
+        wheel_precision: Optional[float] = 50,
+        time: Optional[bool] = None,
     ):
         if style == 'pointcloud': 
             dataviz = BabylonPC()
-            dataviz.value = pointcloud_schema(data,style,width,height,z_scale,time)
+            dataviz.value = pointcloud_schema(data,style,width,height,z_scale,wheel_precision,time)
             display(dataviz)
 
     @classmethod
     def from_array(self,
         array: str,
         style: str,
-        width: float,
-        height: float,
-        z_scale: float,
+        width: Optional[float] = 800,
+        height: Optional[float] = 600,
+        z_scale: Optional[float] = 0.2,
+        wheel_precision: Optional[float] = 50,
     ):
         if style == 'mbrs':
             dataviz = BabylonMBRS()
-            dataviz.value = mbrs_schema(array,style,width,height,z_scale)
+            dataviz.value = mbrs_schema(array,style,width,height,z_scale,wheel_precision)
             display(dataviz)
