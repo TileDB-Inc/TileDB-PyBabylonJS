@@ -26,7 +26,8 @@ def fragment_mbrs(array):
             box_dict = {'fragment': f, 'box': b, 'xmin': box[0][0], 'xmax': box[0][1],
                     'ymin': box[1][0], 'ymax': box[1][1],
                     'zmin': box[2][0], 'zmax': box[2][1]}
-            df = df.append(box_dict, ignore_index=True)
+            box_df = pd.DataFrame([box_dict])           
+            df = pd.concat([df, box_df], ignore_index=True)
 
     data = {
     'Xmin': df['xmin'],
@@ -118,7 +119,7 @@ class Visualize3D:
         ...
     """
     @classmethod
-    def from_data(self,
+    def from_dict(self,
         data: dict,
         style: str,
         width: float,
