@@ -5,11 +5,12 @@
 [![Build Status](https://dev.azure.com/TileDB-Inc/CI/_apis/build/status/TileDB-Inc.TileDB-PyBabylonJS?branchName=main)](https://dev.azure.com/TileDB-Inc/CI/_build/latest?definitionId=37&branchName=main)
 
 
-BabylonJS widget
+The TileDB-PyBabylonJS library is a geospatial data visualization Python library that interactively visualizes TileDB arrays with [Babylon.js](https://www.babylonjs.com) in a Jupyter notebook widget. 
 
 ## Installation
 
-You can install using `pip`:
+This project is available from [PyPI](https://pypi.org/project/pybabylonjs/) and can be installed with `pip`:
+You can install using `pip`:`
 
 ```bash
 pip install pybabylonjs
@@ -29,13 +30,13 @@ conda create -n pybabylonjs-dev -c conda-forge nodejs yarn python jupyterlab
 conda activate pybabylonjs-dev
 ```
 
-Install the python. This will also build the TS package.
+Fork or clone the repo. Install the Python package. This will also build the TS package.
 ```bash
 pip install -e ".[test, examples]"
 ```
 
 When developing your extensions, you need to manually enable your extensions with the
-notebook / lab frontend. For lab, this is done by the command:
+notebook / lab frontend. For jupyter lab, this is done by the command:
 
 ```
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
@@ -43,7 +44,7 @@ yarn run build
 jupyter labextension install .
 ```
 
-For classic notebook, you need to run:
+For a classic notebook, you need to run:
 
 ```
 jupyter nbextension install --sys-prefix --symlink --overwrite --py pybabylonjs
@@ -71,3 +72,63 @@ After a change wait for the build to finish and then refresh your browser and th
 
 #### Python:
 If you make a change to the python code then you will need to restart the notebook kernel to have it take effect.
+
+## Usage
+
+Currently two data visualizations are supported for LiDAR point clouds:
+
+* 3D point cloud visualization
+* 3D MBRS visualization
+
+Full examples can be found it the example notebooks [here]](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples).
+
+### 3D point cloud visualization
+
+To create this visualization load a slice of the data and create a dictionary with the coordinates of the points and the RGB values:
+
+```python
+from pybabylonjs import Show as show
+
+with tiledb.open("autzen1") as arr:
+    df = pd.DataFrame(arr[636800:637800, 851000:853000, 406.14:615.26])
+
+data = {
+    'X': df['X'],
+    'Y': df['Y'],
+    'Z': df['Z'],
+    'Red': df['Red'] / 255.0,
+    'Green': df['Green'] / 255.0,
+    'Blue': df['Blue'] / 255.0
+}
+```
+
+Visualize the 3D point cloud with `pybabylonjs.Show.from_dict()` by specifying `data` and the `style` to use. Optional parameters are the `width` and `height` of the frame, the scaling factor `z_scale` of the z-axis and the wheel precision `wheel_precision`:
+
+```python
+show.from_dict(data=data,
+                style = 'pointcloud',
+                width = 800,
+                height = 600,
+                z_scale = .3,
+                wheel_precision = 50)
+```
+
+This creates an interactive visualization in a notebook widget of which the below is a screenshot:
+
+<img src="examples/pointcloud.png"  width="400" height="300" />
+
+### 3D MBRS visualization
+
+This visualization is created directly from a sparse array by specifying the `array`, the style as `mbrs` and optional `height` and `width` parameters:
+
+```python
+show.from_array(array='autzen',
+                style='mbrs',
+                width=800,
+                height=600,
+                z_scale = 0.5)
+```
+
+Which creates the below interactive visualization in a notebook widget of which the below is a screenshot:
+
+<img src="examples/mbrs.png"  width="400" height="300" />
