@@ -57,18 +57,17 @@
   },
   "dependencies": {
     "@babylonjs/core": "^4.2.1",
+    "@babylonjs/loaders": "^4.2.1",
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4",
     "@jupyterlab/application": "^3.2.0",
     "@tiledb-inc/tiledb-cloud": "^0.0.8",
-    "babylonjs-gui": "^4.2.1",
-    "d3": "^7.3.0"
+    "babylonjs-gui": "^4.2.1"
   },
   "devDependencies": {
     "@babylonjs/core": "^4.2.1",
     "@jupyterlab/builder": "^3.1.0",
     "@types/node": "^10.11.6",
     "@types/webpack-env": "^1.16.3",
-    "@types/d3": "^7.1.0",
     "@typescript-eslint/eslint-plugin": "^4.8.1",
     "@typescript-eslint/parser": "^4.8.1",
     "crypto": "1.0.1",
