@@ -12,99 +12,72 @@ import logging
 logger = logging.Logger("logger")
 
 from ipywidgets import DOMWidget, register
-import json, jsonschema
-import os
-from traitlets import CInt, Float, Dict, List, Bool, TraitError, Unicode, validate, HasTraits
+import jsonschema
+from traitlets import Dict, TraitError, Unicode, validate
 from ._frontend import module_name, module_version
-import pandas as pd
 
-pc_schema = {
-    'type' : 'object',
-    'style' : {'type' : 'string'},
-    'width' : {'type' : 'number'},
-    'height' :{'type' : 'number'},
-    'data' : {
-        'X' : { 'type' : 'number' },
-        'Y' : { 'type' : 'number' },
-        'Y' : { 'type' : 'number' },
-        'Red' : { 'type' : 'number' },
-        'Green' : { 'type' : 'number' },
-        'Blue' : { 'type' : 'number' },
-    },
+
+core_schema = {
+    "properties": {
+        "style" : {"type" : "string"},
+        "width" : {"type" : "number"},
+        "height" :{"type" : "number"},
+        "z_scale":{"type": "number"},
+        "wheel_precision":{"type": "number"},
+        "data" : {
+            "X" : { "type": "array", "items": { "type" : "number" } },
+            "Y" : { "type": "array", "items": { "type" : "number" } },
+            "Z" : { "type": "array", "items": { "type" : "number" } },
+        }
+    }
 }
 
-mbrs_schema = {
-    'type' : 'object',
-    'style' : {'type' : 'string'},
-    'width' : {'type' : 'number'},
-    'height' :{'type' : 'number'},
-    'z_scale' : {'type' : 'number'},
-    'extents' : {'type' : 'number'},
-    'data' : {
-        'X' : { 'type' : 'number' },
-        'Y' : { 'type' : 'number' },
-        'Y' : { 'type' : 'number' },
-        'H' : { 'type' : 'number' },
-        'W' : { 'type' : 'number' },
-        'D' : { 'type' : 'number' },
-    },
-}
+pc_schema = core_schema.copy()
+for c in ["Red", "Green", "Blue"]:
+    pc_schema["properties"]["data"][c] = { "type": "number" }
+
+
+mbrs_schema = core_schema.copy()
+mbrs_schema["properties"]["extents"] = {
+    "type": "array",
+    "items": {"type" : "number"},
+    "maxItems": 6  
+    }
+
+for d in ["H", "W", "D"]:
+    mbrs_schema["properties"]["data"][d] = { "type": "number" }
+
+
+class BabylonBase(DOMWidget):
+    _model_module = Unicode(module_name).tag(sync=True)
+    _model_module_version = Unicode(module_version).tag(sync=True)
+    _view_module_version = Unicode(module_version).tag(sync=True)
+    _view_module = Unicode(module_name).tag(sync=True)
+    value = Dict().tag(sync=True)
+
+
+    """Base class for all Babylon derived widgets"""
+    @validate("value")
+    def _validate_value(self, proposal):
+        try:
+            jsonschema.validate(instance=proposal["value"], schema=self._schema)
+            return proposal["value"]
+        except jsonschema.ValidationError as e:
+            raise TraitError(e)
+
 
 @register
-class BabylonPC(DOMWidget):
+class BabylonPC(BabylonBase):
     """3D point cloud with BabylonJS"""
     _model_name = Unicode("BabylonPCModel").tag(sync=True)
-    _model_module = Unicode(module_name).tag(sync=True)
-    _model_module_version = Unicode(module_version).tag(sync=True)
     _view_name = Unicode("BabylonPCView").tag(sync=True)
-    _view_module = Unicode(module_name).tag(sync=True)
-    _view_module_version = Unicode(module_version).tag(sync=True)
+    _schema = pc_schema
 
-    value = Dict().tag(sync=True)
-
-    @validate("value")
-    def _valid_value(self, proposal):
-        if proposal.value:
-            reqd = ["X", "Y", "Z", "Red", "Green", "Blue"]
-            if not all(key in proposal.value['data'].keys() for key in reqd):
-                raise TraitError(f"Missing one of {reqd} in input")
-        else:
-            return proposal.value
-
-    @validate('value')
-    def _validate_value(self, proposal):
-        try:
-            jsonschema.validate(proposal['value'], pc_schema)
-        except jsonschema.ValidationError as e:
-            raise TraitError(e)
-        return proposal['value']
 
 @register
-class BabylonMBRS(DOMWidget):
+class BabylonMBRS(BabylonBase):
     """MBRS outlines with BabylonJS"""
     _model_name = Unicode("BabylonMBRSModel").tag(sync=True)
-    _model_module = Unicode(module_name).tag(sync=True)
-    _model_module_version = Unicode(module_version).tag(sync=True)
     _view_name = Unicode("BabylonMBRSView").tag(sync=True)
-    _view_module = Unicode(module_name).tag(sync=True)
-    _view_module_version = Unicode(module_version).tag(sync=True)
-
-    value = Dict().tag(sync=True)
-    
-    @validate("value")
-    def _valid_value(self, proposal):
-        if proposal.value:
-            reqd = ["Xmin", "Xmax", "Ymin", "Ymax", "Zmin", "Zmax"]
-            if not all(key in proposal.value['data'] for key in reqd):
-                raise TraitError(f"Missing one of {reqd} in input")
-        else:
-            return proposal.value
-    
-    @validate('value')
-    def _validate_value(self, proposal):
-        try:
-            jsonschema.validate(proposal['value'], mbrs_schema)
-        except jsonschema.ValidationError as e:
-            raise TraitError(e)
-        return proposal['value']
+    _schema = mbrs_schema
      

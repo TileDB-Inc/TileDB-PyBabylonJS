@@ -23,19 +23,19 @@ def fragment_mbrs(array):
         b=0
         for box in fragment:
             b+=1
-            box_dict = {'fragment': f, 'box': b, 'xmin': box[0][0], 'xmax': box[0][1],
-                    'ymin': box[1][0], 'ymax': box[1][1],
-                    'zmin': box[2][0], 'zmax': box[2][1]}
+            box_dict = {"fragment": f, "box": b, "xmin": box[0][0], "xmax": box[0][1],
+                    "ymin": box[1][0], "ymax": box[1][1],
+                    "zmin": box[2][0], "zmax": box[2][1]}
             box_df = pd.DataFrame([box_dict])           
             df = pd.concat([df, box_df], ignore_index=True)
 
     data = {
-    'Xmin': df['xmin'],
-    'Xmax': df['xmax'],
-    'Ymin': df['ymin'],
-    'Ymax': df['ymax'],
-    'Zmin': df['zmin'],
-    'Zmax': df['zmax'],
+    "Xmin": df["xmin"],
+    "Xmax": df["xmax"],
+    "Ymin": df["ymin"],
+    "Ymax": df["ymax"],
+    "Zmin": df["zmin"],
+    "Zmax": df["zmax"],
     }    
 
     extents = [ 
@@ -68,13 +68,13 @@ def pointcloud_schema(
             .agg(lambda x: list(x))
         )
         data = {
-                'X': fourD_agg_df["X"],
-                'Y': fourD_agg_df["Y"],
-                'Z': fourD_agg_df["Z"],
-                'Red': fourD_agg_df["Red"],
-                'Green': fourD_agg_df["Green"],
-                'Blue': fourD_agg_df["Blue"],
-                'GpsTime': fourD_agg_df["GpsTime"]}
+                "X": fourD_agg_df["X"],
+                "Y": fourD_agg_df["Y"],
+                "Z": fourD_agg_df["Z"],
+                "Red": fourD_agg_df["Red"],
+                "Green": fourD_agg_df["Green"],
+                "Blue": fourD_agg_df["Blue"],
+                "GpsTime": fourD_agg_df["GpsTime"]}
 
     extents = [ 
                 min(data["X"].tolist()),
@@ -132,7 +132,7 @@ class Show:
         wheel_precision: Optional[float] = 50,
         time: Optional[bool] = None,
     ):
-        if style == 'pointcloud': 
+        if style == "pointcloud": 
             dataviz = BabylonPC()
             dataviz.value = pointcloud_schema(data,style,width,height,z_scale,wheel_precision,time)
             display(dataviz)
@@ -146,7 +146,7 @@ class Show:
         z_scale: Optional[float] = 0.2,
         wheel_precision: Optional[float] = 50,
     ):
-        if style == 'mbrs':
+        if style == "mbrs":
             dataviz = BabylonMBRS()
             dataviz.value = mbrs_schema(array,style,width,height,z_scale,wheel_precision)
             display(dataviz)
