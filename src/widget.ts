@@ -14,34 +14,34 @@ import * as GUI from 'babylonjs-gui';
 // Import the CSS
 import '../css/widget.css';
 
-export class BabylonPCModel extends DOMWidgetModel {
-  defaults(): any {
-    return {
-      ...super.defaults(),
-      _model_name: BabylonPCModel.model_name,
-      _model_module: BabylonPCModel.model_module,
-      _model_module_version: BabylonPCModel.model_module_version,
-      _view_name: BabylonPCModel.view_name,
-      _view_module: BabylonPCModel.view_module,
-      _view_module_version: BabylonPCModel.view_module_version,
-    };
-  }
+export class BabylonBaseModel extends DOMWidgetModel {
+  static model_module = MODULE_NAME;
+  static model_module_version = MODULE_VERSION;
+  static view_module = MODULE_NAME;
+  static view_module_version = MODULE_VERSION;  
 
   static serializers: ISerializers = {
     ...DOMWidgetModel.serializers
   };
-
-  static model_name = 'BabylonPCModel';
-  static model_module = MODULE_NAME;
-  static model_module_version = MODULE_VERSION;
-  static view_name = 'BabylonPCView';
-  static view_module = MODULE_NAME;
-  static view_module_version = MODULE_VERSION;
 }
 
-export class BabylonPCView extends DOMWidgetView {
+abstract class BabylonBaseView extends DOMWidgetView {
   canvas?: HTMLCanvasElement;
   engine?: BABYLON.Engine;
+
+  protected resizeCanvas(): void {
+    const values = this.model.get('value');
+    const width = values.width;
+    const height = values.height;
+
+    this.canvas?.setAttribute('width', width);
+    this.canvas?.setAttribute('height', height);
+    this.engine?.resize();
+  }
+
+  protected query_changed(): void {
+    // TODO
+  }
 
   render(): void {
     const loadingScreen = document.createElement('div');
@@ -55,7 +55,7 @@ export class BabylonPCView extends DOMWidgetView {
     this.model.on_some_change(['width', 'height'], this.resizeCanvas, this);
 
     this.engine = new BABYLON.Engine(this.canvas, true);
-    BABYLON.SceneLoader.ShowLoadingScreen = true;
+    BABYLON.SceneLoader.ShowLoadingScreen = true;  
 
     this.resizeCanvas();
 
@@ -68,6 +68,36 @@ export class BabylonPCView extends DOMWidgetView {
 
   protected createScene(): BABYLON.Scene {
     const scene = new BABYLON.Scene(this.engine as BABYLON.Engine);
+    // const values = this.model.get('value');
+    // const z_scale = values.z_scale;
+    // const wheel_precision = values.wheel_precision;
+    
+    return scene;
+  }
+
+}
+
+export class BabylonPCModel extends BabylonBaseModel {
+  defaults(): any {
+    return {
+      ...super.defaults(),
+      _model_name: BabylonPCModel.model_name,
+      _model_module: BabylonPCModel.model_module,
+      _model_module_version: BabylonPCModel.model_module_version,
+      _view_name: BabylonPCModel.view_name,
+      _view_module: BabylonPCModel.view_module,
+      _view_module_version: BabylonPCModel.view_module_version,
+    };
+  }
+
+  static model_name = 'BabylonPCModel';
+  static view_name = 'BabylonPCView';
+}
+
+export class BabylonPCView extends BabylonBaseView {
+
+  protected createScene(): BABYLON.Scene {
+    const scene = super.createScene();
     
     const values = this.model.get('value');
     const z_scale = values.z_scale;
@@ -280,23 +310,9 @@ export class BabylonPCView extends DOMWidgetView {
     }
     return scene;
   }  
-  
-  protected resizeCanvas(): void {
-    const values = this.model.get('value');
-    const width = values.width;
-    const height = values.height;
-
-    this.canvas?.setAttribute('width', width);
-    this.canvas?.setAttribute('height', height);
-    this.engine?.resize();
-  }
-
-  protected query_changed(): void {
-    // TODO
-  }
 }
 
-export class BabylonMBRSModel extends DOMWidgetModel {
+export class BabylonMBRSModel extends BabylonBaseModel {
   defaults(): any {
     return {
       ...super.defaults(),
@@ -309,47 +325,13 @@ export class BabylonMBRSModel extends DOMWidgetModel {
     };
   }
 
-  static serializers: ISerializers = {
-    ...DOMWidgetModel.serializers
-  };
-
   static model_name = 'BabylonMBRSModel';
-  static model_module = MODULE_NAME;
-  static model_module_version = MODULE_VERSION;
   static view_name = 'BabylonMBRSView';
-  static view_module = MODULE_NAME;
-  static view_module_version = MODULE_VERSION;
 }
 
-export class BabylonMBRSView extends DOMWidgetView {
-  canvas?: HTMLCanvasElement;
-  engine?: BABYLON.Engine;
-
-  render(): void {
-    const loadingScreen = document.createElement('div');
-    loadingScreen.id = 'loadingScreen';
-
-    this.canvas = document.createElement('canvas');
-    this.canvas.classList.add('renderCanvas');
-    this.el.appendChild(this.canvas);
-
-    this.model.on('change:query', this.query_changed, this);
-    this.model.on_some_change(['width', 'height'], this.resizeCanvas, this);
-
-    this.engine = new BABYLON.Engine(this.canvas, true);
-    BABYLON.SceneLoader.ShowLoadingScreen = true;
-
-    this.resizeCanvas();
-
-    const scene = this.createScene();
-
-    this.engine.runRenderLoop(() => {
-      scene.render();
-    });
-  }
-
+export class BabylonMBRSView extends BabylonBaseView {
   protected createScene(): BABYLON.Scene {
-    const scene = new BABYLON.Scene(this.engine as BABYLON.Engine);
+    const scene = super.createScene();
 
     const values = this.model.get('value');
     const data = values.data;
@@ -411,19 +393,5 @@ export class BabylonMBRSView extends DOMWidgetView {
     SPS.mesh.material = mat;
 
     return scene;
-  }
-
-  protected resizeCanvas(): void {
-    const values = this.model.get('value');
-    const width = values.width;
-    const height = values.height;
-
-    this.canvas?.setAttribute('width', width);
-    this.canvas?.setAttribute('height', height);
-    this.engine?.resize();
-  }
-
-  protected query_changed(): void {
-    // TODO
   }
 }

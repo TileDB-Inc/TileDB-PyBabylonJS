@@ -11,40 +11,66 @@ import logging
 
 logger = logging.Logger("logger")
 
+from copy import deepcopy
 from ipywidgets import DOMWidget, register
 import jsonschema
+from jsonschema import Draft7Validator, validators
 from traitlets import Dict, TraitError, Unicode, validate
 from ._frontend import module_name, module_version
 
 
+def extend_with_default(validator_class):
+    validate_properties = validator_class.VALIDATORS["properties"]
+
+    def set_defaults(validator, properties, instance, schema):
+        for property, subschema in properties.items():
+            if "default" in subschema:
+                instance.setdefault(property, subschema["default"])
+
+        for error in validate_properties(
+            validator, properties, instance, schema,
+        ):
+            yield error
+
+    return validators.extend(
+        validator_class, {"properties" : set_defaults},
+    )
+
+
+DefaultValidatingDraft7Validator = extend_with_default(Draft7Validator)
+
+
 core_schema = {
+    "type": "object",
     "properties": {
-        "style" : {"type" : "string"},
-        "width" : {"type" : "number"},
-        "height" :{"type" : "number"},
-        "z_scale":{"type": "number"},
-        "wheel_precision":{"type": "number"},
+        "width" : {"type" : "number", "default": 800},
+        "height" :{"type" : "number", "default": 600},
+        "z_scale":{"type": "number", "default": 0.2},
+        "wheel_precision":{"type": "number", "default": 50},
         "data" : {
-            "X" : { "type": "array", "items": { "type" : "number" } },
-            "Y" : { "type": "array", "items": { "type" : "number" } },
-            "Z" : { "type": "array", "items": { "type" : "number" } },
+            "type": "object",
+            "properties": {},
+            "required": []
         }
-    }
+    },
+    "required": [
+        "data"
+    ]
 }
 
-pc_schema = core_schema.copy()
-for c in ["Red", "Green", "Blue"]:
-    pc_schema["properties"]["data"][c] = { "type": "number" }
+pc_schema = deepcopy(core_schema)
+attrs = ["X", "Y", "Z", "Red", "Green", "Blue"]
+pc_schema["properties"]["data"]["required"].extend(attrs)
 
-
-mbrs_schema = core_schema.copy()
+mbrs_schema = deepcopy(core_schema)
 mbrs_schema["properties"]["extents"] = {
     "type": "array",
     "items": {"type" : "number"},
     "maxItems": 6  
     }
 
-for d in ["H", "W", "D"]:
+dims = ["H", "W", "D"]
+for d in dims:
     mbrs_schema["properties"]["data"][d] = { "type": "number" }
 
 
@@ -53,14 +79,12 @@ class BabylonBase(DOMWidget):
     _model_module_version = Unicode(module_version).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
-    value = Dict().tag(sync=True)
-
 
     """Base class for all Babylon derived widgets"""
     @validate("value")
     def _validate_value(self, proposal):
         try:
-            jsonschema.validate(instance=proposal["value"], schema=self._schema)
+            DefaultValidatingDraft7Validator(self._schema).validate(proposal["value"])
             return proposal["value"]
         except jsonschema.ValidationError as e:
             raise TraitError(e)
@@ -71,6 +95,7 @@ class BabylonPC(BabylonBase):
     """3D point cloud with BabylonJS"""
     _model_name = Unicode("BabylonPCModel").tag(sync=True)
     _view_name = Unicode("BabylonPCView").tag(sync=True)
+    value = Dict().tag(sync=True)
     _schema = pc_schema
 
 
@@ -79,5 +104,6 @@ class BabylonMBRS(BabylonBase):
     """MBRS outlines with BabylonJS"""
     _model_name = Unicode("BabylonMBRSModel").tag(sync=True)
     _view_name = Unicode("BabylonMBRSView").tag(sync=True)
+    value = Dict().tag(sync=True)
     _schema = mbrs_schema
-     
+

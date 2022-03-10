@@ -11,18 +11,23 @@ import tiledb
 from .babylonjs import BabylonPC, BabylonMBRS
 
 
-def fragment_mbrs(array):
+class PyBabylonJSError(Exception):
+    pass
 
-    fragments_info = tiledb.array_fragments(array,include_mbrs=True)
+
+def create_mbrs(array_name:str):
+    """Create a Dict to be passed on to BabylonMBRS to create a 3D point cloud visualization.
+    """  
+    fragments_info = tiledb.array_fragments(array_name, include_mbrs=True)
     
     df = pd.DataFrame()   
 
-    f=0
+    f = 0
     for fragment in fragments_info.mbrs:
-        f+=1
-        b=0
+        f += 1
+        b = 0
         for box in fragment:
-            b+=1
+            b += 1
             box_dict = {"fragment": f, "box": b, "xmin": box[0][0], "xmax": box[0][1],
                     "ymin": box[1][0], "ymax": box[1][1],
                     "zmin": box[2][0], "zmax": box[2][1]}
@@ -30,13 +35,13 @@ def fragment_mbrs(array):
             df = pd.concat([df, box_df], ignore_index=True)
 
     data = {
-    "Xmin": df["xmin"],
-    "Xmax": df["xmax"],
-    "Ymin": df["ymin"],
-    "Ymax": df["ymax"],
-    "Zmin": df["zmin"],
-    "Zmax": df["zmax"],
-    }    
+    'Xmin': df['xmin'],
+    'Xmax': df['xmax'],
+    'Ymin': df['ymin'],
+    'Ymax': df['ymax'],
+    'Zmin': df['zmin'],
+    'Zmax': df['zmax'],
+    }     
 
     extents = [ 
                 min(df["xmin"].tolist()),
@@ -47,16 +52,11 @@ def fragment_mbrs(array):
                 max(df["zmax"].tolist()),
             ]
 
-    return data, extents
+    return dict(extents=extents, data=data)               
     
-def pointcloud_schema(
+def create_pc(
         data: dict,
-        style: str,
-        width: Optional[float] = 800,
-        height: Optional[float] = 600,
-        z_scale: Optional[float] = 0.2,
-        wheel_precision: Optional[float] = 50,
-        time: Optional[bool] = None,
+        time: Optional[bool] = None
         ):
     """Create a Dict to be passed on to BabylonPC to create a 3D point cloud visualization.
     """
@@ -85,68 +85,45 @@ def pointcloud_schema(
                 max(data["Z"].tolist()),
             ]
     
-    s = dict(style=style, 
-                    width=width,
-                    height=height,
-                    z_scale=z_scale,
-                    wheel_precision=wheel_precision,
-                    extents=extents,
-                    time=time,
-                    data=data)
-    return s
+    return dict(extents=extents,
+                time=time,
+                data=data)
 
-def mbrs_schema(
-        array: str,
-        style: str,
-        width: Optional[float] = 800,
-        height: Optional[float] = 600,
-        z_scale: Optional[float] = 0.2,
-        wheel_precision: Optional[float] = 50):
-    """Create a Dict to be passed on to BabylonMBRS to create a 3D point cloud visualization.
-    """
-    
-    [data,extents] = fragment_mbrs(array)
-    
-    s = dict(style=style, 
-                    width=width,
-                    height=height,
-                    z_scale=z_scale,
-                    wheel_precision=wheel_precision,
-                    extents=extents,
-                    data=data)               
-    return s
-
-class Show:
-    """Create a 3D visualization.
+class Show():
+    """Create a N-D visualization.
 
     Parameters:
         ...
     """
+
+    def __init__(self):
+        self._value = None
+        self._dataviz = None
+
     @classmethod
     def from_dict(self,
         data: dict,
         style: str,
-        width: Optional[float] = 800,
-        height: Optional[float] = 600,
-        z_scale: Optional[float] = 0.2,
-        wheel_precision: Optional[float] = 50,
         time: Optional[bool] = None,
+        **kwargs
     ):
         if style == "pointcloud": 
             dataviz = BabylonPC()
-            dataviz.value = pointcloud_schema(data,style,width,height,z_scale,wheel_precision,time)
+            dataviz.value = create_pc(data, time)
+            # provide defaults when validating with JSON schema
+            dataviz.value.update(kwargs)
             display(dataviz)
+        else:
+            raise PyBabylonJSError(f"Unsupported style {style}")
 
     @classmethod
-    def from_array(self,
-        array: str,
-        style: str,
-        width: Optional[float] = 800,
-        height: Optional[float] = 600,
-        z_scale: Optional[float] = 0.2,
-        wheel_precision: Optional[float] = 50,
-    ):
+    def from_array(self, array_uri: str, style:str, **kwargs):
         if style == "mbrs":
             dataviz = BabylonMBRS()
-            dataviz.value = mbrs_schema(array,style,width,height,z_scale,wheel_precision)
+            dataviz.value = create_mbrs(array_uri)
+            # provide defaults when validating with JSON schema
+            dataviz.value.update(kwargs)
             display(dataviz)
+        else:
+            raise PyBabylonJSError(f"Unsupported style {style}")
+    
