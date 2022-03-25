@@ -53,7 +53,7 @@ stages:
       displayName: 'Install yarn'
       condition: eq(variables['imageName'], 'ubuntu-20.04')
 
-    - script: python -m pip install --upgrade ipywidgets traitlets pytest build jupyter-packaging==0.10.6 jupyterlab==3.2.3
+    - script: python -m pip install --upgrade ipywidgets traitlets pytest build jupyter-packaging==0.10.6 jupyterlab==3.3.2
       # pip installs release candidates by default:
       #   https://github.com/pypa/pip/issues/4969
       displayName: 'Install dependencies'
@@ -116,7 +116,7 @@ stages:
         versionSpec: '3.8'
         architecture: 'x64'
 
-    - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==3.2.3'
+    - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==3.3.2'
       displayName: 'Install twine/build'
 
     - task: NodeTool@0

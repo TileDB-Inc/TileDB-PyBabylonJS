@@ -18,28 +18,6 @@ const resolve = {
 
 module.exports = [
   /**
-   * Notebook extension
-   *
-   * This bundle only contains the part of the JavaScript that is run on load of
-   * the notebook.
-   */
-  {
-    entry: './src/extension.ts',
-    output: {
-      filename: 'index.js',
-      path: path.resolve(__dirname, 'pybabylonjs', 'nbextension'),
-      libraryTarget: 'amd',
-      publicPath: '',
-    },
-    module: {
-      rules: rules
-    },
-    devtool: 'source-map',
-    externals,
-    resolve,
-  },
-
-  /**
    * Embeddable @tiledb-inc/pybabylonjs bundle
    *
    * This bundle is almost identical to the notebook extension bundle. The only
@@ -64,28 +42,5 @@ module.exports = [
     },
     externals,
     resolve,
-  },
-
-
-  /**
-   * Documentation widget bundle
-   *
-   * This bundle is used to embed widgets in the package documentation.
-   */
-  {
-    entry: './src/index.ts',
-    output: {
-      filename: 'embed-bundle.js',
-      path: path.resolve(__dirname, 'docs', 'source', '_static'),
-      library: "@tiledb-inc/pybabylonjs",
-      libraryTarget: 'amd'
-    },
-    module: {
-      rules: rules
-    },
-    devtool: 'source-map',
-    externals,
-    resolve,
   }
-
 ];
