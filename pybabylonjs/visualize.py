@@ -52,44 +52,10 @@ def create_mbrs(array_name:str):
                 max(df["zmax"].tolist()),
             ]
 
-    return dict(extents=extents, data=data)               
-    
-def create_pc(
-        data: dict,
-        time: Optional[bool] = None
-        ):
-    """Create a Dict to be passed on to BabylonPC to create a 3D point cloud visualization.
-    """
-    
-    if time == True:
-        fourD_agg_df = (
-            pd.DataFrame(data)
-            .groupby("GpsTime", sort=False, as_index=False)
-            .agg(lambda x: list(x))
-        )
-        data = {
-                "X": fourD_agg_df["X"],
-                "Y": fourD_agg_df["Y"],
-                "Z": fourD_agg_df["Z"],
-                "Red": fourD_agg_df["Red"],
-                "Green": fourD_agg_df["Green"],
-                "Blue": fourD_agg_df["Blue"],
-                "GpsTime": fourD_agg_df["GpsTime"]}
+    return dict(extents=extents, data=data)
 
-    extents = [ 
-                min(data["X"].tolist()),
-                max(data["X"].tolist()),
-                min(data["Y"].tolist()),
-                max(data["Y"].tolist()),
-                min(data["Z"].tolist()),
-                max(data["Z"].tolist()),
-            ]
-    
-    return dict(extents=extents,
-                time=time,
-                data=data)
 
-class Show():
+class Show:
     """Create a N-D visualization.
 
     Parameters:
@@ -104,14 +70,17 @@ class Show():
     def from_dict(self,
         data: dict,
         style: str,
-        time: Optional[bool] = None,
+        time: Optional[bool] = False,
         **kwargs
     ):
         if style == "pointcloud": 
             dataviz = BabylonPC()
-            dataviz.value = create_pc(data, time)
-            # provide defaults when validating with JSON schema
-            dataviz.value.update(kwargs)
+            d = {
+                "time": time,
+                "data" : data
+            }
+            d.update(kwargs)
+            dataviz.value = d
             display(dataviz)
         else:
             raise PyBabylonJSError(f"Unsupported style {style}")
@@ -120,10 +89,39 @@ class Show():
     def from_array(self, array_uri: str, style:str, **kwargs):
         if style == "mbrs":
             dataviz = BabylonMBRS()
-            dataviz.value = create_mbrs(array_uri)
-            # provide defaults when validating with JSON schema
-            dataviz.value.update(kwargs)
+            d = create_mbrs(array_uri)
+            d.update(kwargs)
+            dataviz.value = d
             display(dataviz)
         else:
             raise PyBabylonJSError(f"Unsupported style {style}")
+
+
+class BabylonJS():
+    """Legacy class for instantiating the widget"""
     
+
+    def __init__(self):
+        self.value = None
+        self.z_scale = None
+        self.width = None
+        self.height = None
+
+
+    def _ipython_display_(self):
+        kwargs = {}
+
+        if self.z_scale:
+            kwargs["z_scale"] = self.z_scale
+
+        if self.width:
+            kwargs["width"] = self.width
+
+        if self.height:
+            kwargs["height"] = self.height
+
+        Show.from_dict(
+            data = self.value,
+            style="pointcloud",
+            **kwargs
+        )

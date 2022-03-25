@@ -43,14 +43,24 @@ DefaultValidatingDraft7Validator = extend_with_default(Draft7Validator)
 core_schema = {
     "type": "object",
     "properties": {
+        "inspector" : {"type": "boolean", "default": False},
         "width" : {"type" : "number", "default": 800},
-        "height" :{"type" : "number", "default": 600},
-        "z_scale":{"type": "number", "default": 0.2},
-        "wheel_precision":{"type": "number", "default": 50},
+        "height" : {"type" : "number", "default": 600},
+        "z_scale": {"type": "number", "default": 1},
+        "wheel_precision":{"type": "number", "default": -1},
+        "time": {"type": "boolean", "default": False},
+        "time_offset": {"type": "number", "default": 0},
+        "gltf_data": {"type": "string"},
+        "point_size": {"type": "number", "default": 1},
         "data" : {
             "type": "object",
             "properties": {},
             "required": []
+        },
+        "extents": {
+            "type": "array",
+            "items": {"type" : "number"},
+            "maxItems": 6
         }
     },
     "required": [
@@ -63,16 +73,6 @@ attrs = ["X", "Y", "Z", "Red", "Green", "Blue"]
 pc_schema["properties"]["data"]["required"].extend(attrs)
 
 mbrs_schema = deepcopy(core_schema)
-mbrs_schema["properties"]["extents"] = {
-    "type": "array",
-    "items": {"type" : "number"},
-    "maxItems": 6  
-    }
-
-dims = ["H", "W", "D"]
-for d in dims:
-    mbrs_schema["properties"]["data"][d] = { "type": "number" }
-
 
 class BabylonBase(DOMWidget):
     _model_module = Unicode(module_name).tag(sync=True)
@@ -106,4 +106,3 @@ class BabylonMBRS(BabylonBase):
     _view_name = Unicode("BabylonMBRSView").tag(sync=True)
     value = Dict().tag(sync=True)
     _schema = mbrs_schema
-
