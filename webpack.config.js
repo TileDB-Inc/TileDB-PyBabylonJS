@@ -28,7 +28,7 @@ module.exports = [
    * the custom widget embedder.
    */
   {
-    entry: './src/index.ts',
+    entry: './src/embed.ts',
     output: {
         filename: 'index.js',
         path: path.resolve(__dirname, 'dist'),
