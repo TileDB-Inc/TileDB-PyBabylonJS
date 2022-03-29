@@ -28,12 +28,16 @@ def extend_with_default(validator_class):
                 instance.setdefault(property, subschema["default"])
 
         for error in validate_properties(
-            validator, properties, instance, schema,
+            validator,
+            properties,
+            instance,
+            schema,
         ):
             yield error
 
     return validators.extend(
-        validator_class, {"properties" : set_defaults},
+        validator_class,
+        {"properties": set_defaults},
     )
 
 
@@ -43,29 +47,19 @@ DefaultValidatingDraft7Validator = extend_with_default(Draft7Validator)
 core_schema = {
     "type": "object",
     "properties": {
-        "inspector" : {"type": "boolean", "default": False},
-        "width" : {"type" : "number", "default": 800},
-        "height" : {"type" : "number", "default": 600},
+        "inspector": {"type": "boolean", "default": False},
+        "width": {"type": "number", "default": 800},
+        "height": {"type": "number", "default": 600},
         "z_scale": {"type": "number", "default": 1},
-        "wheel_precision":{"type": "number", "default": -1},
+        "wheel_precision": {"type": "number", "default": -1},
         "time": {"type": "boolean", "default": False},
         "time_offset": {"type": "number", "default": 0},
         "gltf_data": {"type": "string"},
         "point_size": {"type": "number", "default": 1},
-        "data" : {
-            "type": "object",
-            "properties": {},
-            "required": []
-        },
-        "extents": {
-            "type": "array",
-            "items": {"type" : "number"},
-            "maxItems": 6
-        }
+        "data": {"type": "object", "properties": {}, "required": []},
+        "extents": {"type": "array", "items": {"type": "number"}, "maxItems": 6},
     },
-    "required": [
-        "data"
-    ]
+    "required": ["data"],
 }
 
 pc_schema = deepcopy(core_schema)
@@ -74,6 +68,7 @@ pc_schema["properties"]["data"]["required"].extend(attrs)
 
 mbrs_schema = deepcopy(core_schema)
 
+
 class BabylonBase(DOMWidget):
     _model_module = Unicode(module_name).tag(sync=True)
     _model_module_version = Unicode(module_version).tag(sync=True)
@@ -81,6 +76,7 @@ class BabylonBase(DOMWidget):
     _view_module = Unicode(module_name).tag(sync=True)
 
     """Base class for all Babylon derived widgets"""
+
     @validate("value")
     def _validate_value(self, proposal):
         try:
@@ -93,6 +89,7 @@ class BabylonBase(DOMWidget):
 @register
 class BabylonPC(BabylonBase):
     """3D point cloud with BabylonJS"""
+
     _model_name = Unicode("BabylonPCModel").tag(sync=True)
     _view_name = Unicode("BabylonPCView").tag(sync=True)
     value = Dict().tag(sync=True)
@@ -102,6 +99,7 @@ class BabylonPC(BabylonBase):
 @register
 class BabylonMBRS(BabylonBase):
     """MBRS outlines with BabylonJS"""
+
     _model_name = Unicode("BabylonMBRSModel").tag(sync=True)
     _view_name = Unicode("BabylonMBRSView").tag(sync=True)
     value = Dict().tag(sync=True)
