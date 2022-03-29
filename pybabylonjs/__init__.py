@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from .babylonjs import BabylonJS
+from .visualize import BabylonJS, Show
 from ._version import __version__
 
 HERE = Path(__file__).parent.resolve()

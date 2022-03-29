@@ -44,6 +44,12 @@ setup_args = dict(
         "setuptools-scm>=1.5.4",
         "setuptools-scm-git-archive",
     ],
+    extras_require={
+        "dev": [
+            "matplotlib",
+            "python-pdal",
+        ],
+    },
     url=pkg_json["homepage"],
     author=pkg_json["author"]["name"],
     author_email=pkg_json["author"]["email"],
