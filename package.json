@@ -1,6 +1,6 @@
 {
   "name": "@tiledb-inc/pybabylonjs",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "BabylonJS widget",
   "keywords": [
     "jupyter",
@@ -56,17 +56,16 @@
     "watch:nbextension": "NODE_OPTIONS=--max-old-space-size=4096 webpack --watch --mode=development"
   },
   "dependencies": {
-    "@babylonjs/core": "^4.2.1",
-    "babylonjs-materials": "^4.2.1",
-    "@babylonjs/inspector": "^4.2.1",
-    "@babylonjs/loaders": "^4.2.1",
+    "@babylonjs/core": "^5.0.0",
+    "babylonjs-materials": "^5.0.0",
+    "@babylonjs/inspector": "^5.0.0",
+    "@babylonjs/loaders": "^5.0.0",
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4",
     "@jupyterlab/application": "^3.2.0",
     "@tiledb-inc/tiledb-cloud": "^0.0.8",
     "babylonjs-gui": "^4.2.1"
   },
   "devDependencies": {
-    "@babylonjs/core": "^4.2.1",
     "@jupyterlab/builder": "^3.1.0",
     "@types/node": "^10.11.6",
     "@types/webpack-env": "^1.16.3",
