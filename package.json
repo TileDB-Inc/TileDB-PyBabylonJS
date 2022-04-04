@@ -1,6 +1,6 @@
 {
   "name": "@tiledb-inc/pybabylonjs",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "BabylonJS widget",
   "keywords": [
     "jupyter",
@@ -32,7 +32,6 @@
   },
   "scripts": {
     "build": "jlpm run build:lib && jlpm run build:labextension:dev",
-    "build:prod": "jlpm run clean && jlpm run build:lib && jlpm run build:labextension",
     "build:labextension": "jupyter labextension build .",
     "build:labextension:dev": "jupyter labextension build --development True .",
     "build:lib": "tsc",
@@ -64,10 +63,9 @@
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4",
     "@jupyterlab/application": "^3.2.0",
     "@tiledb-inc/tiledb-cloud": "^0.0.8",
-    "babylonjs-gui": "^5.0.0"
+    "babylonjs-gui": "^4.2.1"
   },
   "devDependencies": {
-    "@babylonjs/core": "^5.0.0",
     "@jupyterlab/builder": "^3.1.0",
     "@types/node": "^10.11.6",
     "@types/webpack-env": "^1.16.3",
