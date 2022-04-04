@@ -74,19 +74,18 @@ def create_ground(array_uri: str, **kwargs):
         io_buf = io.BytesIO(buffer)
         return io_buf.read()
 
-    bbox = kwargs['bbox']
-    nr = kwargs['img_nr']
+    bbox = kwargs["bbox"]
+    nr = kwargs["img_nr"]
 
     with tiledb.open(array_uri, "r") as arr:
-        img = arr[nr, bbox[0] : bbox[1], bbox[2] : bbox[3]][kwargs['attribute']]
+        img = arr[nr, bbox[0] : bbox[1], bbox[2] : bbox[3]][kwargs["attribute"]]
 
-    img_norm = 20 * np.log10(img * kwargs['scale_factor'])
+    img_norm = 20 * np.log10(img * kwargs["scale_factor"])
     img_png = (
-       (img_norm - np.min(img_norm)) / (np.max(img_norm) - np.min(img_norm))
+        (img_norm - np.min(img_norm)) / (np.max(img_norm) - np.min(img_norm))
     ) * 255
     binary_image = numpy_to_binary(img_png)
 
     [img_height, img_width] = np.shape(img)
 
     return dict(data=binary_image, img_width=img_width, img_height=img_height)
-    

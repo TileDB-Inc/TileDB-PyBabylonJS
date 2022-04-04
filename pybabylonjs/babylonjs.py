@@ -70,6 +70,7 @@ mbrs_schema = deepcopy(core_schema)
 
 ground_schema = {"type": "object"}
 
+
 class BabylonBase(DOMWidget):
     _model_module = Unicode(module_name).tag(sync=True)
     _model_module_version = Unicode(module_version).tag(sync=True)
