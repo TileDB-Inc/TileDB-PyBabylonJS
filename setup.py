@@ -48,6 +48,8 @@ setup_args = dict(
         "dev": [
             "matplotlib",
             "python-pdal",
+            "pandas",
+            "cv2",
         ],
     },
     url=pkg_json["homepage"],

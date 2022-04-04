@@ -10,7 +10,8 @@ import {
 import { MODULE_NAME, MODULE_VERSION } from './version';
 import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, StandardMaterial,
   SolidParticleSystem, MeshBuilder,
-  Vector3} from '@babylonjs/core';
+  Vector3,
+  Texture} from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/core/Debug/debugLayer";
@@ -260,16 +261,16 @@ export class BabylonMBRSView extends BabylonBaseView {
       const maxz = extents[5];
 
       const scale = this.zScale;
-
+ 
       var mat = new StandardMaterial('mt1', scene);
       mat.alpha = 0.9;
 
       const SPS = new SolidParticleSystem("SPS", scene);
       const box = MeshBuilder.CreateBox("b", {height: 1, width: 1, depth: 1});
       SPS.addShape(box, data.Xmin.length); 
-      box.dispose(); //dispose of original model box
+      box.dispose(); 
 
-      SPS.buildMesh(); // finally builds and displays the SPS mesh
+      SPS.buildMesh(); 
 
       SPS.initParticles = () => {
         for (let p = 0; p < SPS.nbParticles; p++) {
@@ -285,14 +286,73 @@ export class BabylonMBRSView extends BabylonBaseView {
       };
 
       SPS.mesh.hasVertexAlpha = true;
-      SPS.initParticles(); //call the initialising function
-      SPS.setParticles(); //apply the properties and display the mesh
+      SPS.initParticles(); 
+      SPS.setParticles(); 
       SPS.mesh.material = mat;
 
       scene.createDefaultCameraOrLight(true, true, true);
       let cam = scene.activeCamera as ArcRotateCamera;
       cam.wheelPrecision = this.wheelPrecision;
       cam.alpha += Math.PI;
+
+      return scene;
+    });
+  }
+}
+
+export class BabylonGroundModel extends BabylonBaseModel {
+  defaults(): any {
+    return {
+      ...super.defaults(),
+      _model_name: BabylonGroundModel.model_name,
+      _model_module: BabylonGroundModel.model_module,
+      _model_module_version: BabylonGroundModel.model_module_version,
+      _view_name: BabylonGroundModel.view_name,
+      _view_module: BabylonGroundModel.view_module,
+      _view_module_version: BabylonGroundModel.view_module_version,
+    };
+  }
+
+  static model_name = 'BabylonGroupModel';
+  static view_name = 'BabylonGroupView';
+}
+
+export class BabylonGroundView extends BabylonBaseView {
+
+  protected async createScene(): Promise<Scene> {
+    return super.createScene().then( ( scene ) => {
+      const data = this.values.data;
+      const img_height = this.values.img_height;
+      const img_width = this.values.img_width;
+      
+      scene.createDefaultCameraOrLight(true, true, true);
+      scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
+            
+      var blob = new Blob([data]);
+      var url = URL.createObjectURL(blob);
+      
+      const groundMaterial = new StandardMaterial("ground", scene);
+      groundMaterial.diffuseTexture = new Texture(url, scene);
+      groundMaterial.ambientColor = new Color3(0.5, 0.5, 0.5);
+      groundMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8);
+      groundMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
+      groundMaterial.specularPower = 32;
+
+      const ground = MeshBuilder.CreateGround("ground", {height: img_height*0.01, width: img_width*0.01, subdivisions: 16}, scene);
+      ground.material = groundMaterial;
+      
+      let camera = scene.activeCamera as ArcRotateCamera;
+      camera.panningAxis = new Vector3(1, 1, 0);
+      camera.upperBetaLimit = Math.PI / 2;
+      camera.panningSensibility = 1;
+      camera.panningInertia = 0.2;
+      camera._panningMouseButton = 0;
+      
+      if (this.wheelPrecision > 0)
+        camera.wheelPrecision = this.wheelPrecision;
+
+      camera.alpha += Math.PI;
+      camera.attachControl(this.canvas, true);
 
       return scene;
     });
