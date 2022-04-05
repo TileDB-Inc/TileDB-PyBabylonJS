@@ -333,12 +333,13 @@ export class BabylonGroundView extends BabylonBaseView {
       
       const groundMaterial = new StandardMaterial("ground", scene);
       groundMaterial.diffuseTexture = new Texture(url, scene);
+      groundMaterial.ambientTexture = new Texture(url, scene);
       groundMaterial.ambientColor = new Color3(0.5, 0.5, 0.5);
       groundMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8);
       groundMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
       groundMaterial.specularPower = 32;
 
-      const ground = MeshBuilder.CreateGround("ground", {height: img_height*0.01, width: img_width*0.01, subdivisions: 16}, scene);
+      const ground = MeshBuilder.CreateGround("ground", {height: img_height*0.005, width: img_width*0.005, subdivisions: 16}, scene);
       ground.material = groundMaterial;
       
       let camera = scene.activeCamera as ArcRotateCamera;

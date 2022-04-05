@@ -64,8 +64,8 @@ def create_ground(array_uri: str, **kwargs):
     Parameters:
     array_uri: uri of the dense array
     attribute: the attribute to load from the array
-    bbox: ranges of x and y to slice data on [x1,x2,y1,y2]
-    img_nr: image number to use as ground image
+    xy_bbox: ranges of x and y to slice data on [x1,x2,y1,y2]
+    band: band number to slice from the array
     scale_factor: factor to scale the values in the image
     """
 
@@ -74,13 +74,14 @@ def create_ground(array_uri: str, **kwargs):
         io_buf = io.BytesIO(buffer)
         return io_buf.read()
 
-    bbox = kwargs["bbox"]
-    nr = kwargs["img_nr"]
+    bbox = kwargs["xy_bbox"]
+    band = kwargs["band"]
+    scale_factor = kwargs["scale_factor"]
 
     with tiledb.open(array_uri, "r") as arr:
-        img = arr[nr, bbox[0] : bbox[1], bbox[2] : bbox[3]][kwargs["attribute"]]
+        img = arr[band, bbox[0] : bbox[1], bbox[2] : bbox[3]][kwargs["attribute"]]
 
-    img_norm = 20 * np.log10(img * kwargs["scale_factor"])
+    img_norm = 20 * np.log10(img * scale_factor)
     img_png = (
         (img_norm - np.min(img_norm)) / (np.max(img_norm) - np.min(img_norm))
     ) * 255
