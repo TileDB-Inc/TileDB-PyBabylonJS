@@ -313,8 +313,8 @@ export class BabylonGroundModel extends BabylonBaseModel {
     };
   }
 
-  static model_name = 'BabylonGroupModel';
-  static view_name = 'BabylonGroupView';
+  static model_name = 'BabylonGroundModel';
+  static view_name = 'BabylonGroundView';
 }
 
 export class BabylonGroundView extends BabylonBaseView {
@@ -324,7 +324,7 @@ export class BabylonGroundView extends BabylonBaseView {
       const data = this.values.data;
       const img_height = this.values.img_height;
       const img_width = this.values.img_width;
-      
+
       scene.createDefaultCameraOrLight(true, true, true);
       scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
             
