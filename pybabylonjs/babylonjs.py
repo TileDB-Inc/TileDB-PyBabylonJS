@@ -76,14 +76,15 @@ ground_schema = {
         "height": {"type": "number", "default": 600},
         "z_scale": {"type": "number", "default": 1},
         "wheel_precision": {"type": "number", "default": -1},
-        "xy_bbox": {"type": "array", "default": [0,1,0,1]},
+        "xy_bbox": {"type": "array", "default": [0, 1, 0, 1]},
         "band": {"type": "number", "default": 1},
         "scale_factor": {"type": "number", "default": 0.001},
         "img_width": {"type": "number"},
         "img_height": {"type": "number"},
     },
-     "required": ["img_width"],
+    "required": ["img_width"],
 }
+
 
 class BabylonBase(DOMWidget):
     _model_module = Unicode(module_name).tag(sync=True)
