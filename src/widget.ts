@@ -114,12 +114,20 @@ export class BabylonPCView extends BabylonBaseView {
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
       const isTime = this.values.time;
+      const isClass = this.values.classes;
       const scale = this.zScale;
       var doClear = false;
 
-      var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
-        updatable: isTime
-      });
+      if (isClass) {
+        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+          updatable: isClass
+        });
+      }
+      else {
+        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+          updatable: isTime
+        });
+      }
 
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
@@ -129,14 +137,16 @@ export class BabylonPCView extends BabylonBaseView {
           data.Y[i]
         );
 
-        if (isTime)
+        if (isTime || isClass) {
           particle.color = scene.clearColor;
-        else
+        }
+        else {
           particle.color = new Color3(
             data.Red[i],
             data.Green[i],
             data.Blue[i]
           );  
+        }
       };
 
       pcs.addPoints(numCoords, pcLoader);
@@ -206,6 +216,77 @@ export class BabylonPCView extends BabylonBaseView {
                 pcs.setParticles(value, pcs.counter);
               }
               pcs.counter = value;
+          });
+          
+          panel.addControl(slider);    
+        }
+
+        if (isClass) {
+          const classes = data.Class;
+
+          //todo: replace slider header with class name
+          //const class_names = new Map(Object.entries(this.values.class_names));
+          
+          var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
+                "UI",
+                true,
+                scene);
+
+          var panel = new StackPanel();
+          panel.width = "220px";
+          panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+          panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+          advancedTexture.addControl(panel);
+
+          var header = new TextBlock();
+          var slider_classes: number[] = Array.from(new Set(classes))
+          
+          header.text = slider_classes[0].toFixed(2);
+          header.height = "30px";
+          header.color = "white";
+          panel.addControl(header);
+
+          var slider = new Slider("Classes");
+          slider.minimum = 0;
+          slider.maximum = slider_classes.length;
+          slider.step = 1;
+          slider.value = slider_classes[0];
+          slider.height = "20px";
+          slider.width = "200px";
+
+          // todo: random colors for each class
+
+          // todo: initial dataviz shows all classes
+
+          pcs.updateParticle = function (particle: any) {
+            if (doClear)
+              particle.color = scene.clearColor;
+            else
+             particle.color = new Color3(
+                data.Red[particle.idx],
+                data.Green[particle.idx],
+                data.Blue[particle.idx]
+              );
+
+            return particle;
+          };
+
+          slider.onValueChangedObservable.add(
+            function(value:any) {
+              header.text = slider_classes[value].toFixed(2);
+
+              var start = data.Class.indexOf(slider_classes[value]);
+              var finish = data.Class.lastIndexOf(slider_classes[value]);
+
+              console.log("start > finish");
+              console.log(start);
+              console.log(finish); 
+
+              doClear = true;
+              pcs.setParticles(0, numCoords);
+
+              doClear = false;
+              pcs.setParticles(start, finish);
           });
           
           panel.addControl(slider);    
