@@ -68,6 +68,24 @@ pc_schema["properties"]["data"]["required"].extend(attrs)
 
 mbrs_schema = deepcopy(core_schema)
 
+ground_schema = {
+    "type": "object",
+    "properties": {
+        "inspector": {"type": "boolean", "default": False},
+        "image_type": {"type": "string", "default": "general"},
+        "width": {"type": "number", "default": 800},
+        "height": {"type": "number", "default": 600},
+        "z_scale": {"type": "number", "default": 1},
+        "wheel_precision": {"type": "number", "default": -1},
+        "xy_bbox": {"type": "array", "default": [0, 1, 0, 1]},
+        "band": {"type": "number", "default": 1},
+        "scale_factor": {"type": "number", "default": 1},
+        "img_width": {"type": "number"},
+        "img_height": {"type": "number"},
+    },
+    "required": ["xy_bbox", "img_width"],
+}
+
 
 class BabylonBase(DOMWidget):
     _model_module = Unicode(module_name).tag(sync=True)
@@ -104,3 +122,13 @@ class BabylonMBRS(BabylonBase):
     _view_name = Unicode("BabylonMBRSView").tag(sync=True)
     value = Dict().tag(sync=True)
     _schema = mbrs_schema
+
+
+@register
+class BabylonGround(BabylonBase):
+    """Ground surface as 2D array with BabylonJS"""
+
+    _model_name = Unicode("BabylonGroundModel").tag(sync=True)
+    _view_name = Unicode("BabylonGroundView").tag(sync=True)
+    value = Dict().tag(sync=True)
+    _schema = ground_schema
