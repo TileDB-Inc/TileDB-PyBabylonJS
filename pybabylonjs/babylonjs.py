@@ -72,17 +72,18 @@ ground_schema = {
     "type": "object",
     "properties": {
         "inspector": {"type": "boolean", "default": False},
+        "image_type": {"type": "string", "default": "general"},
         "width": {"type": "number", "default": 800},
         "height": {"type": "number", "default": 600},
         "z_scale": {"type": "number", "default": 1},
         "wheel_precision": {"type": "number", "default": -1},
         "xy_bbox": {"type": "array", "default": [0, 1, 0, 1]},
         "band": {"type": "number", "default": 1},
-        "scale_factor": {"type": "number", "default": 0.001},
+        "scale_factor": {"type": "number", "default": 1},
         "img_width": {"type": "number"},
         "img_height": {"type": "number"},
     },
-    "required": ["img_width"],
+    "required": ["xy_bbox", "img_width"],
 }
 
 

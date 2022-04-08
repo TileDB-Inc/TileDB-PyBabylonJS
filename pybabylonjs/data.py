@@ -76,16 +76,16 @@ def create_ground(array_uri: str, **kwargs):
 
     bbox = kwargs["xy_bbox"]
     band = kwargs["band"]
-    scale_factor = kwargs["scale_factor"]
+    image_type = kwargs["image_type"]
+    sar_scale_factor = kwargs["sar_scale_factor"]
 
     with tiledb.open(array_uri, "r") as arr:
         img = arr[band, bbox[0] : bbox[1], bbox[2] : bbox[3]][kwargs["attribute"]]
 
-    img_norm = 20 * np.log10(img * scale_factor)
-    img_png = (
-        (img_norm - np.min(img_norm)) / (np.max(img_norm) - np.min(img_norm))
-    ) * 255
-    binary_image = numpy_to_binary(img_png)
+    if image_type == "sar":
+        img = 20 * np.log10(img * sar_scale_factor)
+        img = ((img - np.min(img)) / (np.max(img) - np.min(img))) * 255
+    binary_image = numpy_to_binary(img)
 
     [img_height, img_width] = np.shape(img)
 

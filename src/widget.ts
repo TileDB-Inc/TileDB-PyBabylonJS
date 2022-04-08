@@ -259,7 +259,6 @@ export class BabylonMBRSView extends BabylonBaseView {
       const maxy = extents[3];
       const minz = extents[4];
       const maxz = extents[5];
-
       const scale = this.zScale;
  
       var mat = new StandardMaterial('mt1', scene);
