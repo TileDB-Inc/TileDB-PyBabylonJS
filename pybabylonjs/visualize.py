@@ -25,7 +25,14 @@ class Show:
         self._dataviz = None
 
     @classmethod
-    def from_dict(self, data: dict, style: str, time: Optional[bool] = False, classes: Optional[bool] = False, **kwargs):
+    def from_dict(
+        self,
+        data: dict,
+        style: str,
+        time: Optional[bool] = False,
+        classes: Optional[bool] = False,
+        **kwargs,
+    ):
         if style == "pointcloud":
             dataviz = BabylonPC()
             d = {"classes": classes, "time": time, "data": data}
