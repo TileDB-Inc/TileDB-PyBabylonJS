@@ -55,11 +55,11 @@ core_schema = {
         "time": {"type": "boolean", "default": False},
         "time_offset": {"type": "number", "default": 0},
         "classes": {"type": "boolean", "default": False},
-        "class_names": {"type": "object"},
+        "class_numbers": {"type": "array"},
+        "class_names": {"type": "array"},
         "gltf_data": {"type": "string"},
         "point_size": {"type": "number", "default": 1},
         "data": {"type": "object", "properties": {}, "required": []},
-        "extents": {"type": "array", "items": {"type": "number"}, "maxItems": 6},
     },
     "required": ["data"],
 }

@@ -137,7 +137,7 @@ export class BabylonPCView extends BabylonBaseView {
           data.Y[i]
         );
 
-        if (isTime || isClass) {
+        if (isTime) {
           particle.color = scene.clearColor;
         }
         else {
@@ -223,10 +223,9 @@ export class BabylonPCView extends BabylonBaseView {
 
         if (isClass) {
           const classes = data.Class;
+          const class_numbers = this.values.class_numbers;
+          const class_names = this.values.class_names;
 
-          //todo: replace slider header with class name
-          //const class_names = new Map(Object.entries(this.values.class_names));
-          
           var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
                 "UI",
                 true,
@@ -241,7 +240,7 @@ export class BabylonPCView extends BabylonBaseView {
           var header = new TextBlock();
           var slider_classes: number[] = Array.from(new Set(classes))
           
-          header.text = slider_classes[0].toFixed(2);
+          header.text = "All";
           header.height = "30px";
           header.color = "white";
           panel.addControl(header);
@@ -253,10 +252,6 @@ export class BabylonPCView extends BabylonBaseView {
           slider.value = slider_classes[0];
           slider.height = "20px";
           slider.width = "200px";
-
-          // todo: random colors for each class
-
-          // todo: initial dataviz shows all classes
 
           pcs.updateParticle = function (particle: any) {
             if (doClear)
@@ -273,14 +268,12 @@ export class BabylonPCView extends BabylonBaseView {
 
           slider.onValueChangedObservable.add(
             function(value:any) {
-              header.text = slider_classes[value].toFixed(2);
+              
+              var v: number = class_numbers.indexOf(slider_classes[value]);
+              header.text = class_names[v];
 
               var start = data.Class.indexOf(slider_classes[value]);
               var finish = data.Class.lastIndexOf(slider_classes[value]);
-
-              console.log("start > finish");
-              console.log(start);
-              console.log(finish); 
 
               doClear = true;
               pcs.setParticles(0, numCoords);
