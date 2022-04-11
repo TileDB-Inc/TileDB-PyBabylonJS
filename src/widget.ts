@@ -114,12 +114,24 @@ export class BabylonPCView extends BabylonBaseView {
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
       const isTime = this.values.time;
+      const times = data.GpsTime;
+      const offset = this.values.time_offset;
+      const isClass = this.values.classes;
+      const class_numbers = this.values.class_numbers;
+      const class_names = this.values.class_names;
       const scale = this.zScale;
       var doClear = false;
 
-      var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
-        updatable: isTime
-      });
+      if (isClass) {
+        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+          updatable: isClass
+        });
+      }
+      else {
+        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+          updatable: isTime
+        });
+      }
 
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
@@ -129,14 +141,16 @@ export class BabylonPCView extends BabylonBaseView {
           data.Y[i]
         );
 
-        if (isTime)
+        if (isTime) {
           particle.color = scene.clearColor;
-        else
+        }
+        else {
           particle.color = new Color3(
             data.Red[i],
             data.Green[i],
             data.Blue[i]
           );  
+        }
       };
 
       pcs.addPoints(numCoords, pcLoader);
@@ -152,14 +166,12 @@ export class BabylonPCView extends BabylonBaseView {
       return Promise.all(tasks).then(() => {
         scene.createDefaultCameraOrLight(true, true, false);
 
-        if (isTime) {
-          const times = data.GpsTime;
-          const offset = this.values.time_offset;
+        if (isTime || isClass) {
 
           var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
-                "UI",
-                true,
-                scene);
+            "UI",
+            true,
+            scene);
 
           var panel = new StackPanel();
           panel.width = "220px";
@@ -168,18 +180,31 @@ export class BabylonPCView extends BabylonBaseView {
           advancedTexture.addControl(panel);
 
           var header = new TextBlock();
-          header.text = "Time: " + (offset +  times[0]).toFixed(2);
           header.height = "30px";
           header.color = "white";
-          panel.addControl(header);
-
-          var slider = new Slider("GpsTime");
+          
+          var slider = new Slider("Slider");
           slider.minimum = 0;
-          slider.maximum = data.GpsTime.length - 1;
           slider.step = 1;
-          slider.value = 0;
           slider.height = "20px";
           slider.width = "200px";
+
+          if (isTime) {
+            header.text = "Time: " + (offset +  times[0]).toFixed(2);
+
+            slider.maximum = data.GpsTime.length - 1;
+            slider.value = 0; 
+          
+          }
+          if (isClass) {
+            header.text = "All";
+
+            var slider_classes: number[] = Array.from(new Set(data.Class))
+            slider.maximum = slider_classes.length;
+            slider.value = slider_classes[0];
+          }
+
+          panel.addControl(header);
 
           pcs.updateParticle = function (particle: any) {
             if (doClear)
@@ -196,18 +221,33 @@ export class BabylonPCView extends BabylonBaseView {
 
           slider.onValueChangedObservable.add(
             function(value:any) {
-              header.text = "Time: " + (offset + times[value]).toFixed(2);
+              if (isTime) {
+                header.text = "Time: " + (offset + times[value]).toFixed(2);
 
-              if (value > pcs.counter) {
-                doClear = false;
-                pcs.setParticles(pcs.counter, value);
-              } else {
-                doClear = true;
-                pcs.setParticles(value, pcs.counter);
+                if (value > pcs.counter) {
+                  doClear = false;
+                  pcs.setParticles(pcs.counter, value);
+                } else {
+                  doClear = true;
+                  pcs.setParticles(value, pcs.counter);
+                }
+                pcs.counter = value;                
               }
-              pcs.counter = value;
+              if (isClass) {
+                var v: number = class_numbers.indexOf(slider_classes[value]);
+                header.text = class_names[v];
+
+                var start = data.Class.indexOf(slider_classes[value]);
+                var finish = data.Class.lastIndexOf(slider_classes[value]);
+
+                doClear = true;
+                pcs.setParticles(0, numCoords);
+
+                doClear = false;
+                pcs.setParticles(start, finish);
+              }
           });
-          
+
           panel.addControl(slider);    
         }
 
