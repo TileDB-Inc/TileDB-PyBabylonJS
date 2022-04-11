@@ -73,7 +73,7 @@ stages:
       env:
         NPM_TOKEN: $(NPM_TOKEN)
 
-    - script: jlpm run build:prod
+    - script: jlpm run build:prod && git status && python setup.py --version
       displayName: 'Build jupyterlab extension'
       env:
         NPM_TOKEN: $(NPM_TOKEN)
@@ -83,7 +83,7 @@ stages:
         versionSpec: '$(python.version)'
         architecture: 'x64'
       # Build the python distribution from source
-    - script: python -m build
+    - script: python -m build && git status && python setup.py --version
       displayName: 'Build python'
       condition: ne(variables['Agent.OS'], 'Windows_NT')
       env:
