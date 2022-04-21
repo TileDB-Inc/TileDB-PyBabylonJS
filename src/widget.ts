@@ -20,7 +20,6 @@ import "@babylonjs/inspector";
 // Import the CSS
 import '../css/widget.css';
 
-
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
   static model_module_version = MODULE_VERSION;
@@ -298,42 +297,61 @@ export class BabylonMBRSView extends BabylonBaseView {
       const miny = extents[2];
       const maxy = extents[3];
       const minz = extents[4];
-      const maxz = extents[5];
+      const xy_length = Math.min(Math.max(maxx)-Math.min(minx),Math.max(maxy)-Math.min(miny))
       const scale = this.zScale;
- 
+
+      // set up camera
+      scene.createDefaultCameraOrLight(true, true, true)
+      let camera = scene.activeCamera as ArcRotateCamera;
+      camera.alpha += Math.PI;
+      camera.upperBetaLimit = Math.PI / 2;
+      camera.panningAxis = new Vector3(1, 1, 0);
+      camera.panningSensibility = 0.9;
+      camera.panningInertia = 0.2;
+      camera._panningMouseButton = 0;
+
+      if (this.wheelPrecision > 0)
+        camera.wheelPrecision = this.wheelPrecision;
+
+      camera.setTarget(new Vector3((((maxx+minx)/2) - minx) / xy_length, 0, (((maxy+miny)/2) - miny) / xy_length));
+      camera.attachControl(this.canvas, true);
+
       var mat = new StandardMaterial('mt1', scene);
-      mat.alpha = 0.9;
+      mat.alpha = 0.85;
+      mat.diffuseColor = new Color3(0, 0, 0);
+      mat.emissiveColor = new Color3(0.5, 0.5, 0.5);
 
-      const SPS = new SolidParticleSystem("SPS", scene);
+      // create initial particles
+      const SPS = new SolidParticleSystem("SPS", scene, {enableDepthSort: true});
       const box = MeshBuilder.CreateBox("b", {height: 1, width: 1, depth: 1});
-      SPS.addShape(box, data.Xmin.length); 
+      SPS.addShape(box, data.Xmin.length);
+      var mesh = SPS.buildMesh();
+      mesh.material = mat;
       box.dispose(); 
-
-      SPS.buildMesh(); 
-
+      
+      // add dimensions and a random color to each of the particles
       SPS.initParticles = () => {
         for (let p = 0; p < SPS.nbParticles; p++) {
-            const particle = SPS.particles[p];
-            particle.position.x = ((data.Xmax[p]+data.Xmin[p])/2 - minx) / (maxx - minx);
-            particle.position.y = ((data.Ymax[p]+data.Ymin[p])/2 - miny) / (maxy - miny);
-            particle.position.z = (((data.Zmax[p]+data.Zmin[p])/2 - minz) / (maxz - minz)) * scale;
-            particle.scaling.x = (data.Xmax[p]-data.Xmin[p]) / (maxx - minx);
-            particle.scaling.y = (data.Ymax[p]-data.Ymin[p]) / (maxy - miny);
-            particle.scaling.z = ( (data.Zmax[p]-data.Zmin[p]) / (maxz - minz) ) * scale;
-            particle.color = new Color4(0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6,0.9);
+          const particle = SPS.particles[p];
+          particle.position.x = (((data.Xmax[p]+data.Xmin[p])/2) - minx) / xy_length;
+          particle.position.y = ((((data.Zmax[p]+data.Zmin[p])/2) - minz) / xy_length ) * scale;  
+          particle.position.z = (((data.Ymax[p]+data.Ymin[p])/2) - miny) / xy_length;
+          particle.scaling.x = (data.Xmax[p]-data.Xmin[p]) / xy_length;
+          particle.scaling.y = ((data.Zmax[p]-data.Zmin[p]) / xy_length) * scale;  
+          particle.scaling.z = (data.Ymax[p]-data.Ymin[p]) / xy_length;
+          particle.color = new Color4(0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6,0.9);   
         }
       };
 
-      SPS.mesh.hasVertexAlpha = true;
-      SPS.initParticles(); 
-      SPS.setParticles(); 
-      SPS.mesh.material = mat;
+      // update SPS mesh
+      SPS.initParticles();
+      SPS.setParticles();
 
-      scene.createDefaultCameraOrLight(true, true, true);
-      let cam = scene.activeCamera as ArcRotateCamera;
-      cam.wheelPrecision = this.wheelPrecision;
-      cam.alpha += Math.PI;
-
+      // animation
+      scene.registerBeforeRender(function() {
+        SPS.setParticles();
+      });
+      
       return scene;
     });
   }

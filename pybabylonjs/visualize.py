@@ -51,7 +51,7 @@ class Show:
         if style == "mbrs":
             dataviz = BabylonMBRS()
             d = create_mbrs(array_uri)
-        if style == "ground":
+        elif style == "ground":
             dataviz = BabylonGround()
             d = create_ground(array_uri, **kwargs)
         else:
