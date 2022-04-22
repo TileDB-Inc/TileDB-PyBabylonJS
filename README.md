@@ -108,27 +108,45 @@ Visualize the 3D point cloud with `pybabylonjs.Show.from_dict()` by specifying `
 show.from_dict(data=data,
                 style = 'pointcloud',
                 width = 800,
-                height = 600,
-                z_scale = .3,
-                wheel_precision = 50)
+                height = 600)
 ```
 
 This creates an interactive visualization in a notebook widget of which the below is a screenshot:
 
 <img src="examples/pointcloud.png"  width="400" height="300" />
 
-### 3D MBRS visualization
-
-This visualization is created directly from a sparse array by specifying the `array`, the style as `mbrs` and optional `height` and `width` parameters:
+To add a slider over time sort the data by `GpsTime` and add the parameter `time=True`:
 
 ```python
-show.from_array(array='autzen',
+with tiledb.open("autzen") as arr:
+    df = pd.DataFrame(arr[636800:637800, 851000:853000, 406.14:615.26])
+    
+df.sort_values(by=["GpsTime"], inplace=True)
+
+data = {
+    'X': df['X'],
+    'Y': df['Y'],
+    'Z': df['Z'],
+    'Red': df['Red'] / 255.0,
+    'Green': df['Green'] / 255.0,
+    'Blue': df['Blue'] / 255.0,
+    'GpsTime': df['GpsTime']}
+
+show.from_dict(data=data, style="pointcloud", time=True)
+```    
+
+### 3D MBRS visualization
+
+This visualization is created directly from a sparse array by specifying the `array_uri`, the style as `mbrs` and optional `height` and `width` parameters:
+
+```python
+show.from_array(array_uri='autzen',
                 style='mbrs',
                 width=800,
                 height=600,
                 z_scale = 0.5)
 ```
 
-Which creates the below interactive visualization in a notebook widget of which the below is a screenshot:
+This creates an interactive visualization in a notebook widget of which the below is a screenshot:
 
 <img src="examples/mbrs.png"  width="400" height="300" />
