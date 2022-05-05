@@ -87,24 +87,24 @@ abstract class BabylonBaseView extends DOMWidgetView {
 
 }
 
-export class BabylonPCModel extends BabylonBaseModel {
+export class BabylonPointCloudModel extends BabylonBaseModel {
   defaults(): any {
     return {
       ...super.defaults(),
-      _model_name: BabylonPCModel.model_name,
-      _model_module: BabylonPCModel.model_module,
-      _model_module_version: BabylonPCModel.model_module_version,
-      _view_name: BabylonPCModel.view_name,
-      _view_module: BabylonPCModel.view_module,
-      _view_module_version: BabylonPCModel.view_module_version,
+      _model_name: BabylonPointCloudModel.model_name,
+      _model_module: BabylonPointCloudModel.model_module,
+      _model_module_version: BabylonPointCloudModel.model_module_version,
+      _view_name: BabylonPointCloudModel.view_name,
+      _view_module: BabylonPointCloudModel.view_module,
+      _view_module_version: BabylonPointCloudModel.view_module_version,
     };
   }
 
-  static model_name = 'BabylonPCModel';
-  static view_name = 'BabylonPCView';
+  static model_name = 'BabylonPointCloudModel';
+  static view_name = 'BabylonPointCloudView';
 }
 
-export class BabylonPCView extends BabylonBaseView {
+export class BabylonPointCloudView extends BabylonBaseView {
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then( ( scene ) => {
@@ -357,24 +357,24 @@ export class BabylonMBRSView extends BabylonBaseView {
   }
 }
 
-export class BabylonGroundModel extends BabylonBaseModel {
+export class BabylonImageModel extends BabylonBaseModel {
   defaults(): any {
     return {
       ...super.defaults(),
-      _model_name: BabylonGroundModel.model_name,
-      _model_module: BabylonGroundModel.model_module,
-      _model_module_version: BabylonGroundModel.model_module_version,
-      _view_name: BabylonGroundModel.view_name,
-      _view_module: BabylonGroundModel.view_module,
-      _view_module_version: BabylonGroundModel.view_module_version,
+      _model_name: BabylonImageModel.model_name,
+      _model_module: BabylonImageModel.model_module,
+      _model_module_version: BabylonImageModel.model_module_version,
+      _view_name: BabylonImageModel.view_name,
+      _view_module: BabylonImageModel.view_module,
+      _view_module_version: BabylonImageModel.view_module_version,
     };
   }
 
-  static model_name = 'BabylonGroundModel';
-  static view_name = 'BabylonGroundView';
+  static model_name = 'BabylonImageModel';
+  static view_name = 'BabylonImageView';
 }
 
-export class BabylonGroundView extends BabylonBaseView {
+export class BabylonImageView extends BabylonBaseView {
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then( ( scene ) => {

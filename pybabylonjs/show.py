@@ -5,8 +5,13 @@
 from IPython.display import display
 from typing import Optional
 
-from .babylonjs import BabylonPC, BabylonMBRS, BabylonGround
+from .babylonjs import BabylonPointCloud, BabylonMBRS, BabylonImage
 from .data import *
+
+
+def create_dataviz(dataviz, d, **kwargs):
+    dataviz.value = {**d, **kwargs}
+    display(dataviz)
 
 
 class PyBabylonJSError(Exception):
@@ -25,40 +30,34 @@ class Show:
         self._dataviz = None
 
     @classmethod
-    def from_dict(
+    def point_cloud(
         self,
         data: dict,
-        style: str,
         time: Optional[bool] = False,
         classes: Optional[bool] = False,
+        # topo: Optional[bool] = False,
         **kwargs,
     ):
-        if style == "pointcloud":
-            dataviz = BabylonPC()
-            d = {"classes": classes, "time": time, "data": data}
-            dataviz.value = {**d, **kwargs}
-            display(dataviz)
-        else:
-            raise PyBabylonJSError(f"Unsupported style {style}")
+        d = {"classes": classes, "time": time, "data": data}
+        create_dataviz(BabylonPointCloud(), d, **kwargs)
 
     @classmethod
-    def from_array(
+    def image(
         self,
         array_uri: str,
-        style: str,
         **kwargs,
     ):
-        if style == "mbrs":
-            dataviz = BabylonMBRS()
-            d = create_mbrs(array_uri)
-        elif style == "ground":
-            dataviz = BabylonGround()
-            d = create_ground(array_uri, **kwargs)
-        else:
-            raise PyBabylonJSError(f"Unsupported style {style}")
+        d = create_image(array_uri, **kwargs)
+        create_dataviz(BabylonImage(), d, **kwargs)
 
-        dataviz.value = {**d, **kwargs}
-        display(dataviz)
+    @classmethod
+    def mbrs(
+        self,
+        array_uri: str,
+        **kwargs,
+    ):
+        d = create_mbrs(array_uri)
+        create_dataviz(BabylonMBRS(), d, **kwargs)
 
 
 class BabylonJS:
@@ -82,4 +81,5 @@ class BabylonJS:
         if self.height:
             kwargs["height"] = self.height
 
-        Show.from_dict(data=self.value, style="pointcloud", **kwargs)
+        d = {"data": self.value}
+        create_dataviz(BabylonPointCloud(), d, **kwargs)

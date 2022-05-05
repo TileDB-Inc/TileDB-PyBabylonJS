@@ -2,10 +2,7 @@
 # Licensed under the MIT License.
 """Functions to format data from the arrays to be used in the visualization."""
 
-# from array import array
 import io
-import json
-from datetime import datetime
 import numpy as np
 import pandas as pd
 import cv2
@@ -58,7 +55,7 @@ def create_mbrs(array_uri: str):
     return dict(extents=extents, data=data)
 
 
-def create_ground(array_uri: str, **kwargs):
+def create_image(array_uri: str, **kwargs):
     """Create a Dict to be passed on to BabylonGround containing images as blobs.
 
     Parameters:
@@ -77,13 +74,13 @@ def create_ground(array_uri: str, **kwargs):
     bbox = kwargs["xy_bbox"]
     band = kwargs["band"]
     image_type = kwargs["image_type"]
-    sar_scale_factor = kwargs["sar_scale_factor"]
+    sar_scale = kwargs["sar_scale_factor"]
 
     with tiledb.open(array_uri, "r") as arr:
         img = arr[band, bbox[0] : bbox[1], bbox[2] : bbox[3]][kwargs["attribute"]]
 
     if image_type == "sar":
-        img = 20 * np.log10(img * sar_scale_factor)
+        img = 20 * np.log10(img * sar_scale)
         img = ((img - np.min(img)) / (np.max(img) - np.min(img))) * 255
     binary_image = numpy_to_binary(img)
 
