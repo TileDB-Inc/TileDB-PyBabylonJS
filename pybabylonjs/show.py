@@ -35,10 +35,13 @@ class Show:
         data: dict,
         time: Optional[bool] = False,
         classes: Optional[bool] = False,
-        # topo: Optional[bool] = False,
+        topo: Optional[bool] = False,
         **kwargs,
     ):
-        d = {"classes": classes, "time": time, "data": data}
+        d = {"classes": classes, "time": time, "topo": topo, "data": data}
+        if topo:
+            img = create_mapbox_image(data, **kwargs)
+            d = {**d, "mapbox_img": img}
         create_dataviz(BabylonPointCloud(), d, **kwargs)
 
     @classmethod

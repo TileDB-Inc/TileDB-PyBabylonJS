@@ -118,8 +118,12 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const isClass = this.values.classes;
       const class_numbers = this.values.class_numbers;
       const class_names = this.values.class_names;
+      const isTopo = this.values.topo;
       const scale = this.zScale;
       var doClear = false;
+
+      console.log("isTopo")
+      console.log(isTopo)
 
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
@@ -250,6 +254,44 @@ export class BabylonPointCloudView extends BabylonBaseView {
           panel.addControl(slider);    
         }
 
+        if(isTopo) {
+        
+          const mapbox_img = this.values.mapbox_img;
+          var blob = new Blob([mapbox_img]);
+          var url = URL.createObjectURL(blob);
+  
+          //console.log("blob")
+          //console.log(blob)
+  
+          const mat = new StandardMaterial("mat", scene);
+          mat.emissiveColor = Color3.Random();
+          mat.diffuseTexture = new Texture(url, scene);
+          mat.ambientTexture = new Texture(url, scene);
+          
+          //var xmin = Math.min(...data.X)
+          const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+          const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+          const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+          const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+
+          console.log("position")
+          console.log((xmin+xmax)/2)
+          console.log((ymin+ymax)/2)
+          console.log("scaling")
+          console.log(xmax-xmin)
+          console.log(ymax-ymin)
+
+          //abstractPlane = Plane.FromPositionAndNormal(new BABYLON.Vector3(1, 1, 1), new BABYLON.Vector3(0.2, 0.5, -1));
+
+          const plane = MeshBuilder.CreatePlane("plane", {height:1, width: 1}, scene);
+          plane.position.x = (xmin+xmax)/2;
+          plane.position.y = 0;
+          plane.position.z = (ymin+ymax)/2;
+          plane.scaling.x = xmax-xmin;
+          plane.scaling.z = ymax-ymin;
+          plane.material = mat;
+        }
+
         let camera = scene.activeCamera as ArcRotateCamera;
         // possibly make these configurable, but they are good defaults
         camera.panningAxis = new Vector3(1, 1, 0);
@@ -262,7 +304,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
           camera.wheelPrecision = this.wheelPrecision;
 
         camera.alpha += Math.PI;
-        camera.attachControl(this.canvas, true);
+        camera.attachControl(this.canvas, false);
 
         return scene;
       });
@@ -314,7 +356,7 @@ export class BabylonMBRSView extends BabylonBaseView {
         camera.wheelPrecision = this.wheelPrecision;
 
       camera.setTarget(new Vector3((((maxx+minx)/2) - minx) / xy_length, 0, (((maxy+miny)/2) - miny) / xy_length));
-      camera.attachControl(this.canvas, true);
+      camera.attachControl(this.canvas, false);
 
       var mat = new StandardMaterial('mt1', scene);
       mat.alpha = 0.85;
@@ -410,7 +452,7 @@ export class BabylonImageView extends BabylonBaseView {
         camera.wheelPrecision = this.wheelPrecision;
 
       camera.alpha += Math.PI;
-      camera.attachControl(this.canvas, true);
+      camera.attachControl(this.canvas, false);
 
       return scene;
     });
