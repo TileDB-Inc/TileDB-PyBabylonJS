@@ -254,6 +254,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
           panel.addControl(slider);    
         }
 
+        const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+        const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+        const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+        const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+
         if(isTopo) {
         
           const mapbox_img = this.values.mapbox_img;
@@ -269,11 +274,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
           mat.ambientTexture = new Texture(url, scene);
           
           //var xmin = Math.min(...data.X)
-          const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-          const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-          const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-          const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-
+          
           console.log("position")
           console.log((xmin+xmax)/2)
           console.log((ymin+ymax)/2)
@@ -285,10 +286,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
           const plane = MeshBuilder.CreatePlane("plane", {height:1, width: 1}, scene);
           plane.position.x = (xmin+xmax)/2;
-          plane.position.y = 0;
+          //plane.position.z = 0;
           plane.position.z = (ymin+ymax)/2;
           plane.scaling.x = xmax-xmin;
-          plane.scaling.z = ymax-ymin;
+          plane.scaling.y = ymax-ymin;
           plane.material = mat;
         }
 
@@ -304,6 +305,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
           camera.wheelPrecision = this.wheelPrecision;
 
         camera.alpha += Math.PI;
+        camera.setTarget(new Vector3((xmin+xmax)/2, 0, (ymin+ymax)/2));
         camera.attachControl(this.canvas, false);
 
         return scene;
