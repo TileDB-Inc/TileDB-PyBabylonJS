@@ -119,11 +119,15 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const class_numbers = this.values.class_numbers;
       const class_names = this.values.class_names;
       const isTopo = this.values.topo;
+      const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
       var doClear = false;
 
-      console.log("isTopo")
-      console.log(isTopo)
+      const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+      const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+      const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      
 
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
@@ -140,7 +144,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         // Y is up
         particle.position = new Vector3(
           data.X[i],
-          data.Z[i] * scale,
+          (data.Z[i]-topo_offset) * scale,
           data.Y[i]
         );
 
@@ -254,43 +258,21 @@ export class BabylonPointCloudView extends BabylonBaseView {
           panel.addControl(slider);    
         }
 
-        const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-        const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-        const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-        const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-
         if(isTopo) {
         
           const mapbox_img = this.values.mapbox_img;
           var blob = new Blob([mapbox_img]);
           var url = URL.createObjectURL(blob);
   
-          //console.log("blob")
-          //console.log(blob)
-  
           const mat = new StandardMaterial("mat", scene);
           mat.emissiveColor = Color3.Random();
           mat.diffuseTexture = new Texture(url, scene);
           mat.ambientTexture = new Texture(url, scene);
           
-          //var xmin = Math.min(...data.X)
-          
-          console.log("position")
-          console.log((xmin+xmax)/2)
-          console.log((ymin+ymax)/2)
-          console.log("scaling")
-          console.log(xmax-xmin)
-          console.log(ymax-ymin)
+          const options = {xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax};
+          const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
+          ground.material = mat;
 
-          //abstractPlane = Plane.FromPositionAndNormal(new BABYLON.Vector3(1, 1, 1), new BABYLON.Vector3(0.2, 0.5, -1));
-
-          const plane = MeshBuilder.CreatePlane("plane", {height:1, width: 1}, scene);
-          plane.position.x = (xmin+xmax)/2;
-          //plane.position.z = 0;
-          plane.position.z = (ymin+ymax)/2;
-          plane.scaling.x = xmax-xmin;
-          plane.scaling.y = ymax-ymin;
-          plane.material = mat;
         }
 
         let camera = scene.activeCamera as ArcRotateCamera;

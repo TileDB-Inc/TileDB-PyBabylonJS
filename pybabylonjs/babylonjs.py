@@ -57,6 +57,8 @@ core_schema = {
         "classes": {"type": "boolean", "default": False},
         "class_numbers": {"type": "array"},
         "class_names": {"type": "array"},
+        "topo": {"type": "boolean", "default": False},
+        "topo_offset": {"type": "number", "default": 0},
         "gltf_data": {"type": "string"},
         "point_size": {"type": "number", "default": 1},
         "data": {"type": "object", "properties": {}, "required": []},

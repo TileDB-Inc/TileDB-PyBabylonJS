@@ -99,6 +99,7 @@ def create_mapbox_image(data: dict, **kwargs):
     from rasterio.warp import transform_bounds
 
     mbtoken = kwargs["mbtoken"]
+    style_id = kwargs["mbstyle"]
     data_crs = kwargs["crs"]
 
     dst_crs = {"init": "EPSG:4326"}  # lat/lon
@@ -110,7 +111,9 @@ def create_mapbox_image(data: dict, **kwargs):
 
     f = requests.get(
         (
-            "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/["
+            "https://api.mapbox.com/styles/v1/mapbox/"
+            + style_id
+            + "/static/["
             + str(dst_bbox[0])
             + ","
             + str(dst_bbox[1])
@@ -118,7 +121,7 @@ def create_mapbox_image(data: dict, **kwargs):
             + str(dst_bbox[2])
             + ","
             + str(dst_bbox[3])
-            + "]/400x400?access_token="
+            + "]/1280x1280?access_token="
             + mbtoken
         )
     )
