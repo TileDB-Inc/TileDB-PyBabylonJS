@@ -128,7 +128,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
       const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       
-
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isClass
@@ -405,8 +404,7 @@ export class BabylonImageView extends BabylonBaseView {
   protected async createScene(): Promise<Scene> {
     return super.createScene().then( ( scene ) => {
       const data = this.values.data;
-      const img_height = this.values.img_height;
-      const img_width = this.values.img_width;
+      const bbox = this.values.xy_bbox;
 
       scene.createDefaultCameraOrLight(true, true, true);
       scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
@@ -422,7 +420,12 @@ export class BabylonImageView extends BabylonBaseView {
       groundMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
       groundMaterial.specularPower = 32;
 
-      const ground = MeshBuilder.CreateGround("ground", {height: img_height*0.005, width: img_width*0.005, subdivisions: 16}, scene);
+      const xmin = bbox[0];
+      const xmax = bbox[1];
+      const ymin = bbox[2];
+      const ymax = bbox[3];
+
+      const ground = MeshBuilder.CreateGround("ground", {height: (xmax-xmin)*0.005, width: (ymax-ymin)*0.005, subdivisions: 36}, scene);
       ground.material = groundMaterial;
       
       let camera = scene.activeCamera as ArcRotateCamera;
