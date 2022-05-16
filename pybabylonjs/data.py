@@ -84,8 +84,6 @@ def create_image(array_uri: str, **kwargs):
         img = ((img - np.min(img)) / (np.max(img) - np.min(img))) * 255
     binary_image = numpy_to_binary(img)
 
-    #[img_height, img_width] = np.shape(img)
-
     return dict(data=binary_image)
 
 
@@ -101,27 +99,27 @@ def create_mapbox_image(data: dict, **kwargs):
     mbtoken = kwargs["mbtoken"]
     style_id = kwargs["mbstyle"]
     data_crs = kwargs["crs"]
-    
+
     dst_crs = {"init": "EPSG:4326"}  # lat/lon
-    
+
     bbox = BoundingBox(
         data["X"].min(), data["Y"].min(), data["X"].max(), data["Y"].max()
     )
-    
+
     dst_bbox = transform_bounds(data_crs, dst_crs, *bbox)
-    
+
     print(bbox)
     print(dst_bbox)
 
     w = bbox[2] - bbox[0]
     h = bbox[3] - bbox[1]
 
-    if w>h:
+    if w > h:
         ww = 1280
-        hh = int(h/w * 1280)
-    elif h>w:
+        hh = int(h / w * 1280)
+    elif h > w:
         hh = 1280
-        ww = int(w/h * 1280)
+        ww = int(w / h * 1280)
 
     print(ww)
     print(hh)
