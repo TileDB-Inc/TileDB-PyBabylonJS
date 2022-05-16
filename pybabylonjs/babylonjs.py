@@ -87,7 +87,7 @@ image_schema = {
         "img_width": {"type": "number"},
         "img_height": {"type": "number"},
     },
-    "required": ["xy_bbox", "img_width"],
+    "required": ["xy_bbox"],
 }
 
 
