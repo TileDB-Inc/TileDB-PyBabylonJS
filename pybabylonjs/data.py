@@ -108,9 +108,6 @@ def create_mapbox_image(data: dict, **kwargs):
 
     dst_bbox = transform_bounds(data_crs, dst_crs, *bbox)
 
-    print(bbox)
-    print(dst_bbox)
-
     w = bbox[2] - bbox[0]
     h = bbox[3] - bbox[1]
 
@@ -120,9 +117,6 @@ def create_mapbox_image(data: dict, **kwargs):
     elif h > w:
         hh = 1280
         ww = int(w / h * 1280)
-
-    print(ww)
-    print(hh)
 
     f = requests.get(
         (
