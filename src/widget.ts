@@ -19,6 +19,7 @@ import "@babylonjs/inspector";
 
 // Import the CSS
 import '../css/widget.css';
+import proj4 from 'proj4';
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -121,12 +122,16 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const isTopo = this.values.topo;
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
+      const crs = this.values.crs;
       var doClear = false;
 
-      const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-      const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-      const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      // convert coordinates to lat/lon
+      const dataNew = pcCoordToMbCoord(data,crs);
+
+      const xmin = dataNew.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+      const xmax = dataNew.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const ymin = dataNew.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+      const ymax = dataNew.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
@@ -142,9 +147,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
         particle.position = new Vector3(
-          data.X[i],
+          dataNew.X[i],
           (data.Z[i]-topo_offset) * scale,
-          data.Y[i]
+          dataNew.Y[i]
         );
 
         if (isTime) {
@@ -444,4 +449,27 @@ export class BabylonImageView extends BabylonBaseView {
       return scene;
     });
   }
+}
+
+function pcCoordToMbCoord(data: any, crs: string) {
+  
+  var pcProjection: string = 'unknown' ;
+
+  if (crs === "EPSG:2994") {
+    //fetch('https://epsg.io/2994.proj4').then((res) => res.text()).then(res => console.log(res))
+    var pcProjection = "+proj=lcc +lat_1=43 +lat_2=45.5 +lat_0=41.75 +lon_0=-120.5 +x_0=399999.9999984 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=ft +no_defs";
+  }
+  
+  var mbProjection  = "+proj=longlat +datum=WGS84 +no_defs"; //4326
+  //var mbProjection = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"; //3857
+  var Coords = [];
+  var newCoordsX = [];
+  var newCoordsY = [];
+
+  for (let i = 0; i < data.X.length; i++) {
+    Coords = proj4(pcProjection,mbProjection,[data.X[i], data.Y[i]]);
+    newCoordsX.push(Coords[0]);
+    newCoordsY.push(Coords[1]);
+  }
+  return {X: newCoordsX, Y: newCoordsY}
 }
