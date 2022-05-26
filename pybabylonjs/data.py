@@ -9,6 +9,31 @@ import cv2
 import tiledb
 
 
+def create_point_cloud(array_uri: str, **kwargs):
+
+    bbox = kwargs["bbox"]
+
+    with tiledb.open(array_uri) as arr:
+        df = arr.df[
+            bbox["X"][0] : bbox["X"][1],
+            bbox["Y"][0] : bbox["Y"][1],
+            bbox["Z"][0] : bbox["Z"][1],
+        ]
+
+    RGBmax = max(max(df["Red"]), max(df["Red"]), max(df["Red"]))
+
+    data = {
+        "X": df["X"],
+        "Y": df["Y"],
+        "Z": df["Z"],
+        "Red": df["Red"] / RGBmax,
+        "Green": df["Green"] / RGBmax,
+        "Blue": df["Blue"] / RGBmax,
+    }
+
+    return dict(data=data)
+
+
 def create_mbrs(array_uri: str):
     """Create a Dict to be passed on to BabylonMBRS to create MBRS outlines."""
     fragments_info = tiledb.array_fragments(array_uri, include_mbrs=True)
@@ -102,14 +127,12 @@ def create_mapbox_image(data: dict, **kwargs):
 
     dst_crs = {"init": "EPSG:4326"}  # lat/lon
 
-    bbox = BoundingBox(
-        data["X"].min(), data["Y"].min(), data["X"].max(), data["Y"].max()
-    )
+    # bbox = BoundingBox(
+    #    data["X"].min(), data["Y"].min(), data["X"].max(), data["Y"].max()
+    # )
+    bbox = kwargs["bbox"]
 
     dst_bbox = transform_bounds(data_crs, dst_crs, *bbox)
-
-    print(bbox)
-    print(dst_bbox)
 
     w = bbox[2] - bbox[0]
     h = bbox[3] - bbox[1]
@@ -120,9 +143,6 @@ def create_mapbox_image(data: dict, **kwargs):
     elif h > w:
         hh = 1280
         ww = int(w / h * 1280)
-
-    print(ww)
-    print(hh)
 
     f = requests.get(
         (

@@ -19,6 +19,9 @@ import "@babylonjs/inspector";
 
 // Import the CSS
 import '../css/widget.css';
+import proj4 from 'proj4';
+import Client from '@tiledb-inc/tiledb-cloud';
+import { Layout } from '@tiledb-inc/tiledb-cloud/lib/v1';
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -107,8 +110,20 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 export class BabylonPointCloudView extends BabylonBaseView {
 
   protected async createScene(): Promise<Scene> {
-    return super.createScene().then( ( scene ) => {
-      const data = this.values.data;
+    return super.createScene().then( async ( scene ) => {
+
+      console.log(this.values.data.X.length);
+      console.log((this.values.data.X.length > 0));
+      
+      if (this.values.data.X.length > 0) {
+        var data = this.values.data;
+        console.log("true");
+      } else {
+        console.log("false");
+        var data = await loadPointCloud(this.values)
+          .then((results) => {return results});  
+      }
+      
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
@@ -122,11 +137,19 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
       var doClear = false;
+      const crs = this.values.crs;
+      
+      // convert coordinates to lat/lon
+      const dataNew = pcCoordToMbCoord(data,crs);
+      console.log(dataNew);
 
       const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
       const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
       const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const Redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const Greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const Bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
@@ -138,6 +161,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
           updatable: isTime
         });
       }
+
+      const rgbMax = Math.max(Redmax, Greenmax, Bluemax);
+      console.log(rgbMax);
 
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
@@ -152,9 +178,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
         else {
           particle.color = new Color3(
-            data.Red[i],
-            data.Green[i],
-            data.Blue[i]
+            data.Red[i] / rgbMax,
+            data.Green[i] / rgbMax,
+            data.Blue[i] / rgbMax
           );  
         }
       };
@@ -169,128 +195,122 @@ export class BabylonPointCloudView extends BabylonBaseView {
         tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf"));
       }
 
-      return Promise.all(tasks).then(() => {
-        scene.createDefaultCameraOrLight(true, true, false);
+      await Promise.all(tasks);
+      scene.createDefaultCameraOrLight(true, true, false);
+      if (isTime || isClass) {
 
-        if (isTime || isClass) {
+        var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
+          "UI",
+          true,
+          scene);
 
-          var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
-            "UI",
-            true,
-            scene);
+        var panel = new StackPanel();
+        panel.width = "220px";
+        panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+        panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+        advancedTexture.addControl(panel);
 
-          var panel = new StackPanel();
-          panel.width = "220px";
-          panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-          panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-          advancedTexture.addControl(panel);
+        var header = new TextBlock();
+        header.height = "30px";
+        header.color = "white";
 
-          var header = new TextBlock();
-          header.height = "30px";
-          header.color = "white";
-          
-          var slider = new Slider("Slider");
-          slider.minimum = 0;
-          slider.step = 1;
-          slider.height = "20px";
-          slider.width = "200px";
+        var slider = new Slider("Slider");
+        slider.minimum = 0;
+        slider.step = 1;
+        slider.height = "20px";
+        slider.width = "200px";
 
-          if (isTime) {
-            header.text = "Time: " + (offset +  times[0]).toFixed(2);
+        if (isTime) {
+          header.text = "Time: " + (offset + times[0]).toFixed(2);
 
-            slider.maximum = data.GpsTime.length - 1;
-            slider.value = 0; 
-          
-          }
-          if (isClass) {
-            header.text = "All";
+          slider.maximum = data.GpsTime.length - 1;
+          slider.value = 0;
 
-            var slider_classes: number[] = Array.from(new Set(data.Class))
-            slider.maximum = slider_classes.length;
-            slider.value = slider_classes[0];
-          }
+        }
+        if (isClass) {
+          header.text = "All";
 
-          panel.addControl(header);
+          var slider_classes: number[] = Array.from(new Set(data.Class));
+          slider.maximum = slider_classes.length;
+          slider.value = slider_classes[0];
+        }
 
-          pcs.updateParticle = function (particle: any) {
-            if (doClear)
-              particle.color = scene.clearColor;
-            else
-              particle.color = new Color3(
-                data.Red[particle.idx],
-                data.Green[particle.idx],
-                data.Blue[particle.idx]
-              );
+        panel.addControl(header);
 
-            return particle;
-          };
+        pcs.updateParticle = function (particle_3: any) {
+          if (doClear)
+            particle_3.color = scene.clearColor;
 
-          slider.onValueChangedObservable.add(
-            function(value:any) {
-              if (isTime) {
-                header.text = "Time: " + (offset + times[value]).toFixed(2);
+          else
+            particle_3.color = new Color3(
+              data.Red[particle_3.idx] / rgbMax,
+              data.Green[particle_3.idx] / rgbMax,
+              data.Blue[particle_3.idx] / rgbMax
+            );
 
-                if (value > pcs.counter) {
-                  doClear = false;
-                  pcs.setParticles(pcs.counter, value);
-                } else {
-                  doClear = true;
-                  pcs.setParticles(value, pcs.counter);
-                }
-                pcs.counter = value;                
-              }
-              if (isClass) {
-                var v: number = class_numbers.indexOf(slider_classes[value]);
-                header.text = class_names[v];
+          return particle_3;
+        };
 
-                var start = data.Class.indexOf(slider_classes[value]);
-                var finish = data.Class.lastIndexOf(slider_classes[value]);
+        slider.onValueChangedObservable.add(
+          function (value: any) {
+            if (isTime) {
+              header.text = "Time: " + (offset + times[value]).toFixed(2);
 
-                doClear = true;
-                pcs.setParticles(0, numCoords);
-
+              if (value > pcs.counter) {
                 doClear = false;
-                pcs.setParticles(start, finish);
+                pcs.setParticles(pcs.counter, value);
+              } else {
+                doClear = true;
+                pcs.setParticles(value, pcs.counter);
               }
+              pcs.counter = value;
+            }
+            if (isClass) {
+              var v: number = class_numbers.indexOf(slider_classes[value]);
+              header.text = class_names[v];
+
+              var start_1 = data.Class.indexOf(slider_classes[value]);
+              var finish = data.Class.lastIndexOf(slider_classes[value]);
+
+              doClear = true;
+              pcs.setParticles(0, numCoords);
+
+              doClear = false;
+              pcs.setParticles(start_1, finish);
+            }
           });
 
-          panel.addControl(slider);    
-        }
+        panel.addControl(slider);
+      }
+      if (isTopo) {
 
-        if(isTopo) {
-        
-          const mapbox_img = this.values.mapbox_img;
-          var blob = new Blob([mapbox_img]);
-          var url = URL.createObjectURL(blob);
-  
-          const mat = new StandardMaterial("mat", scene);
-          mat.emissiveColor = Color3.Random();
-          mat.diffuseTexture = new Texture(url, scene);
-          mat.ambientTexture = new Texture(url, scene);
-          
-          const options = {xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax};
-          const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
-          ground.material = mat;
+        const mapbox_img = this.values.mapbox_img;
+        var blob_1 = new Blob([mapbox_img]);
+        var url_1 = URL.createObjectURL(blob_1);
 
-        }
+        const mat = new StandardMaterial("mat", scene);
+        mat.emissiveColor = Color3.Random();
+        mat.diffuseTexture = new Texture(url_1, scene);
+        mat.ambientTexture = new Texture(url_1, scene);
 
-        let camera = scene.activeCamera as ArcRotateCamera;
-        // possibly make these configurable, but they are good defaults
-        camera.panningAxis = new Vector3(1, 1, 0);
-        camera.upperBetaLimit = Math.PI / 2;
-        camera.panningSensibility = 1;
-        camera.panningInertia = 0.2;
-        camera._panningMouseButton = 0;
+        const options = { xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax };
+        const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
+        ground.material = mat;
 
-        if (this.wheelPrecision > 0)
-          camera.wheelPrecision = this.wheelPrecision;
-
-        camera.alpha += Math.PI;
-        camera.setTarget(new Vector3((xmin+xmax)/2, 0, (ymin+ymax)/2));
-        camera.attachControl(this.canvas, false);
-
-        return scene;
-      });
+      }
+      let camera = scene.activeCamera as ArcRotateCamera;
+      // possibly make these configurable, but they are good defaults
+      camera.panningAxis = new Vector3(1, 1, 0);
+      camera.upperBetaLimit = Math.PI / 2;
+      camera.panningSensibility = 1;
+      camera.panningInertia = 0.2;
+      camera._panningMouseButton = 0;
+      if (this.wheelPrecision > 0)
+        camera.wheelPrecision = this.wheelPrecision;
+      camera.alpha += Math.PI;
+      camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
+      camera.attachControl(this.canvas, false);
+      return scene;
     });
   }
 }
@@ -324,6 +344,22 @@ export class BabylonMBRSView extends BabylonBaseView {
       const minz = extents[4];
       const xy_length = Math.min(Math.max(maxx)-Math.min(minx),Math.max(maxy)-Math.min(miny))
       const scale = this.zScale;
+
+      console.log(Client);
+
+      const client = new Client({
+          apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjY1NzhiYTMtNmY1MC00YzM2LThkMjUtOTFhNWVmYjQ1YjkzIiwiU2VlZCI6NDMwMjIzNzYzNTQ0NTk0OSwiZXhwIjoxNjY0NTc4Nzk5LCJpYXQiOjE2NTIyNzQwNDcsIm5iZiI6MTY1MjI3NDA0Nywic3ViIjoibWFyZ3JpZXQtdGlsZWRiIn0.UpGyy7Fo7WOD5vpXjGqvnRc5Ew79fD5iBING46lxeTk'
+      });
+
+      async function getFragments() {
+
+          const response = await client.ArrayApi.getFragmentEndTimestamp('margriet-tiledb','autzen_classified_tiledb');
+          return response
+          }
+
+      console.log(getFragments());
+
+
 
       // set up camera
       scene.createDefaultCameraOrLight(true, true, true)
@@ -401,47 +437,97 @@ export class BabylonImageModel extends BabylonBaseModel {
 
 export class BabylonImageView extends BabylonBaseView {
 
-  protected async createScene(): Promise<Scene> {
-    return super.createScene().then( ( scene ) => {
-      const data = this.values.data;
-      const bbox = this.values.xy_bbox;
-
-      scene.createDefaultCameraOrLight(true, true, true);
-      scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
-            
-      var blob = new Blob([data]);
-      var url = URL.createObjectURL(blob);
-      
-      const groundMaterial = new StandardMaterial("ground", scene);
-      groundMaterial.diffuseTexture = new Texture(url, scene);
-      groundMaterial.ambientTexture = new Texture(url, scene);
-      groundMaterial.ambientColor = new Color3(0.5, 0.5, 0.5);
-      groundMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8);
-      groundMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
-      groundMaterial.specularPower = 32;
-
-      const xmin = bbox[0];
-      const xmax = bbox[1];
-      const ymin = bbox[2];
-      const ymax = bbox[3];
-
-      const ground = MeshBuilder.CreateGround("ground", {height: (xmax-xmin)*0.005, width: (ymax-ymin)*0.005, subdivisions: 36}, scene);
-      ground.material = groundMaterial;
-      
-      let camera = scene.activeCamera as ArcRotateCamera;
-      camera.panningAxis = new Vector3(1, 1, 0);
-      camera.upperBetaLimit = Math.PI / 2;
-      camera.panningSensibility = 1;
-      camera.panningInertia = 0.2;
-      camera._panningMouseButton = 0;
-      
-      if (this.wheelPrecision > 0)
-        camera.wheelPrecision = this.wheelPrecision;
-
-      camera.alpha += Math.PI;
-      camera.attachControl(this.canvas, false);
-
-      return scene;
-    });
-  }
+    protected async createScene(): Promise<Scene> {
+      return super.createScene().then( ( scene ) => {
+        const data = this.values.data;
+        const bbox = this.values.xy_bbox;
+  
+        scene.createDefaultCameraOrLight(true, true, true);
+        scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
+              
+        var blob = new Blob([data]);
+        var url = URL.createObjectURL(blob);
+        
+        const groundMaterial = new StandardMaterial("ground", scene);
+        groundMaterial.diffuseTexture = new Texture(url, scene);
+        groundMaterial.ambientTexture = new Texture(url, scene);
+        groundMaterial.ambientColor = new Color3(0.5, 0.5, 0.5);
+        groundMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8);
+        groundMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
+        groundMaterial.specularPower = 32;
+  
+        const xmin = bbox[0];
+        const xmax = bbox[1];
+        const ymin = bbox[2];
+        const ymax = bbox[3];
+  
+        const ground = MeshBuilder.CreateGround("ground", {height: (xmax-xmin)*0.005, width: (ymax-ymin)*0.005, subdivisions: 36}, scene);
+        ground.material = groundMaterial;
+        
+        let camera = scene.activeCamera as ArcRotateCamera;
+        camera.panningAxis = new Vector3(1, 1, 0);
+        camera.upperBetaLimit = Math.PI / 2;
+        camera.panningSensibility = 1;
+        camera.panningInertia = 0.2;
+        camera._panningMouseButton = 0;
+        
+        if (this.wheelPrecision > 0)
+          camera.wheelPrecision = this.wheelPrecision;
+  
+        camera.alpha += Math.PI;
+        camera.attachControl(this.canvas, false);
+  
+        return scene;
+      });
+    }
 }
+  
+//}
+
+function pcCoordToMbCoord(data: any, crs: string) {
+  
+  var pcProjection: string = 'unknown' ;
+
+  if (crs === "EPSG:2994") {
+    //fetch('https://epsg.io/2994.proj4').then((res) => res.text()).then(res => console.log(res))
+    var pcProjection = "+proj=lcc +lat_1=43 +lat_2=45.5 +lat_0=41.75 +lon_0=-120.5 +x_0=399999.9999984 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=ft +no_defs";
+  }
+  
+  var mbProjection  = "+proj=longlat +datum=WGS84 +no_defs"; //4326
+  //var mbProjection = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"; //3857
+  var Coords = [];
+  var newCoordsX = [];
+  var newCoordsY = [];
+
+  for (let i = 0; i < data.X.length; i++) {
+    Coords = proj4(pcProjection,mbProjection,[data.X[i], data.Y[i]]);
+    newCoordsX.push(Coords[0]);
+    newCoordsY.push(Coords[1]);
+  }
+  return {X: newCoordsX, Y: newCoordsY}
+}
+
+async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, api_key: string}) {
+
+  const config = {
+    apiKey: values.api_key
+  };
+
+  const tiledbClient = new Client(config);
+
+  const query: { layout: any, ranges: number[][], bufferSize: number, attributes: any} = {
+    layout: Layout.Unordered,
+    ranges: [values.bbox.X, values.bbox.Y, values.bbox.Z],
+    bufferSize: 150000000000,
+    attributes: ['X','Y','Z','Red','Green','Blue','GpsTime','Classification']
+  };
+
+  for await (let results of tiledbClient.query.ReadQuery(
+    values.name_space,
+    values.array_name,
+    query
+  )) {
+    return results
+  }
+  
+};  

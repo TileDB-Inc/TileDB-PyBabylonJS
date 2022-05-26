@@ -62,13 +62,19 @@ core_schema = {
         "gltf_data": {"type": "string"},
         "point_size": {"type": "number", "default": 1},
         "data": {"type": "object", "properties": {}, "required": []},
+        "bbox": {"type": "object",
+        "default": {
+            "X": [636800, 637800],
+            "Y": [851000, 853000],
+            "Z": [406.14, 615.26],
+        }},
     },
-    "required": ["data"],
+    "required": ["bbox"],
 }
 
 point_cloud_schema = deepcopy(core_schema)
-attrs = ["X", "Y", "Z", "Red", "Green", "Blue"]
-point_cloud_schema["properties"]["data"]["required"].extend(attrs)
+# attrs = ["X", "Y", "Z", "Red", "Green", "Blue"]
+# point_cloud_schema["properties"]["data"]["required"].extend(attrs)
 
 mbrs_schema = deepcopy(core_schema)
 

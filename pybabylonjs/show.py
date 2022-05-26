@@ -32,15 +32,23 @@ class Show:
     @classmethod
     def point_cloud(
         self,
-        data: dict,
+        source: Optional[str] = "cloud",
         time: Optional[bool] = False,
         classes: Optional[bool] = False,
         topo: Optional[bool] = False,
         **kwargs,
     ):
-        d = {"classes": classes, "time": time, "topo": topo, "data": data}
+        if source == "dict":
+            #
+        elif source == "local":
+            #
+        else:
+            # 
+        # d = create_point_cloud(array_uri, **kwargs)
+        # d = {**d, "classes": classes, "time": time, "topo": topo}
+        d = {"classes": classes, "time": time, "topo": topo}
         if topo:
-            img = create_mapbox_image(data, **kwargs)
+            img = create_mapbox_image(**kwargs)
             d = {**d, "mapbox_img": img}
         create_dataviz(BabylonPointCloud(), d, **kwargs)
 
@@ -71,7 +79,17 @@ class Show:
         topo: Optional[bool] = False,
         **kwargs,
     ):
-        d = {"classes": classes, "time": time, "topo": topo, "data": data}
+        d = {
+            "classes": classes,
+            "time": time,
+            "topo": topo,
+            "data": data,
+            "bbox": {
+            "X": [636800, 637800],
+            "Y": [851000, 853000],
+            "Z": [406.14, 615.26],
+        },
+        }
         if topo:
             img = create_mapbox_image(data, **kwargs)
             d = {**d, "mapbox_img": img}
