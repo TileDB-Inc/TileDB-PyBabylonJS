@@ -57,6 +57,8 @@ core_schema = {
         "classes": {"type": "boolean", "default": False},
         "class_numbers": {"type": "array"},
         "class_names": {"type": "array"},
+        "topo": {"type": "boolean", "default": False},
+        "topo_offset": {"type": "number", "default": 0},
         "gltf_data": {"type": "string"},
         "point_size": {"type": "number", "default": 1},
         "data": {"type": "object", "properties": {}, "required": []},
@@ -64,13 +66,13 @@ core_schema = {
     "required": ["data"],
 }
 
-pc_schema = deepcopy(core_schema)
+point_cloud_schema = deepcopy(core_schema)
 attrs = ["X", "Y", "Z", "Red", "Green", "Blue"]
-pc_schema["properties"]["data"]["required"].extend(attrs)
+point_cloud_schema["properties"]["data"]["required"].extend(attrs)
 
 mbrs_schema = deepcopy(core_schema)
 
-ground_schema = {
+image_schema = {
     "type": "object",
     "properties": {
         "inspector": {"type": "boolean", "default": False},
@@ -85,17 +87,17 @@ ground_schema = {
         "img_width": {"type": "number"},
         "img_height": {"type": "number"},
     },
-    "required": ["xy_bbox", "img_width"],
+    "required": ["xy_bbox"],
 }
 
 
 class BabylonBase(DOMWidget):
+    """Base class for all Babylon derived widgets"""
+
     _model_module = Unicode(module_name).tag(sync=True)
     _model_module_version = Unicode(module_version).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
-
-    """Base class for all Babylon derived widgets"""
 
     @validate("value")
     def _validate_value(self, proposal):
@@ -107,13 +109,13 @@ class BabylonBase(DOMWidget):
 
 
 @register
-class BabylonPC(BabylonBase):
+class BabylonPointCloud(BabylonBase):
     """3D point cloud with BabylonJS"""
 
-    _model_name = Unicode("BabylonPCModel").tag(sync=True)
-    _view_name = Unicode("BabylonPCView").tag(sync=True)
+    _model_name = Unicode("BabylonPointCloudModel").tag(sync=True)
+    _view_name = Unicode("BabylonPointCloudView").tag(sync=True)
     value = Dict().tag(sync=True)
-    _schema = pc_schema
+    _schema = point_cloud_schema
 
 
 @register
@@ -127,10 +129,10 @@ class BabylonMBRS(BabylonBase):
 
 
 @register
-class BabylonGround(BabylonBase):
+class BabylonImage(BabylonBase):
     """Ground surface as 2D array with BabylonJS"""
 
-    _model_name = Unicode("BabylonGroundModel").tag(sync=True)
-    _view_name = Unicode("BabylonGroundView").tag(sync=True)
+    _model_name = Unicode("BabylonImageModel").tag(sync=True)
+    _view_name = Unicode("BabylonImageView").tag(sync=True)
     value = Dict().tag(sync=True)
-    _schema = ground_schema
+    _schema = image_schema

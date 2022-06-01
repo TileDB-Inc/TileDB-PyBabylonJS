@@ -2,10 +2,7 @@
 # Licensed under the MIT License.
 """Functions to format data from the arrays to be used in the visualization."""
 
-# from array import array
 import io
-import json
-from datetime import datetime
 import numpy as np
 import pandas as pd
 import cv2
@@ -58,7 +55,7 @@ def create_mbrs(array_uri: str):
     return dict(extents=extents, data=data)
 
 
-def create_ground(array_uri: str, **kwargs):
+def create_image(array_uri: str, **kwargs):
     """Create a Dict to be passed on to BabylonGround containing images as blobs.
 
     Parameters:
@@ -77,16 +74,69 @@ def create_ground(array_uri: str, **kwargs):
     bbox = kwargs["xy_bbox"]
     band = kwargs["band"]
     image_type = kwargs["image_type"]
-    sar_scale_factor = kwargs["sar_scale_factor"]
+    sar_scale = kwargs["sar_scale_factor"]
 
     with tiledb.open(array_uri, "r") as arr:
         img = arr[band, bbox[0] : bbox[1], bbox[2] : bbox[3]][kwargs["attribute"]]
 
     if image_type == "sar":
-        img = 20 * np.log10(img * sar_scale_factor)
+        img = 20 * np.log10(img * sar_scale)
         img = ((img - np.min(img)) / (np.max(img) - np.min(img))) * 255
     binary_image = numpy_to_binary(img)
 
-    [img_height, img_width] = np.shape(img)
+    return dict(data=binary_image)
 
-    return dict(data=binary_image, img_width=img_width, img_height=img_height)
+
+def create_mapbox_image(data: dict, **kwargs):
+    """Create a Dict with an additional topographic image from mapbox
+
+    Parameters:
+    """
+    import requests
+    from rasterio.coords import BoundingBox
+    from rasterio.warp import transform_bounds
+
+    mbtoken = kwargs["mbtoken"]
+    style_id = kwargs["mbstyle"]
+    data_crs = kwargs["crs"]
+
+    dst_crs = {"init": "EPSG:4326"}  # lat/lon
+
+    bbox = BoundingBox(
+        data["X"].min(), data["Y"].min(), data["X"].max(), data["Y"].max()
+    )
+
+    dst_bbox = transform_bounds(data_crs, dst_crs, *bbox)
+
+    w = bbox[2] - bbox[0]
+    h = bbox[3] - bbox[1]
+
+    if w > h:
+        ww = 1280
+        hh = int(h / w * 1280)
+    elif h > w:
+        hh = 1280
+        ww = int(w / h * 1280)
+
+    f = requests.get(
+        (
+            "https://api.mapbox.com/styles/v1/mapbox/"
+            + style_id
+            + "/static/["
+            + str(dst_bbox[0])
+            + ","
+            + str(dst_bbox[1])
+            + ","
+            + str(dst_bbox[2])
+            + ","
+            + str(dst_bbox[3])
+            + "]/"
+            + str(ww)
+            + "x"
+            + str(hh)
+            + "?access_token="
+            + mbtoken
+        )
+    )
+
+    return f.content

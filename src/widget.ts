@@ -87,24 +87,24 @@ abstract class BabylonBaseView extends DOMWidgetView {
 
 }
 
-export class BabylonPCModel extends BabylonBaseModel {
+export class BabylonPointCloudModel extends BabylonBaseModel {
   defaults(): any {
     return {
       ...super.defaults(),
-      _model_name: BabylonPCModel.model_name,
-      _model_module: BabylonPCModel.model_module,
-      _model_module_version: BabylonPCModel.model_module_version,
-      _view_name: BabylonPCModel.view_name,
-      _view_module: BabylonPCModel.view_module,
-      _view_module_version: BabylonPCModel.view_module_version,
+      _model_name: BabylonPointCloudModel.model_name,
+      _model_module: BabylonPointCloudModel.model_module,
+      _model_module_version: BabylonPointCloudModel.model_module_version,
+      _view_name: BabylonPointCloudModel.view_name,
+      _view_module: BabylonPointCloudModel.view_module,
+      _view_module_version: BabylonPointCloudModel.view_module_version,
     };
   }
 
-  static model_name = 'BabylonPCModel';
-  static view_name = 'BabylonPCView';
+  static model_name = 'BabylonPointCloudModel';
+  static view_name = 'BabylonPointCloudView';
 }
 
-export class BabylonPCView extends BabylonBaseView {
+export class BabylonPointCloudView extends BabylonBaseView {
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then( ( scene ) => {
@@ -118,9 +118,16 @@ export class BabylonPCView extends BabylonBaseView {
       const isClass = this.values.classes;
       const class_numbers = this.values.class_numbers;
       const class_names = this.values.class_names;
+      const isTopo = this.values.topo;
+      const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
       var doClear = false;
 
+      const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+      const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+      const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isClass
@@ -136,7 +143,7 @@ export class BabylonPCView extends BabylonBaseView {
         // Y is up
         particle.position = new Vector3(
           data.X[i],
-          data.Z[i] * scale,
+          (data.Z[i]-topo_offset) * scale,
           data.Y[i]
         );
 
@@ -250,6 +257,23 @@ export class BabylonPCView extends BabylonBaseView {
           panel.addControl(slider);    
         }
 
+        if(isTopo) {
+        
+          const mapbox_img = this.values.mapbox_img;
+          var blob = new Blob([mapbox_img]);
+          var url = URL.createObjectURL(blob);
+  
+          const mat = new StandardMaterial("mat", scene);
+          mat.emissiveColor = Color3.Random();
+          mat.diffuseTexture = new Texture(url, scene);
+          mat.ambientTexture = new Texture(url, scene);
+          
+          const options = {xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax};
+          const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
+          ground.material = mat;
+
+        }
+
         let camera = scene.activeCamera as ArcRotateCamera;
         // possibly make these configurable, but they are good defaults
         camera.panningAxis = new Vector3(1, 1, 0);
@@ -262,7 +286,8 @@ export class BabylonPCView extends BabylonBaseView {
           camera.wheelPrecision = this.wheelPrecision;
 
         camera.alpha += Math.PI;
-        camera.attachControl(this.canvas, true);
+        camera.setTarget(new Vector3((xmin+xmax)/2, 0, (ymin+ymax)/2));
+        camera.attachControl(this.canvas, false);
 
         return scene;
       });
@@ -314,7 +339,7 @@ export class BabylonMBRSView extends BabylonBaseView {
         camera.wheelPrecision = this.wheelPrecision;
 
       camera.setTarget(new Vector3((((maxx+minx)/2) - minx) / xy_length, 0, (((maxy+miny)/2) - miny) / xy_length));
-      camera.attachControl(this.canvas, true);
+      camera.attachControl(this.canvas, false);
 
       var mat = new StandardMaterial('mt1', scene);
       mat.alpha = 0.85;
@@ -357,30 +382,29 @@ export class BabylonMBRSView extends BabylonBaseView {
   }
 }
 
-export class BabylonGroundModel extends BabylonBaseModel {
+export class BabylonImageModel extends BabylonBaseModel {
   defaults(): any {
     return {
       ...super.defaults(),
-      _model_name: BabylonGroundModel.model_name,
-      _model_module: BabylonGroundModel.model_module,
-      _model_module_version: BabylonGroundModel.model_module_version,
-      _view_name: BabylonGroundModel.view_name,
-      _view_module: BabylonGroundModel.view_module,
-      _view_module_version: BabylonGroundModel.view_module_version,
+      _model_name: BabylonImageModel.model_name,
+      _model_module: BabylonImageModel.model_module,
+      _model_module_version: BabylonImageModel.model_module_version,
+      _view_name: BabylonImageModel.view_name,
+      _view_module: BabylonImageModel.view_module,
+      _view_module_version: BabylonImageModel.view_module_version,
     };
   }
 
-  static model_name = 'BabylonGroundModel';
-  static view_name = 'BabylonGroundView';
+  static model_name = 'BabylonImageModel';
+  static view_name = 'BabylonImageView';
 }
 
-export class BabylonGroundView extends BabylonBaseView {
+export class BabylonImageView extends BabylonBaseView {
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then( ( scene ) => {
       const data = this.values.data;
-      const img_height = this.values.img_height;
-      const img_width = this.values.img_width;
+      const bbox = this.values.xy_bbox;
 
       scene.createDefaultCameraOrLight(true, true, true);
       scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
@@ -396,7 +420,12 @@ export class BabylonGroundView extends BabylonBaseView {
       groundMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
       groundMaterial.specularPower = 32;
 
-      const ground = MeshBuilder.CreateGround("ground", {height: img_height*0.005, width: img_width*0.005, subdivisions: 16}, scene);
+      const xmin = bbox[0];
+      const xmax = bbox[1];
+      const ymin = bbox[2];
+      const ymax = bbox[3];
+
+      const ground = MeshBuilder.CreateGround("ground", {height: (xmax-xmin)*0.005, width: (ymax-ymin)*0.005, subdivisions: 36}, scene);
       ground.material = groundMaterial;
       
       let camera = scene.activeCamera as ArcRotateCamera;
@@ -410,7 +439,7 @@ export class BabylonGroundView extends BabylonBaseView {
         camera.wheelPrecision = this.wheelPrecision;
 
       camera.alpha += Math.PI;
-      camera.attachControl(this.canvas, true);
+      camera.attachControl(this.canvas, false);
 
       return scene;
     });
