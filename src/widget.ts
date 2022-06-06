@@ -24,7 +24,7 @@ export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
   static model_module_version = MODULE_VERSION;
   static view_module = MODULE_NAME;
-  static view_module_version = MODULE_VERSION;  
+  static view_module_version = MODULE_VERSION;
 
   static serializers: ISerializers = {
     ...DOMWidgetModel.serializers
@@ -66,11 +66,11 @@ abstract class BabylonBaseView extends DOMWidgetView {
 
     this.resizeCanvas();
 
-    this.createScene().then( ( scene ) => {
+    this.createScene().then(scene => {
       engine.runRenderLoop(() => {
         scene.render();
       });
-    })
+    });
   }
 
   protected async createScene(): Promise<Scene> {
@@ -78,13 +78,12 @@ abstract class BabylonBaseView extends DOMWidgetView {
 
     if (this.inspector) {
       scene.debugLayer.show({
-        embedMode: true,
+        embedMode: true
       });
     }
 
     return scene;
   }
-
 }
 
 export class BabylonPointCloudModel extends BabylonBaseModel {
@@ -105,29 +104,48 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 }
 
 export class BabylonPointCloudView extends BabylonBaseView {
-
   protected async createScene(): Promise<Scene> {
-    return super.createScene().then( ( scene ) => {
-      const data = this.values.data;
+    return super.createScene().then(async scene => {
+
+      var isTime = false;
+      var isClass = false;
+      var isTopo = false;
+
+      var data!: { X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[]}; 
+
+      if (this.values.mode === "time"){
+        isTime = true;
+      }else if (this.values.mode === "classes") {
+        isClass = true;
+      }else if(this.values.mode == "topo"){
+        isTopo = true;
+      } 
+      
+      if (this.values.source === "dict"){
+        data = this.values.data;
+      }
+      
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
-      const isTime = this.values.time;
-      const times = data.GpsTime;
+      const times = this.values.data.GpsTime;
       const offset = this.values.time_offset;
-      const isClass = this.values.classes;
+      const classification = this.values.data.Class;
       const class_numbers = this.values.class_numbers;
       const class_names = this.values.class_names;
-      const isTopo = this.values.topo;
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
-      var doClear = false;
+      let doClear = false;
 
       const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
       const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
       const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      
+      const Redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const Greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const Bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const rgbMax = Math.max(Redmax, Greenmax, Bluemax);
+
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isClass
@@ -152,9 +170,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
         else {
           particle.color = new Color3(
-            data.Red[i],
-            data.Green[i],
-            data.Blue[i]
+            data.Red[i]/ rgbMax,
+            data.Green[i]/ rgbMax,
+            data.Blue[i]/ rgbMax
           );  
         }
       };
@@ -169,128 +187,122 @@ export class BabylonPointCloudView extends BabylonBaseView {
         tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf"));
       }
 
-      return Promise.all(tasks).then(() => {
-        scene.createDefaultCameraOrLight(true, true, false);
+      await Promise.all(tasks);
+      scene.createDefaultCameraOrLight(true, true, false);
+      if (isTime || isClass) {
 
-        if (isTime || isClass) {
+        var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
+          "UI",
+          true,
+          scene);
 
-          var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
-            "UI",
-            true,
-            scene);
+        var panel = new StackPanel();
+        panel.width = "220px";
+        panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+        panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+        advancedTexture.addControl(panel);
 
-          var panel = new StackPanel();
-          panel.width = "220px";
-          panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-          panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-          advancedTexture.addControl(panel);
+        var header = new TextBlock();
+        header.height = "30px";
+        header.color = "white";
 
-          var header = new TextBlock();
-          header.height = "30px";
-          header.color = "white";
-          
-          var slider = new Slider("Slider");
-          slider.minimum = 0;
-          slider.step = 1;
-          slider.height = "20px";
-          slider.width = "200px";
+        var slider = new Slider("Slider");
+        slider.minimum = 0;
+        slider.step = 1;
+        slider.height = "20px";
+        slider.width = "200px";
 
-          if (isTime) {
-            header.text = "Time: " + (offset +  times[0]).toFixed(2);
+        if (isTime) {
+          header.text = "Time: " + (offset + times[0]).toFixed(2);
 
-            slider.maximum = data.GpsTime.length - 1;
-            slider.value = 0; 
-          
-          }
-          if (isClass) {
-            header.text = "All";
+          slider.maximum = times.length - 1;
+          slider.value = 0;
 
-            var slider_classes: number[] = Array.from(new Set(data.Class))
-            slider.maximum = slider_classes.length;
-            slider.value = slider_classes[0];
-          }
+        }
+        if (isClass) {
+          header.text = "All";
 
-          panel.addControl(header);
+          var slider_classes: number[] = Array.from(new Set(classification));
+          slider.maximum = slider_classes.length;
+          slider.value = slider_classes[0];
+        }
 
-          pcs.updateParticle = function (particle: any) {
-            if (doClear)
-              particle.color = scene.clearColor;
-            else
-              particle.color = new Color3(
-                data.Red[particle.idx],
-                data.Green[particle.idx],
-                data.Blue[particle.idx]
-              );
+        panel.addControl(header);
 
-            return particle;
-          };
+        pcs.updateParticle = function (particle_3: any) {
+          if (doClear)
+            particle_3.color = scene.clearColor;
 
-          slider.onValueChangedObservable.add(
-            function(value:any) {
-              if (isTime) {
-                header.text = "Time: " + (offset + times[value]).toFixed(2);
+          else
+            particle_3.color = new Color3(
+              data.Red[particle_3.idx],
+              data.Green[particle_3.idx],
+              data.Blue[particle_3.idx]
+            );
 
-                if (value > pcs.counter) {
-                  doClear = false;
-                  pcs.setParticles(pcs.counter, value);
-                } else {
-                  doClear = true;
-                  pcs.setParticles(value, pcs.counter);
-                }
-                pcs.counter = value;                
-              }
-              if (isClass) {
-                var v: number = class_numbers.indexOf(slider_classes[value]);
-                header.text = class_names[v];
+          return particle_3;
+        };
 
-                var start = data.Class.indexOf(slider_classes[value]);
-                var finish = data.Class.lastIndexOf(slider_classes[value]);
+        slider.onValueChangedObservable.add(
+          function (value: any) {
+            if (isTime) {
+              header.text = "Time: " + (offset + times[value]).toFixed(2);
 
-                doClear = true;
-                pcs.setParticles(0, numCoords);
-
+              if (value > pcs.counter) {
                 doClear = false;
-                pcs.setParticles(start, finish);
+                pcs.setParticles(pcs.counter, value);
+              } else {
+                doClear = true;
+                pcs.setParticles(value, pcs.counter);
               }
+              pcs.counter = value;
+            }
+            if (isClass) {
+              var v: number = class_numbers.indexOf(slider_classes[value]);
+              header.text = class_names[v];
+
+              var start_1 = classification.indexOf(slider_classes[value]);
+              var finish = classification.lastIndexOf(slider_classes[value]);
+
+              doClear = true;
+              pcs.setParticles(0, numCoords);
+
+              doClear = false;
+              pcs.setParticles(start_1, finish);
+            }
           });
 
-          panel.addControl(slider);    
-        }
+        panel.addControl(slider);
+      }
+      if (isTopo) {
 
-        if(isTopo) {
-        
-          const mapbox_img = this.values.mapbox_img;
-          var blob = new Blob([mapbox_img]);
-          var url = URL.createObjectURL(blob);
-  
-          const mat = new StandardMaterial("mat", scene);
-          mat.emissiveColor = Color3.Random();
-          mat.diffuseTexture = new Texture(url, scene);
-          mat.ambientTexture = new Texture(url, scene);
-          
-          const options = {xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax};
-          const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
-          ground.material = mat;
+        const mapbox_img = this.values.mapbox_img;
+        var blob_1 = new Blob([mapbox_img]);
+        var url_1 = URL.createObjectURL(blob_1);
 
-        }
+        const mat = new StandardMaterial("mat", scene);
+        mat.emissiveColor = Color3.Random();
+        mat.diffuseTexture = new Texture(url_1, scene);
+        mat.ambientTexture = new Texture(url_1, scene);
 
-        let camera = scene.activeCamera as ArcRotateCamera;
-        // possibly make these configurable, but they are good defaults
-        camera.panningAxis = new Vector3(1, 1, 0);
-        camera.upperBetaLimit = Math.PI / 2;
-        camera.panningSensibility = 1;
-        camera.panningInertia = 0.2;
-        camera._panningMouseButton = 0;
+        const options = { xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax };
+        const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
+        ground.material = mat;
 
-        if (this.wheelPrecision > 0)
-          camera.wheelPrecision = this.wheelPrecision;
-
-        camera.alpha += Math.PI;
-        camera.setTarget(new Vector3((xmin+xmax)/2, 0, (ymin+ymax)/2));
-        camera.attachControl(this.canvas, false);
-
-        return scene;
-      });
+      }
+      let camera = scene.activeCamera as ArcRotateCamera;
+      // possibly make these configurable, but they are good defaults
+      camera.panningAxis = new Vector3(1, 1, 0);
+      camera.upperBetaLimit = Math.PI / 2;
+      camera.panningSensibility = 1;
+      camera.panningInertia = 0.2;
+      camera._panningMouseButton = 0;
+      if (this.wheelPrecision > 0)
+        camera.wheelPrecision = this.wheelPrecision;
+      camera.alpha += Math.PI;
+      camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
+      camera.attachControl(this.canvas, false);
+      return scene;
     });
   }
 }
