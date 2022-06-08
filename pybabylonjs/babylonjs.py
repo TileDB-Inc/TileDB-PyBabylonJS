@@ -52,23 +52,43 @@ core_schema = {
         "height": {"type": "number", "default": 600},
         "z_scale": {"type": "number", "default": 1},
         "wheel_precision": {"type": "number", "default": -1},
-        "time": {"type": "boolean", "default": False},
         "time_offset": {"type": "number", "default": 0},
-        "classes": {"type": "boolean", "default": False},
-        "class_numbers": {"type": "array"},
-        "class_names": {"type": "array"},
-        "topo": {"type": "boolean", "default": False},
         "topo_offset": {"type": "number", "default": 0},
         "gltf_data": {"type": "string"},
         "point_size": {"type": "number", "default": 1},
+        "classes": {"type": "object"},
         "data": {"type": "object", "properties": {}, "required": []},
     },
-    "required": ["data"],
+    "required": ["source"],
 }
 
-point_cloud_schema = deepcopy(core_schema)
-attrs = ["X", "Y", "Z", "Red", "Green", "Blue"]
-point_cloud_schema["properties"]["data"]["required"].extend(attrs)
+point_cloud_schema = {
+    "type": "object",
+    "properties": {
+        "source": {"type": "string"},
+        "mode": {"type": "string"},
+        "inspector": {"type": "boolean", "default": False},
+        "width": {"type": "number"},
+        "height": {"type": "number"},
+        "z_scale": {"type": "number"},
+        "point_size": {"type": "number"},
+        "wheel_precision": {"type": "number"},
+        "bbox": {"type": "object"},
+        "time_offset": {"type": "number"},
+        "topo_offset": {"type": "number"},
+        "mbtoken": {"type": "string"},
+        "mbstyle": {"type": "string"},
+        "crs": {"type": "string"},
+        "gltf_data": {"type": "string"},
+        "classes": {"type": "object"},
+        "data": {"type": "object"},
+    },
+    "required": ["source", "mode"],
+}
+
+# point_cloud_schema = deepcopy(core_schema)
+# attrs = ["X", "Y", "Z", "Red", "Green", "Blue"]
+# point_cloud_schema["properties"]["data"]["required"].extend(attrs)
 
 mbrs_schema = deepcopy(core_schema)
 

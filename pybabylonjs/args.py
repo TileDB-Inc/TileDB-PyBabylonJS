@@ -1,9 +1,10 @@
 # Copyright 2022 TileDB Inc.
 # Licensed under the MIT License.
-"""Functions to format and check the keyword arguments for each visualization mode."""
+"""Functions to format and check the data and keyword arguments for each data source and visualization mode."""
 
 import os
 import sys
+from .data import *
 
 POINT_CLOUD_KWARG_DEFAULTS = {
     "inspector": False,
@@ -14,82 +15,84 @@ POINT_CLOUD_KWARG_DEFAULTS = {
     "point_size": 1,
     "bbox": {"X": [0, 1], "Y": [0, 1], "Z": [0, 1]},
     "time_offset": 0,
+    "classes": {"numbers": [], "names": []},
+    "mbtoken": "none",
+    "mbstyle": "streets-v11",
+    "crs": "EPSG:2994",
+    "topo_offset": 0,
+    "gltf_data": "none",
 }
 
-# "class_numbers": {"type": "array"},
-# "class_names": {"type": "array"},
-# "topo_offset": {"type": "number", "default": 0},
-# "gltf_data": {"type": "string"},
 
+def check_point_cloud_args(mode, kwargs):
 
-def check_point_cloud_data(source, mode, uri, data, kwargs):
+    if mode == "classes":
+        if not "classes" in kwargs:
+            raise ValueError(
+                "The classes containing numbers and names is not specified"
+            )
+    elif mode == "topo":
+        if not "mbtoken" in kwargs:
+            raise ValueError("The Mapbox token is not specified")
+        if not "crs" in kwargs:
+            raise ValueError(
+                "The crs (coordinate reference system) of the data is not specified"
+            )
+    # elif mode == "gltf":
+    #
+    # else:
+    # unknown mode
 
-    if source == "dict":
-        if not "X" in data:
-            sys.exit("Error: data dict does not contain 'X'.")
-        if not "Y" in data:
-            sys.exit("Error: data dict does not contain 'Y'.")
-        if not "Z" in data:
-            sys.exit("Error: data dict does not contain 'Z'.")
-        if not "Red" in data:
-            sys.exit("Error: data dict does not contain 'Red'.")
-        if not "Green" in data:
-            sys.exit("Error: data dict does not contain 'Green'.")
-        if not "Blue" in data:
-            sys.exit("Error: data dict does not contain 'Blue'.")
-        if not (
-            data["X"].size
-            == data["Y"].size
-            == data["Z"].size
-            == data["Red"].size
-            == data["Blue"].size
-            == data["Green"].size
-        ):
-            sys.exit("Error: attributes in data dict do not have the same length.")
-    elif source == "local":
-        # add checks when implementing this functionality - check if args are in array etc
-        data_dir = os.path.isdir(uri)
-        if data_dir == False:
-            sys.exit("Error: array" + uri + " does not exist.")
-        else:
-            if not "bbox" in kwargs:
-                sys.exit("Error: bbox for slicing data from " + uri + " not specified")
-    elif source == "cloud":
-        # add checks when implementing this functionality
-        sys.exit("Error: loading data from TileDB Cloud arrays not yet implemented")
-    else:
-        sys.exit(
-            "Error: unknown value "
-            + source
-            + ' given for source, needs to be one of one of "cloud", "local" or "dict"'
-        )
-
-    if mode == "time":
-        try:
-            T_len = data["GpsTime"].size
-        except:
-            sys.exit("Error: data dictionary does not contain 'GpsTime' values.")
-    elif mode == "classes":
-        try:
-            T_len = data["Classification"].size
-        except:
-            sys.exit("Error: data dictionary does not contain 'Classification' values.")
-
-    return "data accessible"
-
-
-def check_point_cloud_args(source, mode, uri, data, kwargs):
-
-    # if mode == classes:
-    # check for class_numbers and class_names --> replace by a single dict
-
-    # if mode == topo:
-    # check for topo_offset, mbtoken, mbstyle and crs, and set z_scale to 0.000004 (temporary)
-
-    # parsed_args = dict(POINT_CLOUD_KWARG_DEFAULTS.keys())
     parsed_args = dict(POINT_CLOUD_KWARG_DEFAULTS)
     for key in POINT_CLOUD_KWARG_DEFAULTS.keys():
         if key in kwargs:
             parsed_args[key] = kwargs.pop(key)
 
     return parsed_args
+
+
+def check_point_cloud_data_dict(mode, data):
+
+    for var in ["X", "Y", "Z", "Red", "Green", "Blue"]:
+        if not var in data:
+            raise ValueError("Data dictionary does not contain " + var)
+    if not (
+        data["X"].size
+        == data["Y"].size
+        == data["Z"].size
+        == data["Red"].size
+        == data["Blue"].size
+        == data["Green"].size
+    ):
+        raise ValueError("Attributes in data dictionary do not have the same length.")
+
+    if mode == "time":
+        if not "GpsTime" in data:
+            raise ValueError("Data dictionary does not contain 'GpsTime'")
+
+        i = np.argsort(data["GpsTime"])
+        for key in ["Red", "Green", "Blue", "GpsTime", "X", "Y", "Z"]:
+            data[key] = data[key][i]
+
+    elif mode == "classes":
+        if not "Classification" in data:
+            raise ValueError("Data dictionary does not contain 'Classification'")
+
+    return data
+
+
+def check_point_cloud_data_local(mode, uri, kwargs):
+
+    if os.path.isdir(uri) == False:
+        raise ValueError("uri: " + uri + " does not exist.")
+    if not "bbox" in kwargs:
+        raise ValueError("The bbox for slicing data from " + uri + " is not specified")
+
+    data = create_point_cloud(mode, uri, kwargs)
+
+    return data
+
+
+def check_point_cloud_data_cloud():
+
+    raise ValueError("Loading data from TileDB Cloud arrays not yet implemented")

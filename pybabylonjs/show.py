@@ -10,11 +10,6 @@ from .args import *
 from .data import *
 from .babylonjs import BabylonPointCloud, BabylonMBRS, BabylonImage
 
-# class DataSource(Enum):
-#    CLOUD = "cloud"
-#    LOCAL = "local"
-#    DICT = "dict"
-
 
 def create_dataviz(dataviz, d, **kwargs):
     dataviz.value = {**d, **kwargs}
@@ -35,7 +30,6 @@ class Show:
     @classmethod
     def point_cloud(
         self,
-        # source: DataSource = DataSource.DICT,
         uri: Optional[str] = "uri",
         data: Optional[dict] = {},
         source: Optional[str] = "cloud",
@@ -45,18 +39,30 @@ class Show:
         """
         Returns a point cloud visualization widget
 
-        :param uri: URI for the TileDB array (any supported TileDB URI) when source is "cloud" or "local"
-        :param data: dictionary containing the points to be visualized, when type="dict" containing {"X", "Y", "Z", "Red", "Green", "Blue"}
+        :param uri: when source is "cloud" or "local" specify the URI for the TileDB array
+        :param data: when source="dict" this dictionary contains the points to be visualized: {"X", "Y", "Z", "Red", "Green", "Blue"}
         :param source: location of the data to be visualized, one of "cloud", "local" or "dict"
         :param mode: sub-type of the visualization, one of "default", "time", "classes" or "topo"
 
-        Keyword Arguments:
+        :Keyword Arguments:
+
+        * **bbox** - ...
+        * **classes** - ...
+        * **time_offset** - ...
+        *
 
 
         """
-        check_point_cloud_data(source, mode, uri, data, kwargs)
 
-        point_cloud_args = check_point_cloud_args(source, mode, uri, data, kwargs)
+        if source == "dict":
+            data = check_point_cloud_data_dict(mode, data)
+        if source == "local":
+            data = check_point_cloud_data_local(mode, uri, kwargs)
+        if source == "cloud":
+            # not implemented yet
+            check_point_cloud_data_cloud()
+
+        point_cloud_args = check_point_cloud_args(mode, kwargs)
 
         d = {
             **point_cloud_args,
@@ -66,13 +72,13 @@ class Show:
             "mode": mode,
         }
 
-        print(d)
-
         if mode == "topo":
-            img = create_mapbox_image(data, **kwargs)
+            img = create_mapbox_image(data, kwargs)
             d = {**d, "mapbox_img": img}
 
-        create_dataviz(BabylonPointCloud(), d, **kwargs)
+        dataviz = BabylonPointCloud()
+        dataviz.value = {**d}
+        display(dataviz)
 
     @classmethod
     def image(

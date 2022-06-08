@@ -110,8 +110,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
       var isTime = false;
       var isClass = false;
       var isTopo = false;
+      var isGltf = false;
 
       var data!: { X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[]}; 
+
+      console.log(this.values);
 
       if (this.values.mode === "time"){
         isTime = true;
@@ -119,20 +122,28 @@ export class BabylonPointCloudView extends BabylonBaseView {
         isClass = true;
       }else if(this.values.mode == "topo"){
         isTopo = true;
+      }else if(this.values.mode == "gltf"){
+        isGltf = true;
       } 
       
-      if (this.values.source === "dict"){
+      console.log(this.values.source);
+
+      if (this.values.source === "cloud"){
+        // call to function to load data with TileDB-Cloud-JS
+        // data = ...
+      }else{
         data = this.values.data;
       }
       
+      console.log(data);
+
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
       const times = this.values.data.GpsTime;
       const offset = this.values.time_offset;
-      const classification = this.values.data.Class;
-      const class_numbers = this.values.class_numbers;
-      const class_names = this.values.class_names;
+      const classification = this.values.data.Classification;
+      const classes = this.values.classes;
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
       let doClear = false;
@@ -141,10 +152,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
       const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const Redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const Greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const Bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const rgbMax = Math.max(Redmax, Greenmax, Bluemax);
+      const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const rgbMax = Math.max(redmax, greenmax, bluemax);
 
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
@@ -181,7 +192,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       let tasks:Promise<any>[] = [pcs.buildMeshAsync()];
 
-      if (gltfData) {
+      if (isGltf) {
         var blob = new Blob([gltfData]);
         var url = URL.createObjectURL(blob);
         tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf"));
@@ -235,9 +246,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
           else
             particle_3.color = new Color3(
-              data.Red[particle_3.idx],
-              data.Green[particle_3.idx],
-              data.Blue[particle_3.idx]
+              data.Red[particle_3.idx]/ rgbMax,
+              data.Green[particle_3.idx]/ rgbMax,
+              data.Blue[particle_3.idx]/ rgbMax
             );
 
           return particle_3;
@@ -258,11 +269,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
               pcs.counter = value;
             }
             if (isClass) {
-              var v: number = class_numbers.indexOf(slider_classes[value]);
-              header.text = class_names[v];
+              var v: number = classes.numbers.indexOf(slider_classes[value]);
+              header.text = classes.names[v];
 
-              var start_1 = classification.indexOf(slider_classes[value]);
-              var finish = classification.lastIndexOf(slider_classes[value]);
+              var start_1: number = classification.indexOf(slider_classes[value]); ////
+              var finish: number = classification.lastIndexOf(slider_classes[value]);
 
               doClear = true;
               pcs.setParticles(0, numCoords);
