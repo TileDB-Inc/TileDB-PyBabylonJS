@@ -1,5 +1,5 @@
-// Copyright (c) TileDB, Inc.
-// Distributed under the terms of the Modified BSD License.
+// Copyright 2022 TileDB Inc.
+// Licensed under the MIT License.
 
 import {
   DOMWidgetModel,
@@ -114,8 +114,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       var data!: { X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[]}; 
 
-      console.log(this.values);
-
       if (this.values.mode === "time"){
         isTime = true;
       }else if (this.values.mode === "classes") {
@@ -126,8 +124,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
         isGltf = true;
       } 
       
-      console.log(this.values.source);
-
       if (this.values.source === "cloud"){
         // call to function to load data with TileDB-Cloud-JS
         // data = ...
@@ -135,8 +131,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
         data = this.values.data;
       }
       
-      console.log(data);
-
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
@@ -272,7 +266,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
               var v: number = classes.numbers.indexOf(slider_classes[value]);
               header.text = classes.names[v];
 
-              var start_1: number = classification.indexOf(slider_classes[value]); ////
+              var start_1: number = classification.indexOf(slider_classes[value]);
               var finish: number = classification.lastIndexOf(slider_classes[value]);
 
               doClear = true;

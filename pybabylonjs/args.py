@@ -3,7 +3,7 @@
 """Functions to format and check the data and keyword arguments for each data source and visualization mode."""
 
 import os
-import sys
+
 from .data import *
 
 POINT_CLOUD_KWARG_DEFAULTS = {
@@ -38,10 +38,9 @@ def check_point_cloud_args(mode, kwargs):
             raise ValueError(
                 "The crs (coordinate reference system) of the data is not specified"
             )
-    # elif mode == "gltf":
-    #
-    # else:
-    # unknown mode
+    elif mode == "gltf":
+        if not "gltf_data" in kwargs:
+            raise ValueError("gltf_data is not specified")
 
     parsed_args = dict(POINT_CLOUD_KWARG_DEFAULTS)
     for key in POINT_CLOUD_KWARG_DEFAULTS.keys():
@@ -71,7 +70,7 @@ def check_point_cloud_data_dict(mode, data):
             raise ValueError("Data dictionary does not contain 'GpsTime'")
 
         i = np.argsort(data["GpsTime"])
-        for key in ["Red", "Green", "Blue", "GpsTime", "X", "Y", "Z"]:
+        for key in ["X", "Y", "Z", "Red", "Green", "Blue", "GpsTime"]:
             data[key] = data[key][i]
 
     elif mode == "classes":

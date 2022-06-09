@@ -1,5 +1,6 @@
 # Copyright 2022 TileDB Inc.
 # Licensed under the MIT License.
+
 """Classes for setting up the visualization."""
 
 from IPython.display import display
@@ -59,7 +60,6 @@ class Show:
         if source == "local":
             data = check_point_cloud_data_local(mode, uri, kwargs)
         if source == "cloud":
-            # not implemented yet
             check_point_cloud_data_cloud()
 
         point_cloud_args = check_point_cloud_args(mode, kwargs)
@@ -73,7 +73,7 @@ class Show:
         }
 
         if mode == "topo":
-            img = create_mapbox_image(data, kwargs)
+            img = create_mapbox_image(data, point_cloud_args)
             d = {**d, "mapbox_img": img}
 
         dataviz = BabylonPointCloud()
@@ -98,21 +98,6 @@ class Show:
         d = create_mbrs(array_uri)
         create_dataviz(BabylonMBRS(), d, **kwargs)
 
-    @classmethod
-    def from_dict(
-        self,
-        data: dict,
-        time: Optional[bool] = False,
-        classes: Optional[bool] = False,
-        topo: Optional[bool] = False,
-        **kwargs,
-    ):
-        d = {"classes": classes, "time": time, "topo": topo, "data": data}
-        if topo:
-            img = create_mapbox_image(data, **kwargs)
-            d = {**d, "mapbox_img": img}
-        create_dataviz(BabylonPointCloud(), d, **kwargs)
-
 
 class BabylonJS:
     """Legacy class for instantiating the widget"""
@@ -124,7 +109,10 @@ class BabylonJS:
         self.height = None
 
     def _ipython_display_(self):
-        kwargs = {}
+
+        kwargs = check_point_cloud_args("default", {})
+
+        kwargs["source"] = "dict"
 
         if self.z_scale:
             kwargs["z_scale"] = self.z_scale
@@ -136,4 +124,5 @@ class BabylonJS:
             kwargs["height"] = self.height
 
         d = {"data": self.value}
+
         create_dataviz(BabylonPointCloud(), d, **kwargs)
