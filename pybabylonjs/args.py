@@ -16,11 +16,14 @@ POINT_CLOUD_KWARG_DEFAULTS = {
     "bbox": {"X": [0, 1], "Y": [0, 1], "Z": [0, 1]},
     "time_offset": 0,
     "classes": {"numbers": [], "names": []},
-    "mbtoken": "none",
+    "mbtoken": None,
     "mbstyle": "streets-v11",
     "crs": "EPSG:2994",
     "topo_offset": 0,
-    "gltf_data": "none",
+    "gltf_data": None,
+    "name_space": None,
+    "array_name": None,
+    "token": None,
 }
 
 
@@ -92,6 +95,13 @@ def check_point_cloud_data_local(mode, uri, kwargs):
     return data
 
 
-def check_point_cloud_data_cloud():
+def check_point_cloud_data_cloud(kwargs):
 
-    raise ValueError("Loading data from TileDB Cloud arrays not yet implemented")
+    if not "name_space" in kwargs:
+        raise ValueError("The name space of the array is not specified")
+    if not "array_name" in kwargs:
+        raise ValueError("The name of the array is not specified")
+    if not "token" in kwargs:
+        raise ValueError("The TileDB token needed to access the array is not specified")
+    if not "bbox" in kwargs:
+        raise ValueError("The bbox for slicing data from the array is not specified")

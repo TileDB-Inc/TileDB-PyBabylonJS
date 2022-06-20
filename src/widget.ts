@@ -19,6 +19,8 @@ import "@babylonjs/inspector";
 
 // Import the CSS
 import '../css/widget.css';
+import Client from '@tiledb-inc/tiledb-cloud';
+import { Layout } from '@tiledb-inc/tiledb-cloud/lib/v1';
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -112,7 +114,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
       var isTopo = false;
       var isGltf = false;
 
-      var data!: { X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[]}; 
+      var data!: {
+        [x: string]: any; X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[], GpsTime: number[], Classification: number[]}; 
 
       if (this.values.mode === "time"){
         isTime = true;
@@ -125,8 +128,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
       } 
       
       if (this.values.source === "cloud"){
-        // call to function to load data with TileDB-Cloud-JS
-        // data = ...
+        data = await loadPointCloud(this.values).then((results) => {return results}); 
+        //if (isTime = true){sort data by GpsTime}
       }else{
         data = this.values.data;
       }
@@ -134,7 +137,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
-      const times = this.values.data.GpsTime;
+      const times = data.GpsTime;
       const offset = this.values.time_offset;
       const classification = this.values.data.Classification;
       const classes = this.values.classes;
@@ -462,3 +465,28 @@ export class BabylonImageView extends BabylonBaseView {
     });
   }
 }
+
+async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string}) {
+
+  const config = {
+    apiKey: values.token
+  };
+
+  const tiledbClient = new Client(config);
+
+  const query: { layout: any, ranges: number[][], bufferSize: number, attributes: any} = {
+    layout: Layout.Unordered,
+    ranges: [values.bbox.X, values.bbox.Y, values.bbox.Z],
+    bufferSize: 150000000000,
+    attributes: ['X','Y','Z','Red','Green','Blue','GpsTime','Classification']
+  };
+
+  for await (let results of tiledbClient.query.ReadQuery(
+    values.name_space,
+    values.array_name,
+    query
+  )) {
+    return results
+  }
+  
+};  

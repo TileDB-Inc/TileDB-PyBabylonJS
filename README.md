@@ -75,7 +75,7 @@ If you make a change to the python code then you will need to restart the notebo
 
 ## Usage
 
-### 3D point cloud visualization
+Jupyter notebooks are provided in the [Examples](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples).
 
 Create a default visualization from a local sparse array containing LiDAR data by specifying the bounding box (`bbox`) of the slice of the data in the array uri:
 
@@ -106,3 +106,4 @@ show.point_cloud(source="local",
                  uri=uri,
                  bbox=bbox)
 ```    
+

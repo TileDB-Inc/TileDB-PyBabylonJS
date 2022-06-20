@@ -31,7 +31,7 @@ class Show:
     @classmethod
     def point_cloud(
         self,
-        uri: Optional[str] = "uri",
+        uri: Optional[str] = None,
         data: Optional[dict] = {},
         source: Optional[str] = "cloud",
         mode: Optional[str] = "default",
@@ -60,7 +60,7 @@ class Show:
         if source == "local":
             data = check_point_cloud_data_local(mode, uri, kwargs)
         if source == "cloud":
-            check_point_cloud_data_cloud()
+            check_point_cloud_data_cloud(kwargs)
 
         point_cloud_args = check_point_cloud_args(mode, kwargs)
 
