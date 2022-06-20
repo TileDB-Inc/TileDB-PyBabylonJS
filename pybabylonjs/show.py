@@ -1,12 +1,15 @@
 # Copyright 2022 TileDB Inc.
 # Licensed under the MIT License.
+
 """Classes for setting up the visualization."""
 
 from IPython.display import display
 from typing import Optional
+from enum import Enum
 
-from .babylonjs import BabylonPointCloud, BabylonMBRS, BabylonImage
+from .args import *
 from .data import *
+from .babylonjs import BabylonPointCloud, BabylonMBRS, BabylonImage
 
 
 def create_dataviz(dataviz, d, **kwargs):
@@ -19,11 +22,7 @@ class PyBabylonJSError(Exception):
 
 
 class Show:
-    """Create a N-D visualization.
-
-    Parameters:
-        ...
-    """
+    """Create a N-D visualization."""
 
     def __init__(self):
         self._value = None
@@ -32,17 +31,54 @@ class Show:
     @classmethod
     def point_cloud(
         self,
-        data: dict,
-        time: Optional[bool] = False,
-        classes: Optional[bool] = False,
-        topo: Optional[bool] = False,
+        uri: Optional[str] = None,
+        data: Optional[dict] = {},
+        source: Optional[str] = "cloud",
+        mode: Optional[str] = "default",
         **kwargs,
     ):
-        d = {"classes": classes, "time": time, "topo": topo, "data": data}
-        if topo:
-            img = create_mapbox_image(data, **kwargs)
+        """
+        Returns a point cloud visualization widget
+
+        :param uri: when source is "cloud" or "local" specify the URI for the TileDB array
+        :param data: when source="dict" this dictionary contains the points to be visualized: {"X", "Y", "Z", "Red", "Green", "Blue"}
+        :param source: location of the data to be visualized, one of "cloud", "local" or "dict"
+        :param mode: sub-type of the visualization, one of "default", "time", "classes" or "topo"
+
+        :Keyword Arguments:
+
+        * **bbox** - ...
+        * **classes** - ...
+        * **time_offset** - ...
+        *
+
+
+        """
+
+        if source == "dict":
+            data = check_point_cloud_data_dict(mode, data)
+        if source == "local":
+            data = check_point_cloud_data_local(mode, uri, kwargs)
+        if source == "cloud":
+            check_point_cloud_data_cloud(kwargs)
+
+        point_cloud_args = check_point_cloud_args(mode, kwargs)
+
+        d = {
+            **point_cloud_args,
+            "uri": uri,
+            "data": data,
+            "source": source,
+            "mode": mode,
+        }
+
+        if mode == "topo":
+            img = create_mapbox_image(data, point_cloud_args)
             d = {**d, "mapbox_img": img}
-        create_dataviz(BabylonPointCloud(), d, **kwargs)
+
+        dataviz = BabylonPointCloud()
+        dataviz.value = {**d}
+        display(dataviz)
 
     @classmethod
     def image(
@@ -62,21 +98,6 @@ class Show:
         d = create_mbrs(array_uri)
         create_dataviz(BabylonMBRS(), d, **kwargs)
 
-    @classmethod
-    def from_dict(
-        self,
-        data: dict,
-        time: Optional[bool] = False,
-        classes: Optional[bool] = False,
-        topo: Optional[bool] = False,
-        **kwargs,
-    ):
-        d = {"classes": classes, "time": time, "topo": topo, "data": data}
-        if topo:
-            img = create_mapbox_image(data, **kwargs)
-            d = {**d, "mapbox_img": img}
-        create_dataviz(BabylonPointCloud(), d, **kwargs)
-
 
 class BabylonJS:
     """Legacy class for instantiating the widget"""
@@ -88,7 +109,10 @@ class BabylonJS:
         self.height = None
 
     def _ipython_display_(self):
-        kwargs = {}
+
+        kwargs = check_point_cloud_args("default", {})
+
+        kwargs["source"] = "dict"
 
         if self.z_scale:
             kwargs["z_scale"] = self.z_scale
@@ -100,4 +124,5 @@ class BabylonJS:
             kwargs["height"] = self.height
 
         d = {"data": self.value}
+
         create_dataviz(BabylonPointCloud(), d, **kwargs)

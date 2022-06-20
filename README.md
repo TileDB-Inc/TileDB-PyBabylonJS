@@ -26,7 +26,7 @@ jupyter nbextension enable --py [--sys-prefix|--user|--system] pybabylonjs
 
 Create a dev environment:
 ```bash
-conda create -n pybabylonjs-dev -c conda-forge nodejs yarn python jupyterlab
+mamba create -n pybabylonjs-dev -c conda-forge nodejs yarn python jupyterlab
 conda activate pybabylonjs-dev
 ```
 
@@ -75,78 +75,35 @@ If you make a change to the python code then you will need to restart the notebo
 
 ## Usage
 
-Currently two data visualizations are supported for LiDAR point clouds:
+Jupyter notebooks are provided in the [Examples](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples).
 
-* 3D point cloud visualization
-* 3D MBRS visualization
-
-Full examples can be found it the example notebooks [here]](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples).
-
-### 3D point cloud visualization
-
-To create this visualization load a slice of the data and create a dictionary with the coordinates of the points and the RGB values:
+Create a default visualization from a local sparse array containing LiDAR data by specifying the bounding box (`bbox`) of the slice of the data in the array uri:
 
 ```python
 from pybabylonjs import Show as show
 
-with tiledb.open("autzen1") as arr:
-    df = pd.DataFrame(arr[636800:637800, 851000:853000, 406.14:615.26])
-
-data = {
-    'X': df['X'],
-    'Y': df['Y'],
-    'Z': df['Z'],
-    'Red': df['Red'] / 255.0,
-    'Green': df['Green'] / 255.0,
-    'Blue': df['Blue'] / 255.0
+bbox = {
+    'X': [636800, 637800],
+    'Y': [851000, 853000],
+    'Z': [406.14, 615.26]
 }
-```
 
-Visualize the 3D point cloud with `pybabylonjs.Show.from_dict()` by specifying `data` and the `style` to use. Optional parameters are the `width` and `height` of the frame, the scaling factor `z_scale` of the z-axis and the wheel precision `wheel_precision`:
-
-```python
-show.from_dict(data=data,
-                style = 'pointcloud',
-                width = 800,
-                height = 600)
+show.point_cloud(source="local",
+                 mode="default",
+                 uri="./data/autzen",
+                 bbox=bbox)
 ```
 
 This creates an interactive visualization in a notebook widget of which the below is a screenshot:
 
 <img src="examples/pointcloud.png"  width="400" height="300" />
 
-To add a slider over time sort the data by `GpsTime` and add the parameter `time=True`:
+To add a slider over `GpsTime` change the `mode` to `time`:
 
 ```python
-with tiledb.open("autzen") as arr:
-    df = pd.DataFrame(arr[636800:637800, 851000:853000, 406.14:615.26])
-    
-df.sort_values(by=["GpsTime"], inplace=True)
-
-data = {
-    'X': df['X'],
-    'Y': df['Y'],
-    'Z': df['Z'],
-    'Red': df['Red'] / 255.0,
-    'Green': df['Green'] / 255.0,
-    'Blue': df['Blue'] / 255.0,
-    'GpsTime': df['GpsTime']}
-
-show.from_dict(data=data, style="pointcloud", time=True)
+show.point_cloud(source="local",
+                 mode="time",
+                 uri=uri,
+                 bbox=bbox)
 ```    
 
-### 3D MBRS visualization
-
-This visualization is created directly from a sparse array by specifying the `array_uri`, the style as `mbrs` and optional `height` and `width` parameters:
-
-```python
-show.from_array(array_uri='autzen',
-                style='mbrs',
-                width=800,
-                height=600,
-                z_scale = 0.5)
-```
-
-This creates an interactive visualization in a notebook widget of which the below is a screenshot:
-
-<img src="examples/mbrs.png"  width="400" height="300" />
