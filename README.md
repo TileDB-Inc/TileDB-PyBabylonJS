@@ -10,7 +10,6 @@ The TileDB-PyBabylonJS library is a geospatial data visualization Python library
 ## Installation
 
 This project is available from [PyPI](https://pypi.org/project/pybabylonjs/) and can be installed with `pip`:
-You can install using `pip`:`
 
 ```bash
 pip install pybabylonjs
@@ -24,13 +23,14 @@ jupyter nbextension enable --py [--sys-prefix|--user|--system] pybabylonjs
 
 ## Development Installation
 
-Create a dev environment:
+Create and activate a dev environment:
 ```bash
 mamba create -n pybabylonjs-dev -c conda-forge nodejs yarn python jupyterlab
+
 conda activate pybabylonjs-dev
 ```
 
-Fork or clone the repo. Install the Python package. This will also build the TS package.
+Fork or clone the repo. Install the TileDB-PyBabylonJS Python package. This will also build the TS package.
 ```bash
 pip install -e ".[test, examples]"
 ```
