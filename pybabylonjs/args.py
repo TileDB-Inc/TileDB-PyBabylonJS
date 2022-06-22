@@ -13,6 +13,7 @@ POINT_CLOUD_KWARG_DEFAULTS = {
     "z_scale": 1,
     "wheel_precision": -1,
     "point_size": 1,
+    "background_color": [0, 0, 0, 1],
     "bbox": {"X": [0, 1], "Y": [0, 1], "Z": [0, 1]},
     "time_offset": 0,
     "classes": {"numbers": [], "names": []},
