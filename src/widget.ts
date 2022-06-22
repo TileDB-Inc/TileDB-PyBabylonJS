@@ -11,7 +11,9 @@ import { MODULE_NAME, MODULE_VERSION } from './version';
 import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, StandardMaterial,
   SolidParticleSystem, MeshBuilder,
   Vector3,
-  Texture} from '@babylonjs/core';
+  Texture,
+  Axis,
+  Ray} from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/core/Debug/debugLayer";
@@ -21,6 +23,8 @@ import "@babylonjs/inspector";
 import '../css/widget.css';
 import Client from '@tiledb-inc/tiledb-cloud';
 import { Layout } from '@tiledb-inc/tiledb-cloud/lib/v1';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -165,6 +169,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
         });
       }
 
+      var _this = this;
+
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
         particle.position = new Vector3(
@@ -183,19 +189,57 @@ export class BabylonPointCloudView extends BabylonBaseView {
             data.Blue[i]/ rgbMax
           );  
         }
+
+        // check if inside meshes
+        particle.color.set(0.5, 0.5, 0.5, 0.5);
+        for (let i=0; i<scene.meshes.length; i++)
+        {
+          //console.log("  Processing mesh: " + scene.meshes[i].name);
+          if (_this.pointIsInsideMesh(scene.meshes[i], particle.position))
+          {
+            //console.log("    Found point inside");
+            particle.color?.set(1, 0, 0, 1);
+          }
+        }
       };
 
-      pcs.addPoints(numCoords, pcLoader);
-
-      let tasks:Promise<any>[] = [pcs.buildMeshAsync()];
+      let tasks:Promise<any>[] = [];
 
       if (isGltf) {
         var blob = new Blob([gltfData]);
         var url = URL.createObjectURL(blob);
-        tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf"));
+        console.log("LOADING GLTF...");
+        tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf").then(function(scene)
+        {
+          console.log("MODEL IS LOADED");
+          scene.meshes[0].position.set(0, -10, 0);
+          let len = scene.meshes.length;
+          for (let i=0; i<len; i++) {
+            let mesh = (scene.meshes[i] as Mesh);
+            //console.log("Initializing mesh " + mesh.name);
+            mesh.computeWorldMatrix(true);
+            mesh.bakeCurrentTransformIntoVertices();
+            mesh.refreshBoundingInfo();
+            //mesh.showBoundingBox = true;
+            //let bsphere = mesh.getBoundingInfo().boundingSphere.radius;
+            //let sph = MeshBuilder.CreateSphere("", {diameter: bsphere});
+            //sph.parent = mesh;
+            //sph.position.set(0, 0, 0);
+            //sph.material = new StandardMaterial("", scene);
+            //sph.material.wireframe = true;
+            if (mesh.material) mesh.material.wireframe = true;
+          }
+        }));
       }
 
+      console.log("PROCEEDING...");
       await Promise.all(tasks);
+      pcs.addPoints(numCoords, pcLoader);
+      tasks.push(pcs.buildMeshAsync());
+
+      console.log("WAITING FOR TASKS...");
+      await Promise.all(tasks);
+      console.log("ALL READY!");
       scene.createDefaultCameraOrLight(true, true, false);
       if (isTime || isClass) {
 
@@ -312,6 +356,66 @@ export class BabylonPointCloudView extends BabylonBaseView {
       camera.attachControl(this.canvas, false);
       return scene;
     });
+  }
+
+
+  pointIsInsideMesh(mesh: AbstractMesh, point: Vector3): boolean
+  {
+    let boundInfo = mesh.getBoundingInfo();
+    let max = boundInfo.maximum;
+    let min = boundInfo.minimum;
+    let diameter = 100 * boundInfo.boundingSphere.radius;
+  
+    if (point.x < min.x || point.x > max.x) {
+      //console.log("X bail: " + point.x + ": " + min.x + ".." + max.x);
+      return false;
+    }
+  
+    if (point.y < min.y || point.y > max.y) {
+      //console.log("Y bail");
+      return false;
+    }
+  
+    if (point.z < min.z || point.z > max.z) {
+      //console.log("Z bail");
+      return false;
+    }
+
+    //console.log("pointIsInsideMesh [" + mesh.name + "]");
+  
+    let pointFound = false;
+    let hitCount = 0;
+    let ray = new Ray(Vector3.Zero(), Axis.X, diameter * 2);
+    let pickInfo;
+    let direction = point.clone();
+      let refPoint = point.clone();
+  
+    hitCount = 0;
+    ray.origin = refPoint;
+      ray.direction = direction;
+      ray.length = diameter;		
+    pickInfo = ray.intersectsMesh(mesh);
+  
+    while (pickInfo.hit && pickInfo.pickedPoint) {	
+      hitCount++;
+      pickInfo.pickedPoint.addToRef(direction.scale(0.00000001), refPoint);
+      ray.origin = refPoint;
+      pickInfo = ray.intersectsMesh(mesh);
+    }
+
+    //if ((hitCount % 2) === 1) {
+    if (hitCount > 0) {
+      pointFound = true;
+      //console.log("hit: " + hitCount + " (" + (hitCount % 2) + ")");
+    }
+    //else console.log("NO hit: " + hitCount + " (" + (hitCount % 2) + ")");
+
+    // debug line
+    //let line = MeshBuilder.CreateCylinder("", {height:2, diameter:0.2});
+    //line.position = point.clone();
+    //line.lookAt(direction.add(point).scale(10));
+
+    return pointFound;
   }
 }
 
