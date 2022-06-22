@@ -33,13 +33,16 @@ long_description = (HERE / "README.md").read_text()
 # Get the package info from package.json
 pkg_json = json.loads((HERE / "package.json").read_bytes())
 
+version = (
+    pkg_json["version"]
+    .replace("-alpha.", "a")
+    .replace("-beta.", "b")
+    .replace("-rc.", "rc")
+)
+
 setup_args = dict(
     name=name,
-    use_scm_version={
-        "version_scheme": "guess-next-dev",
-        "local_scheme": "dirty-tag",
-        "write_to": "pybabylonjs/version.py",
-    },
+    version=version,
     setup_requires=[
         "setuptools-scm>=1.5.4",
         "setuptools-scm-git-archive",
