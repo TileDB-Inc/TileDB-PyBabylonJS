@@ -11,15 +11,15 @@ def _fetchVersion():
         try:
             with settings.open() as f:
                 version = json.load(f)["version"]
-                return (
-                    version.replace("-alpha.", "a")
-                    .replace("-beta.", "b")
-                    .replace("-rc.", "rc")
-                )
+                return version
         except FileNotFoundError:
             pass
 
     raise FileNotFoundError(f"Could not find package.json under dir {HERE!s}")
 
 
-__version__ = _fetchVersion()
+__npm_version__ = _fetchVersion()
+
+__version__ = (
+    __npm_version__.replace("-alpha.", "a").replace("-beta.", "b").replace("-rc.", "rc")
+)
