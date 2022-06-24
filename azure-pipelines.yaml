@@ -129,6 +129,12 @@ stages:
       env:
         NPM_TOKEN: $(NPM_TOKEN)
 
+    - script: |
+        latestGitTag=$(git describe --tags --abbrev=0)
+        latestGitTag="${latestGitTag:1}"
+        npm version $latestGitTag --no-commit-hooks --no-git-tag-version
+      displayName: 'Update package.json version'
+
     - script: jlpm run build:prod
       displayName: 'Build jupyterlab extension'
       env:
@@ -149,10 +155,8 @@ stages:
       displayName: 'Release to Pypi'
 
     - script: |
-        currentVersion=$(./node_modules/.bin/git-tag-version)
         latestGitTag=$(git describe --tags --abbrev=0)
         latestGitTag="${latestGitTag:1}"
-        echo $currentVersion
         echo $latestGitTag
         if [[ $latestGitTag == *"beta"* ]];
         then
