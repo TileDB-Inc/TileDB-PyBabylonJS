@@ -151,6 +151,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
+      const backgroundColor = this.values.background_color;
       const times = data.GpsTime;
       const offset = this.values.time_offset;
       const classification = this.values.data.Classification;
@@ -377,6 +378,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
         ground.material = mat;
 
       }
+      
+      scene.clearColor = new Color4(backgroundColor[0], backgroundColor[1], backgroundColor[2],backgroundColor[3]);
+      
       let camera = scene.activeCamera as ArcRotateCamera;
       // possibly make these configurable, but they are good defaults
       camera.panningAxis = new Vector3(1, 1, 0);
