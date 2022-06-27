@@ -15,7 +15,6 @@ import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, Scen
   Axis,
   Ray,
   TransformNode,
-  //TransformNode,
   } from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
@@ -113,7 +112,13 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 
 export class BabylonPointCloudView extends BabylonBaseView {
   // this is to keep all imported models on a common parent
-  private _instances:TransformNode[] = new Array<TransformNode>();
+  private _instances: TransformNode[] = new Array<TransformNode>();
+  // webworkers for pointcloud initialization
+  //private _workers: Worker[] = [];
+  // current webworker
+  //private _currworker: int = 0;
+  // remaining tasks to consider webworkers work complete
+  //private _remaining: int = 0;
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
@@ -174,7 +179,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         });
       }
 
-      var _main = this;
+      let _main = this;
 
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
@@ -196,7 +201,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
 
         // check if inside meshes
-        particle.color.set(0.1, 0.2, 0.1, 0.5);
+        particle.color.set(.5, .5, 0, 1);
         for (let i=0; i<_main._instances.length; i++)
         {
           let mesh = (_main._instances[i].getChildMeshes()[0] as Mesh);
@@ -218,14 +223,25 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
       };
 
+      //const workerPromise = 
+
       let tasks:Promise<any>[] = [];
+      
+      //this.initializeWorkers(8, function(e:MessageEvent)
+      //{
+      //  let idx = e.data[0];
+      //  console.log("Worker " + idx + " finished.");
+      //  _main._remaining--;
+      //  if (_main._remaining <= 0)
+      //  {
+      //    console.log("All work done.");
+      //  }
+      //});
 
       if (isGltf) {
         var blob = new Blob([gltfData]);
         var url = URL.createObjectURL(blob);
         console.log("LOADING GLTF...");
-
-        let _main = this;
 
         tasks.push(SceneLoader.ImportMeshAsync("", url, "", scene, null, ".gltf").then(function(container)
         {
@@ -377,6 +393,57 @@ export class BabylonPointCloudView extends BabylonBaseView {
     });
   }
 
+  runImportPoints(): Promise<boolean>
+  {
+    return new Promise(
+      function (resolve, reject) {
+        resolve(true);
+      }
+    );
+  }
+
+
+  //initializeWorkers(count: int, workdone: any): void
+  //{
+  //  var blobURL = URL.createObjectURL( new Blob([ '(',
+  //  function()
+  //  {
+  //    let idx = -1;
+  //  
+  //    // data[0]    = task to execute
+  //    // data[1..n] = depends on the task.
+  //    onmessage = function(e:MessageEvent)
+  //    {
+  //      switch (e.data[0])
+  //      {
+  //        case 0:
+  //          idx = e.data[1];
+  //          console.log("[Worker] Set idx = " + idx);
+  //        break;
+  //  
+  //        case 1:
+  //          console.log("[Worker] Run data on idx " + idx);
+//
+//
+  //          // done
+  //          //self.postMessage([ idx ]);
+  //        break;
+  //      }
+  //    }
+  //  
+  //    onerror = function(message, filename, lineno)
+  //    {
+  //      console.log("[Worker] Error: " + message + " on line " + lineno);
+  //    }
+  //  }.toString(), ')()' ], { type: 'application/javascript' } ) );
+//
+  //  //for (let w=0; w<count; w++)
+  //  //{
+  //  //  this._workers[w] = new Worker(blobURL);
+  //  //  this._workers[w].addEventListener("message", workdone);
+  //  //  this._workers[w].postMessage([ 0, w ]);
+  //  //}
+  //}
 
   pointIsInsideMesh(mesh: Mesh, boundInfo:{min:Vector3, max:Vector3}, point: Vector3): boolean
   {
@@ -396,39 +463,23 @@ export class BabylonPointCloudView extends BabylonBaseView {
       return false;
     }
 
-    let pointFound = false;
-    let hitCount = 0;
-    let ray = new Ray(Vector3.Zero(), Axis.X, diameter * 2);
-    let pickInfo;
-    let direction = point.clone();
-    let refPoint = point.clone();
+    const directions:Vector3[] =
+    [
+      new Vector3(0, 1, 0),
+      new Vector3(0, -1, 0),
+      new Vector3(-1, 0.5, 0),
+      new Vector3(1, 0.5, 0),
+    ]
 
-    hitCount = 0;
-    ray.origin = refPoint;
-    ray.direction = direction;
-    ray.length = diameter;		
-    pickInfo = ray.intersectsMesh(mesh);
-  
-    while (pickInfo.hit && pickInfo.pickedPoint) {	
-      hitCount++;
-      pickInfo.pickedPoint.addToRef(direction.scale(0.00000001), refPoint);
-      ray.origin = refPoint;
-      pickInfo = ray.intersectsMesh(mesh);
+    let ray = new Ray(point, Axis.X, diameter);
+
+    for (let c=0; c<directions.length; c++)
+    {
+      ray.direction = directions[c];
+      if (!ray.intersectsMesh(mesh).hit) return false;
     }
 
-    //if ((hitCount % 2) === 1) {
-    if (hitCount > 0) {
-      pointFound = true;
-      //console.log("hit: " + hitCount + " (" + (hitCount % 2) + ")");
-    }
-    //else console.log("NO hit: " + hitCount + " (" + (hitCount % 2) + ")");
-
-    // debug line
-    //let line = MeshBuilder.CreateCylinder("", {height:2, diameter:0.2});
-    //line.position = point.clone();
-    //line.lookAt(direction.add(point).scale(10));
-
-    return pointFound;
+    return true;
   }
 }
 
