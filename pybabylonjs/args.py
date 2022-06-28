@@ -25,6 +25,7 @@ POINT_CLOUD_KWARG_DEFAULTS = {
     "name_space": None,
     "array_name": None,
     "token": None,
+    "tiledb_env": "prod",
 }
 
 

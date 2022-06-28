@@ -88,9 +88,13 @@ class Show:
         if time:
             mode = "time"
         elif classes:
-            raise ValueError("This mode is not implemented for show.from_dict(), use show.point_cloud() instead")
+            raise ValueError(
+                "This mode is not implemented for show.from_dict(), use show.point_cloud() instead"
+            )
         elif topo:
-            raise ValueError("This mode is not implemented for show.from_dict(), use show.point_cloud() instead")
+            raise ValueError(
+                "This mode is not implemented for show.from_dict(), use show.point_cloud() instead"
+            )
         else:
             mode = "default"
 

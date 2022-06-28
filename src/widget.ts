@@ -470,11 +470,18 @@ export class BabylonImageView extends BabylonBaseView {
   }
 }
 
-async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string}) {
+async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string, tiledb_env: string}) {
 
-  const config = {
-    apiKey: values.token
-  };
+  const config: Record<string, any> = {};
+  
+  config.apiKey = values.token;
+
+  if(values.tiledb_env === "stage")
+  {
+    config.basePath = 'https://api.dev.tiledb.io';
+  }
+
+  console.log(config)
 
   const tiledbClient = new Client(config);
 
