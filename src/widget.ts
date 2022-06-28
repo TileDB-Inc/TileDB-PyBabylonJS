@@ -15,6 +15,8 @@ import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, Scen
   Axis,
   Ray,
   TransformNode,
+  ShaderMaterial,
+  int,
   } from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
@@ -26,6 +28,7 @@ import '../css/widget.css';
 import Client from '@tiledb-inc/tiledb-cloud';
 import { Layout } from '@tiledb-inc/tiledb-cloud/lib/v1';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { Effect } from '@babylonjs/core/Materials/effect';
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -114,11 +117,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
   // this is to keep all imported models on a common parent
   private _instances: TransformNode[] = new Array<TransformNode>();
   // webworkers for pointcloud initialization
-  //private _workers: Worker[] = [];
+  private _workers: Worker[] = [];
   // current webworker
   //private _currworker: int = 0;
   // remaining tasks to consider webworkers work complete
-  //private _remaining: int = 0;
+  private _remaining: int = 0;
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
@@ -182,6 +185,18 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       let _main = this;
 
+      // distribute particles initialization to
+      // different webworkers in a cyclical way;
+      // when reaching the last webworker, starts
+      // feeding to firt again and so on.
+      //pcs.initParticles = () => {
+      //  const slice = 1000;
+      //  for (let s = 0; s < numCoords; s += slice) {
+      //    _main._workers[_main._currworker].postMessage([ 1, s, slice, _main, pcs ]);
+      //    _main._currworker = (_main._currworker + 1) % _main._workers.length;
+      //  }
+      //}
+
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
         particle.position = new Vector3(
@@ -228,16 +243,16 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       let tasks:Promise<any>[] = [];
       
-      //this.initializeWorkers(8, function(e:MessageEvent)
-      //{
-      //  let idx = e.data[0];
-      //  console.log("Worker " + idx + " finished.");
-      //  _main._remaining--;
-      //  if (_main._remaining <= 0)
-      //  {
-      //    console.log("All work done.");
-      //  }
-      //});
+      this.initializeWorkers(8, function(e:MessageEvent)
+      {
+        let idx = e.data[0];
+        console.log("Worker " + idx + " finished.");
+        _main._remaining--;
+        if (_main._remaining <= 0)
+        {
+          console.log("All work done.");
+        }
+      });
 
       if (isGltf) {
         var blob = new Blob([gltfData]);
@@ -265,6 +280,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
             }
           }
 
+          for (let i=0; i<container.meshes.length; i++) {
+            container.meshes[i].setEnabled(false);
+          }
+
         }));
       }
 
@@ -276,6 +295,21 @@ export class BabylonPointCloudView extends BabylonBaseView {
       console.log("WAITING FOR TASKS...");
       await Promise.all(tasks);
       console.log("ALL READY!");
+
+      // use custom shader for pcs
+      //console.log("INITIALIZING PCS SHADING");
+      //let customShader = this.createShader(scene);
+      //customShader.setFloat("minHeight", -200);
+      //customShader.setFloat("maxHeight", 200);
+      //customShader.setFloat("minHue", 0.0);
+      //customShader.setFloat("maxHue", 0.7);
+      //customShader.setFloat("opacity", 1.0);
+      //customShader.setFloat("pointSize", 4.0);
+      //customShader.setInt("invertHue", 1);
+      //customShader.pointsCloud = true;
+      //pcs.mesh.material = customShader;
+      //console.log("PCS SHADING INITIALIZED");
+
       scene.createDefaultCameraOrLight(true, true, false);
       if (isTime || isClass) {
 
@@ -406,48 +440,145 @@ export class BabylonPointCloudView extends BabylonBaseView {
     );
   }
 
+  createShader(scene: Scene): ShaderMaterial
+  {
+    console.log("WILL CREATE CUSTOM SHADER");
 
-  //initializeWorkers(count: int, workdone: any): void
-  //{
-  //  var blobURL = URL.createObjectURL( new Blob([ '(',
-  //  function()
-  //  {
-  //    let idx = -1;
-  //  
-  //    // data[0]    = task to execute
-  //    // data[1..n] = depends on the task.
-  //    onmessage = function(e:MessageEvent)
-  //    {
-  //      switch (e.data[0])
-  //      {
-  //        case 0:
-  //          idx = e.data[1];
-  //          console.log("[Worker] Set idx = " + idx);
-  //        break;
-  //  
-  //        case 1:
-  //          console.log("[Worker] Run data on idx " + idx);
-//
-//
-  //          // done
-  //          //self.postMessage([ idx ]);
-  //        break;
-  //      }
-  //    }
-  //  
-  //    onerror = function(message, filename, lineno)
-  //    {
-  //      console.log("[Worker] Error: " + message + " on line " + lineno);
-  //    }
-  //  }.toString(), ')()' ], { type: 'application/javascript' } ) );
-//
-  //  //for (let w=0; w<count; w++)
-  //  //{
-  //  //  this._workers[w] = new Worker(blobURL);
-  //  //  this._workers[w].addEventListener("message", workdone);
-  //  //  this._workers[w].postMessage([ 0, w ]);
-  //  //}
-  //}
+    Effect.ShadersStore["pcsVertexShader"] = `
+        precision highp float;
+
+        // Attributes
+        attribute vec3 position;
+        attribute vec4 color;
+
+        // Uniforms
+        uniform mat4 worldViewProjection;
+        uniform float minHeight;
+        uniform float maxHeight;
+        uniform float minHue;
+        uniform float maxHue;
+        uniform float opacity;
+        uniform float pointSize;
+        uniform bool invertHue;
+
+        // Varying
+        varying vec4 colorOut;
+
+        float map(float value, float min1, float max1, float min2, float max2) {
+          return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+        }
+
+        // Smooth Hue to RGB conversion (based on: https://www.shadertoy.com/view/MsS3Wc)
+        vec3 hue2rgb(float hue) {
+            vec3 rgb = clamp(abs(mod(hue * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) -3.0) -1.0, 0.0, 1.0);
+            rgb = rgb * rgb * (3.0 - 2.0 * rgb); // cubic smoothing	
+            return mix(vec3(1.0), rgb, 1.0);
+        }
+
+        void main(void) {
+            vec3 p = position;
+            gl_Position = worldViewProjection * vec4(p, 1.0);
+            gl_PointSize = clamp(20. - gl_Position.z*0.01, 2., 20.);;
+
+            float hue = map(p.y, minHeight, maxHeight, minHue, maxHue);
+            //if (invertHue) {
+                //hue = invertHue ? maxHue - hue : hue;
+            //}
+            hue = invertHue ? maxHue - hue : hue;
+            vec3 rgb = hue2rgb(hue);
+            colorOut = vec4(rgb, opacity);
+        }
+    `;
+
+    Effect.ShadersStore["pcsFragmentShader"] =`
+        precision highp float;
+        varying vec4 colorOut;
+        void main(void) {
+            gl_FragColor = colorOut;
+        }
+    `;
+
+    console.log("CUSTOM SHADER");
+
+    let shader = new ShaderMaterial("pcs_shader", scene,
+    {
+            vertex: "pcs",
+            fragment: "pcs",
+    },
+    {
+			attributes: ["position", "color"],
+			uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
+    }
+    );
+
+    console.log("CUSTOM SHADER OK!");
+    return shader;
+  }
+
+  initializeWorkers(count: int, workdone: any): void
+  {
+    var blobURL = URL.createObjectURL( new Blob([ '(',
+    function()
+    {
+      let idx = -1;
+    
+      // data[0]    = task to execute
+      // data[1..n] = depends on the task.
+      onmessage = function(e:MessageEvent)
+      {
+        switch (e.data[0])
+        {
+          case 0:
+            idx = e.data[1];
+            console.log("[Worker] Set idx = " + idx);
+          break;
+    
+          case 1:
+            console.log("[Worker] Run data on idx " + idx);
+
+            // data[0] = BabylonPointCloudView
+            // data[1] = PointsCloudSystem
+            // data[2] = particle
+
+            // check if inside meshes
+            //let _main:BabylonPointCloudView = e.data[0];
+            //let _pcs:PointsCloudSystem = e.data[1];
+            //particle.color.set(.5, .5, 0, 1);
+            //for (let i=0; i<_main._instances.length; i++)
+            //{
+            //  let mesh = (_main._instances[i].getChildMeshes()[0] as Mesh);
+            //  let bounds = _main._instances[i].getHierarchyBoundingVectors(true);
+            //  if (_main.pointIsInsideMesh(mesh, bounds, particle.position))
+            //  {
+            //    particle.color?.set(1, 0, 0, 1);
+            //  }
+            //  else
+            //  {
+            //    //particle.color.set(0.1, 0.2, 0.1, 0);
+            //
+            //    // color based on distance
+            //    //let dist = Math.max(1, particle.position.lengthSquared() * 0.00025);
+            //    //particle.color.r /= dist;
+            //    //particle.color.g /= dist;
+            //    //particle.color.b /= dist;
+            //  }
+            //}
+
+            // done
+            //self.postMessage([ idx ]);
+          break;
+        }
+      }
+   
+    }.toString(), ')()' ], { type: 'application/javascript' } ) );
+    
+    for (let w=0; w<count; w++)
+    {
+      this._workers[w] = new Worker(blobURL);
+      this._workers[w].addEventListener("message", workdone);
+      this._workers[w].postMessage([ 0, w ]);
+    }
+  }
 
   pointIsInsideMesh(mesh: Mesh, boundInfo:{min:Vector3, max:Vector3}, point: Vector3): boolean
   {
