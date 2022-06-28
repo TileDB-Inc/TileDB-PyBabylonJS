@@ -155,6 +155,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const rgbMax = Math.max(redmax, greenmax, bluemax);
 
+      scene.clearColor = new Color4(backgroundColor[0], backgroundColor[1], backgroundColor[2],backgroundColor[3]);
+      
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isClass
@@ -299,8 +301,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
         ground.material = mat;
 
       }
-      
-      scene.clearColor = new Color4(backgroundColor[0], backgroundColor[1], backgroundColor[2],backgroundColor[3]);
       
       let camera = scene.activeCamera as ArcRotateCamera;
       // possibly make these configurable, but they are good defaults

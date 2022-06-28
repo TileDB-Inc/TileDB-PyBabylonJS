@@ -96,13 +96,26 @@ def check_point_cloud_data_local(mode, uri, kwargs):
     return data
 
 
-def check_point_cloud_data_cloud(kwargs):
+def check_point_cloud_data_cloud(uri, kwargs):
 
-    if not "name_space" in kwargs:
-        raise ValueError("The name space of the array is not specified")
-    if not "array_name" in kwargs:
-        raise ValueError("The name of the array is not specified")
     if not "token" in kwargs:
-        raise ValueError("The TileDB token needed to access the array is not specified")
+        token = os.getenv("TILEDB_REST_TOKEN")
+        if token == None:
+            raise ValueError(
+                "The TileDB Cloud token needed to access the array is not specified or cannot be accessed"
+            )
+        kwargs = {**kwargs, "token": token}
+
     if not "bbox" in kwargs:
         raise ValueError("The bbox for slicing data from the array is not specified")
+
+    name_space = uri.split("://")[1].split("/")[0]
+    array_name = uri.split("://")[1].split("/")[1]
+
+    kwargs = {
+        **kwargs,
+        "name_space": name_space,
+        "array_name": array_name,
+    }
+
+    return kwargs
