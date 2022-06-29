@@ -114,8 +114,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       var isTopo = false;
       var isGltf = false;
 
-      var data!: {
-        [x: string]: any; X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[], GpsTime: number[], Classification: number[]}; 
+      var data: any
 
       if (this.values.mode === "time"){
         isTime = true;
@@ -128,12 +127,19 @@ export class BabylonPointCloudView extends BabylonBaseView {
       } 
       
       if (this.values.source === "cloud"){
-        data = await loadPointCloud(this.values).then((results) => {return results}); 
-        //if (isTime = true){sort data by GpsTime}
+        var dataUnsorted = await loadPointCloud(this.values).then((results) => {return results});        
+        if (isTime){
+          data = sortDataArrays(dataUnsorted);
+        }else{
+          data = dataUnsorted;
+        }
       }else{
         data = this.values.data;
       }
       
+      console.log("data")
+      console.log(data)
+
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
@@ -497,4 +503,40 @@ async function loadPointCloud(values: {name_space: string, array_name: string, b
     return results
   }
   
-};  
+}  
+
+function sortDataArrays(data: any){
+  
+  const GpsTime = data.GpsTime
+  const X = data.X
+  const Y = data.Y
+  const Z = data.Z
+  const Red = data.Red
+  const Green = data.Green
+  const Blue = data.Blue
+
+  const sortedData = sortArrays({GpsTime, X, Y, Z, Red, Green, Blue})
+
+  return sortedData;
+
+}        
+
+function sortArrays(arrays: any, comparator = (a: number, b: number) => (a < b) ? -1 : (a > b) ? 1 : 0) {
+  
+  const arrayKeys = Object.keys(arrays);
+  const [sortableArray] = Object.values(arrays) as any[];
+  const indexes = Object.keys(sortableArray);
+  const sortedIndexes = indexes.sort((a, b) => comparator(sortableArray[a], sortableArray[b]));
+
+  const sortByIndexes = (array: { [x: string]: any; }, sortedIndexes: any[]) => sortedIndexes.map(sortedIndex => array[sortedIndex]);
+
+  if (Array.isArray(arrays)) {
+    return arrayKeys.map((arrayIndex: string) => sortByIndexes(arrays[arrayIndex as any], sortedIndexes));
+  } else {
+    const sortedArrays: any = {};
+    arrayKeys.forEach((arrayKey) => {
+      sortedArrays[arrayKey] = sortByIndexes(arrays[arrayKey as any], sortedIndexes) as any;
+    });
+    return sortedArrays;
+  }
+}
