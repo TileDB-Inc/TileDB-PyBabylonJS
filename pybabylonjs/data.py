@@ -9,9 +9,7 @@ import cv2
 import tiledb
 
 
-def create_point_cloud(mode, array_uri: str, kwargs):
-
-    bbox = kwargs["bbox"]
+def create_point_cloud(mode, array_uri: str, bbox):
 
     if mode == "time":
         attrs = ["Red", "Green", "Blue", "GpsTime"]
@@ -35,7 +33,7 @@ def create_point_cloud(mode, array_uri: str, kwargs):
     return data
 
 
-def create_mapbox_image(data: dict, kwargs):
+def create_mapbox_image(data: dict, point_cloud_args):
     """Create a Dict with an additional topographic image from mapbox
 
     Parameters:
@@ -44,9 +42,9 @@ def create_mapbox_image(data: dict, kwargs):
     from rasterio.coords import BoundingBox
     from rasterio.warp import transform_bounds
 
-    mbtoken = kwargs["mbtoken"]
-    style_id = kwargs["mbstyle"]
-    data_crs = kwargs["crs"]
+    mbtoken = point_cloud_args["mbtoken"]
+    style_id = point_cloud_args["mbstyle"]
+    data_crs = point_cloud_args["crs"]
 
     dst_crs = {"init": "EPSG:4326"}  # lat/lon
 

@@ -476,12 +476,9 @@ async function loadPointCloud(values: {name_space: string, array_name: string, b
   
   config.apiKey = values.token;
 
-  if(values.tiledb_env === "stage")
-  {
-    config.basePath = 'https://api.dev.tiledb.io';
+  if (values.tiledb_env){
+    config.basePath = values.tiledb_env;
   }
-
-  console.log(config)
 
   const tiledbClient = new Client(config);
 

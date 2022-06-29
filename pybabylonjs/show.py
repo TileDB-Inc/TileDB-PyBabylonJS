@@ -47,14 +47,16 @@ class Show:
 
         """
 
+        point_cloud_args_in = kwargs
+
         if source == "dict":
             data = check_point_cloud_data_dict(mode, data)
         if source == "local":
-            data = check_point_cloud_data_local(mode, uri, kwargs)
+            data = check_point_cloud_data_local(mode, uri, point_cloud_args_in)
         if source == "cloud":
-            kwargs = check_point_cloud_data_cloud(uri, kwargs)
+            point_cloud_args_in = check_point_cloud_data_cloud(uri, point_cloud_args_in)
 
-        point_cloud_args = check_point_cloud_args(mode, kwargs)
+        point_cloud_args = check_point_cloud_args(mode, point_cloud_args_in)
 
         d = {
             **point_cloud_args,

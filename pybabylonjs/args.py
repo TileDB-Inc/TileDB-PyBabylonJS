@@ -3,10 +3,11 @@
 """Functions to format and check the data and keyword arguments for each data source and visualization mode."""
 
 import os
+from urllib.parse import urlparse
 
 from .data import *
 
-POINT_CLOUD_KWARG_DEFAULTS = {
+POINT_CLOUD_ARGS_DEFAULTS = {
     "inspector": False,
     "width": 800,
     "height": 600,
@@ -25,34 +26,34 @@ POINT_CLOUD_KWARG_DEFAULTS = {
     "name_space": None,
     "array_name": None,
     "token": None,
-    "tiledb_env": "prod",
+    "tiledb_env": None,
 }
 
 
-def check_point_cloud_args(mode, kwargs):
+def check_point_cloud_args(mode, point_cloud_args_in):
 
     if mode == "classes":
-        if not "classes" in kwargs:
+        if not "classes" in point_cloud_args_in:
             raise ValueError(
                 "The classes containing numbers and names is not specified"
             )
     elif mode == "topo":
-        if not "mbtoken" in kwargs:
+        if not "mbtoken" in point_cloud_args_in:
             raise ValueError("The Mapbox token is not specified")
-        if not "crs" in kwargs:
+        if not "crs" in point_cloud_args_in:
             raise ValueError(
                 "The crs (coordinate reference system) of the data is not specified"
             )
     elif mode == "gltf":
-        if not "gltf_data" in kwargs:
+        if not "gltf_data" in point_cloud_args_in:
             raise ValueError("gltf_data is not specified")
 
-    parsed_args = dict(POINT_CLOUD_KWARG_DEFAULTS)
-    for key in POINT_CLOUD_KWARG_DEFAULTS.keys():
-        if key in kwargs:
-            parsed_args[key] = kwargs.pop(key)
+    point_cloud_args = dict(POINT_CLOUD_ARGS_DEFAULTS)
+    for key in POINT_CLOUD_ARGS_DEFAULTS.keys():
+        if key in point_cloud_args_in:
+            point_cloud_args[key] = point_cloud_args_in.pop(key)
 
-    return parsed_args
+    return point_cloud_args
 
 
 def check_point_cloud_data_dict(mode, data):
@@ -85,38 +86,37 @@ def check_point_cloud_data_dict(mode, data):
     return data
 
 
-def check_point_cloud_data_local(mode, uri, kwargs):
+def check_point_cloud_data_local(mode, uri, point_cloud_args):
 
     if os.path.isdir(uri) == False:
         raise ValueError("uri: " + uri + " does not exist.")
-    if not "bbox" in kwargs:
+    if not "bbox" in point_cloud_args:
         raise ValueError("The bbox for slicing data from " + uri + " is not specified")
 
-    data = create_point_cloud(mode, uri, kwargs)
+    data = create_point_cloud(mode, uri, point_cloud_args["bbox"])
 
     return data
 
 
-def check_point_cloud_data_cloud(uri, kwargs):
+def check_point_cloud_data_cloud(uri, point_cloud_args):
 
-    if not "token" in kwargs:
+    if not "token" in point_cloud_args:
         token = os.getenv("TILEDB_REST_TOKEN")
         if token == None:
             raise ValueError(
                 "The TileDB Cloud token needed to access the array is not specified or cannot be accessed"
             )
-        kwargs = {**kwargs, "token": token}
+        point_cloud_args = {**point_cloud_args, "token": token}
 
-    if not "bbox" in kwargs:
+    if not "bbox" in point_cloud_args:
         raise ValueError("The bbox for slicing data from the array is not specified")
 
-    name_space = uri.split("://")[1].split("/")[0]
-    array_name = uri.split("://")[1].split("/")[1]
+    o = urlparse(uri)
 
-    kwargs = {
-        **kwargs,
-        "name_space": name_space,
-        "array_name": array_name,
+    point_cloud_args = {
+        **point_cloud_args,
+        "name_space": o.netloc,
+        "array_name": o.path[1:],
     }
 
-    return kwargs
+    return point_cloud_args
