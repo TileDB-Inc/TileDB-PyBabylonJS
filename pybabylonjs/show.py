@@ -45,22 +45,62 @@ class Show:
         :param source: location of the data to be visualized, one of "cloud", "local" or "dict"
         :param mode: sub-type of the visualization, one of "default", "time", "classes" or "topo"
 
-        :Keyword Arguments:
-
-        * **bbox** - ...
-        * **classes** - ...
-        * **time_offset** - ...
-        *
-
-
         """
+
+        point_cloud_args_in = kwargs
 
         if source == "dict":
             data = check_point_cloud_data_dict(mode, data)
         if source == "local":
-            data = check_point_cloud_data_local(mode, uri, kwargs)
+            data = check_point_cloud_data_local(mode, uri, point_cloud_args_in)
         if source == "cloud":
-            check_point_cloud_data_cloud(kwargs)
+            point_cloud_args_in = check_point_cloud_data_cloud(uri, point_cloud_args_in)
+
+        point_cloud_args = check_point_cloud_args(mode, point_cloud_args_in)
+
+        d = {
+            **point_cloud_args,
+            "uri": uri,
+            "data": data,
+            "source": source,
+            "mode": mode,
+        }
+
+        if mode == "topo":
+            img = create_mapbox_image(data, point_cloud_args)
+            d = {**d, "mapbox_img": img}
+
+        dataviz = BabylonPointCloud()
+        dataviz.value = {**d}
+        display(dataviz)
+
+    @classmethod
+    def from_dict(
+        self,
+        data: dict,
+        time: Optional[bool] = False,
+        classes: Optional[bool] = False,
+        topo: Optional[bool] = False,
+        uri: Optional[str] = None,
+        **kwargs,
+    ):
+
+        source = "dict"
+
+        if time:
+            mode = "time"
+        elif classes:
+            raise ValueError(
+                "This mode is not implemented for show.from_dict(), use show.point_cloud() instead"
+            )
+        elif topo:
+            raise ValueError(
+                "This mode is not implemented for show.from_dict(), use show.point_cloud() instead"
+            )
+        else:
+            mode = "default"
+
+        data = check_point_cloud_data_dict(mode, data)
 
         point_cloud_args = check_point_cloud_args(mode, kwargs)
 
