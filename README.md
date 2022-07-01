@@ -24,21 +24,26 @@ jupyter nbextension enable --py [--sys-prefix|--user|--system] pybabylonjs
 ## Development Installation
 
 Create and activate a dev environment:
+
 ```bash
-mamba create -n pybabylonjs-dev -c conda-forge nodejs yarn python jupyterlab
+conda install -c conda-forge mamba
+
+mamba create -n pybabylonjs-dev -c conda-forge nodejs yarn python=3.7.10 tree scipy 'pyarrow>2' numpy pandas tiledb-py rasterio gdal pdal python-pdal jupyter-packaging jupyterlab
 
 conda activate pybabylonjs-dev
+
+pip install opencv-python
 ```
 
-Fork or clone the repo. Install the TileDB-PyBabylonJS Python package. This will also build the TS package.
+Fork or clone the repo and go the main directory. Install the TileDB-PyBabylonJS Python package that will also build the TypeScript package:
+
 ```bash
 pip install -e ".[test, examples]"
 ```
 
-When developing your extensions, you need to manually enable your extensions with the
-notebook / lab frontend. For jupyter lab, this is done by the command:
+When developing your extensions, you need to manually enable your extensions with the notebook / lab frontend. For jupyter lab, this is done by the command:
 
-```
+```bash
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
 yarn run build
 jupyter labextension install .
@@ -46,7 +51,7 @@ jupyter labextension install .
 
 For a classic notebook, you need to run:
 
-```
+```bash
 jupyter nbextension install --sys-prefix --symlink --overwrite --py pybabylonjs
 jupyter nbextension enable --sys-prefix --py pybabylonjs
 ```
@@ -57,7 +62,9 @@ you might also need another flag instead of `--sys-prefix`, but we won't cover t
 of those flags here.
 
 ### How to see your changes
-#### Typescript:
+
+#### TypeScript
+
 If you use JupyterLab to develop then you can watch the source directory and run JupyterLab at the same time in different
 terminals to watch for changes in the extension's source and automatically rebuild the widget.
 
@@ -70,7 +77,15 @@ jupyter lab
 
 After a change wait for the build to finish and then refresh your browser and the changes should take effect.
 
-#### Python:
+To add a TypeScript package use [yarn](https://classic.yarnpkg.com/lang/en/docs/cli/add/): 
+
+```bash
+yarn add <package-name>
+yarn add --dev <dev-package-name>
+``` 
+
+#### Python
+
 If you make a change to the python code then you will need to restart the notebook kernel to have it take effect.
 
 ## Usage
