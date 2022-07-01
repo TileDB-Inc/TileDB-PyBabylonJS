@@ -15,6 +15,10 @@ import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, Scen
   Axis,
   Ray,
   TransformNode,
+  BoundingBoxGizmo,
+  UtilityLayerRenderer,
+  SixDofDragBehavior,
+  MultiPointerScaleBehavior,
   } from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
@@ -113,6 +117,8 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 export class BabylonPointCloudView extends BabylonBaseView {
   // this is to keep all imported models on a common parent
   private _instances: TransformNode[] = new Array<TransformNode>();
+  // take note of scene
+  //private _scene!: Scene;
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
@@ -121,6 +127,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
       var isClass = false;
       var isTopo = false;
       var isGltf = false;
+
+      let main = this;
+      //main._scene = scene;
 
       var data!: {
         [x: string]: any; X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[], GpsTime: number[], Classification: number[]}; 
@@ -174,8 +183,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
         });
       }
 
-      let _main = this;
-
       const pcLoader = function (particle: any, i: number, _: string) {
         // Y is up
         particle.position = new Vector3(
@@ -199,11 +206,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
         let minDist = 999999999999;
         particle.color.set(0, .8, 0, 1);
 
-        for (let i=0; i<_main._instances.length; i++)
+        for (let i=0; i<main._instances.length; i++)
         {
-          let mesh = (_main._instances[i].getChildMeshes()[0] as Mesh);
-          let bounds = _main._instances[i].getHierarchyBoundingVectors(true);
-          if (_main.pointIsInsideMesh(mesh, bounds, particle.position))
+          let mesh = (main._instances[i].getChildMeshes()[0] as Mesh);
+          let bounds = main._instances[i].getHierarchyBoundingVectors(true);
+          if (main.pointIsInsideMesh(mesh, bounds, particle.position))
           {
             particle.color.set(1, 0, 0, 1);
             minDist = 1;
@@ -211,7 +218,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
           else
           {
             // find minimum distance
-            let dist = Math.max(1, particle.position.subtract(_main._instances[i].position).lengthSquared() * 0.0004);
+            let dist = Math.max(1, particle.position.subtract(main._instances[i].position).lengthSquared() * 0.0004);
             if (dist < minDist) minDist = dist;
           }
         }
@@ -244,9 +251,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
             let inst = (container.meshes[0] as Mesh).instantiateHierarchy();
             if (inst)
             {
-              //inst.getChildMeshes()[0].showBoundingBox = true;
+              inst.getChildMeshes()[0].showBoundingBox = true;
               inst.position.set(-400+Math.random()*800, 0, -400+Math.random()*800);
-              _main._instances.push(inst);
+              //main.makeDraggable((inst.getChildMeshes()[0] as Mesh), main._scene);
+              main._instances.push(inst);
             }
           }
 
@@ -389,6 +397,23 @@ export class BabylonPointCloudView extends BabylonBaseView {
         resolve(true);
       }
     );
+  }
+
+  makeDraggable(mesh: Mesh, scene: Scene): void
+  {
+    let boundingBox = BoundingBoxGizmo.MakeNotPickableAndWrapInBoundingBox(mesh);
+
+    // Create bounding box gizmo
+    let utilLayer = new UtilityLayerRenderer(scene);
+    utilLayer.utilityLayerScene.autoClearDepthAndStencil = false;
+    let gizmo = new BoundingBoxGizmo(Color3.FromHexString("#0984e3"), utilLayer);
+    gizmo.attachedMesh = boundingBox;
+
+    // Create behaviors to drag and scale with pointers in VR
+    let sixDofDragBehavior = new SixDofDragBehavior();
+    boundingBox.addBehavior(sixDofDragBehavior);
+    let multiPointerScaleBehavior = new MultiPointerScaleBehavior();
+    boundingBox.addBehavior(multiPointerScaleBehavior);
   }
 
   pointIsInsideMesh(mesh: Mesh, boundInfo:{min:Vector3, max:Vector3}, point: Vector3): boolean
