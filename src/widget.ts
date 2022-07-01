@@ -119,14 +119,21 @@ export class BabylonPointCloudView extends BabylonBaseView {
   // webworkers for pointcloud initialization
   private _workers: Worker[] = [];
   // current webworker
-  //private _currworker: int = 0;
+  private _currworker: int = 0;
   // remaining tasks to consider webworkers work complete
   private _remaining: int = 0;
+  // other vars
+  private _isTime: boolean = false;
+  //private _scene?: Scene;
 
   protected async createScene(): Promise<Scene> {
+
+    let _main = this;
+
     return super.createScene().then(async scene => {
 
-      var isTime = false;
+      //_main._scene = scene;
+
       var isClass = false;
       var isTopo = false;
       var isGltf = false;
@@ -135,7 +142,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         [x: string]: any; X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[], GpsTime: number[], Classification: number[]}; 
 
       if (this.values.mode === "time"){
-        isTime = true;
+        _main._isTime = true;
       }else if (this.values.mode === "classes") {
         isClass = true;
       }else if(this.values.mode == "topo"){
@@ -146,7 +153,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       
       if (this.values.source === "cloud"){
         data = await loadPointCloud(this.values).then((results) => {return results}); 
-        //if (isTime = true){sort data by GpsTime}
+        //if (_main._isTime = true){sort data by GpsTime}
       }else{
         data = this.values.data;
       }
@@ -159,8 +166,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const offset = this.values.time_offset;
       const classification = this.values.data.Classification;
       const classes = this.values.classes;
-      const topo_offset = this.values.topo_offset;
-      const scale = this.zScale;
       let doClear = false;
 
       const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
@@ -179,70 +184,12 @@ export class BabylonPointCloudView extends BabylonBaseView {
       }
       else {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
-          updatable: isTime
+          updatable: _main._isTime
         });
       }
 
-      let _main = this;
-
-      // distribute particles initialization to
-      // different webworkers in a cyclical way;
-      // when reaching the last webworker, starts
-      // feeding to firt again and so on.
-      //pcs.initParticles = () => {
-      //  const slice = 1000;
-      //  for (let s = 0; s < numCoords; s += slice) {
-      //    _main._workers[_main._currworker].postMessage([ 1, s, slice, _main, pcs ]);
-      //    _main._currworker = (_main._currworker + 1) % _main._workers.length;
-      //  }
-      //}
-
-      const pcLoader = function (particle: any, i: number, _: string) {
-        // Y is up
-        particle.position = new Vector3(
-          data.X[i],
-          (data.Z[i]-topo_offset) * scale,
-          data.Y[i]
-        );
-
-        if (isTime) {
-          particle.color = scene.clearColor;
-        }
-        else {
-          particle.color = new Color3(
-            data.Red[i]/ rgbMax,
-            data.Green[i]/ rgbMax,
-            data.Blue[i]/ rgbMax
-          );  
-        }
-
-        // check if inside meshes
-        particle.color.set(.5, .5, 0, 1);
-        for (let i=0; i<_main._instances.length; i++)
-        {
-          let mesh = (_main._instances[i].getChildMeshes()[0] as Mesh);
-          let bounds = _main._instances[i].getHierarchyBoundingVectors(true);
-          if (_main.pointIsInsideMesh(mesh, bounds, particle.position))
-          {
-            particle.color?.set(1, 0, 0, 1);
-          }
-          else
-          {
-            //particle.color.set(0.1, 0.2, 0.1, 0);
-
-            // color based on distance
-            //let dist = Math.max(1, particle.position.lengthSquared() * 0.00025);
-            //particle.color.r /= dist;
-            //particle.color.g /= dist;
-            //particle.color.b /= dist;
-          }
-        }
-      };
-
-      //const workerPromise = 
-
       let tasks:Promise<any>[] = [];
-      
+
       this.initializeWorkers(8, function(e:MessageEvent)
       {
         let idx = e.data[0];
@@ -253,6 +200,22 @@ export class BabylonPointCloudView extends BabylonBaseView {
           console.log("All work done.");
         }
       });
+
+      console.log("WORKERS INITIALIZED");
+
+      // distribute particles initialization to
+      // different webworkers in a cyclical way;
+      // when reaching the last webworker, starts
+      // feeding to firt again and so on.
+      pcs.initParticles = () => {
+        console.log("INITIALIZING PARTICLES...");
+        const slice = 1000;
+        const json_main = JSON.stringify(_main);
+        for (let s = 0; s < numCoords; s += slice) {
+          _main._workers[_main._currworker].postMessage([ 1, s, slice, json_main ]);
+          _main._currworker = (_main._currworker + 1) % _main._workers.length;
+        }
+      }
 
       if (isGltf) {
         var blob = new Blob([gltfData]);
@@ -289,8 +252,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       console.log("WAITING FOR LOAD...");
       await Promise.all(tasks);
-      pcs.addPoints(numCoords, pcLoader);
-      tasks.push(pcs.buildMeshAsync());
+
+      console.log("WILL ADD PARTICLES TO PCS");
+      pcs.addPoints(numCoords);
+      tasks.push(pcs.buildMeshAsync().then(() => { pcs.initParticles(); }));
 
       console.log("WAITING FOR TASKS...");
       await Promise.all(tasks);
@@ -311,7 +276,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       //console.log("PCS SHADING INITIALIZED");
 
       scene.createDefaultCameraOrLight(true, true, false);
-      if (isTime || isClass) {
+      if (_main._isTime || isClass) {
 
         var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
           "UI",
@@ -334,7 +299,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         slider.height = "20px";
         slider.width = "200px";
 
-        if (isTime) {
+        if (_main._isTime) {
           header.text = "Time: " + (offset + times[0]).toFixed(2);
 
           slider.maximum = times.length - 1;
@@ -367,7 +332,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
         slider.onValueChangedObservable.add(
           function (value: any) {
-            if (isTime) {
+            if (_main._isTime) {
               header.text = "Time: " + (offset + times[value]).toFixed(2);
 
               if (value > pcs.counter) {
@@ -534,36 +499,70 @@ export class BabylonPointCloudView extends BabylonBaseView {
           break;
     
           case 1:
-            console.log("[Worker] Run data on idx " + idx);
+            //console.log("[Worker] Run data on idx " + idx);
+            console.log("[Worker] Run data");
 
-            // data[0] = BabylonPointCloudView
-            // data[1] = PointsCloudSystem
-            // data[2] = particle
+            // [1] = start index
+            // [2] = slice size
+            // [3] = _main (BabylonPointCloudView instance)
+            // [4] = pcs
+            // [5] = data
+            // ([ 1, s, slice, data ])
+            let start_index = e.data[1];
+            let end_index = e.data[2] + start_index;
+            let main = JSON.parse(e.data[3]) as BabylonPointCloudView;
 
-            // check if inside meshes
-            //let _main:BabylonPointCloudView = e.data[0];
-            //let _pcs:PointsCloudSystem = e.data[1];
-            //particle.color.set(.5, .5, 0, 1);
-            //for (let i=0; i<_main._instances.length; i++)
-            //{
-            //  let mesh = (_main._instances[i].getChildMeshes()[0] as Mesh);
-            //  let bounds = _main._instances[i].getHierarchyBoundingVectors(true);
-            //  if (_main.pointIsInsideMesh(mesh, bounds, particle.position))
-            //  {
-            //    particle.color?.set(1, 0, 0, 1);
-            //  }
-            //  else
-            //  {
-            //    //particle.color.set(0.1, 0.2, 0.1, 0);
-            //
-            //    // color based on distance
-            //    //let dist = Math.max(1, particle.position.lengthSquared() * 0.00025);
-            //    //particle.color.r /= dist;
-            //    //particle.color.g /= dist;
-            //    //particle.color.b /= dist;
-            //  }
-            //}
+            console.log("Start: " + start_index + ", End: " + end_index + ", Main: " + main);
+/*
+            const topo_offset = _main.values.topo_offset;
+            const scale = _main.zScale;
 
+            for (let i = start_index; i < end_index; i++)
+            {
+              let particle = pcs.particles[i] as CloudPoint;
+
+              // Y is up
+              particle.position = new Vector3(
+                data.X[i],
+                (data.Z[i]-topo_offset) * scale,
+                data.Y[i]
+              );
+
+              if (_main._isTime) {
+                if (_main._scene) particle.color = _main._scene.clearColor;
+              }
+              else {
+                particle.color = new Color4(
+                  data.Red[i],
+                  data.Green[i],
+                  data.Blue[i],
+                  1
+                );  
+              }
+
+              // check if inside meshes
+              particle?.color?.set(.5, .5, 0, 1);
+              for (let i=0; i<_main._instances.length; i++)
+              {
+                let mesh = (_main._instances[i].getChildMeshes()[0] as Mesh);
+                let bounds = _main._instances[i].getHierarchyBoundingVectors(true);
+                if (_main.pointIsInsideMesh(mesh, bounds, particle.position))
+                {
+                  particle.color?.set(1, 0, 0, 1);
+                }
+                else
+                {
+                  //particle.color.set(0.1, 0.2, 0.1, 0);
+
+                  // color based on distance
+                  //let dist = Math.max(1, particle.position.lengthSquared() * 0.00025);
+                  //particle.color.r /= dist;
+                  //particle.color.g /= dist;
+                  //particle.color.b /= dist;
+                }
+              }
+            }
+*/
             // done
             //self.postMessage([ idx ]);
           break;
@@ -576,7 +575,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
     {
       this._workers[w] = new Worker(blobURL);
       this._workers[w].addEventListener("message", workdone);
-      this._workers[w].postMessage([ 0, w ]);
+      //this._workers[w].postMessage([ 0, w ]);
     }
   }
 
