@@ -164,6 +164,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       var ymax: number
       var zmin: number
       var zmax: number
+      var rgbMax: number
 
       if (this.values.bbox) {
         xmin = this.values.bbox.X[0];
@@ -182,10 +183,15 @@ export class BabylonPointCloudView extends BabylonBaseView {
         zmax = data.Z.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       }    
 
-      const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const rgbMax = Math.max(redmax, greenmax, bluemax);
+      if (this.values.rgb_max) {
+        rgbMax = this.values.rgb_max;
+      }
+      else {
+        const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+        const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+        const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+        rgbMax = Math.max(redmax, greenmax, bluemax);
+      }    
 
       scene.clearColor = new Color4(backgroundColor[0], backgroundColor[1], backgroundColor[2],backgroundColor[3]);
       

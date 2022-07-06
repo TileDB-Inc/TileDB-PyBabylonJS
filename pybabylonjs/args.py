@@ -16,6 +16,7 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "point_size": 1,
     "background_color": [0, 0, 0, 1],
     "bbox": None,
+    "rgb_max": None,
     "time_offset": 0,
     "classes": {"numbers": [], "names": []},
     "mbtoken": None,
