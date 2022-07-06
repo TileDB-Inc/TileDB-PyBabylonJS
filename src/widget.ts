@@ -10,8 +10,7 @@ import {
 import { MODULE_NAME, MODULE_VERSION } from './version';
 import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, StandardMaterial,
   SolidParticleSystem, MeshBuilder,
-  Vector3,
-  Texture} from '@babylonjs/core';
+  Vector3, Texture } from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/core/Debug/debugLayer";
@@ -32,6 +31,7 @@ export class BabylonBaseModel extends DOMWidgetModel {
     ...DOMWidgetModel.serializers
   };
 }
+
 
 abstract class BabylonBaseView extends DOMWidgetView {
   canvas?: HTMLCanvasElement;
@@ -88,6 +88,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
   }
 }
 
+
 export class BabylonPointCloudModel extends BabylonBaseModel {
   defaults(): any {
     return {
@@ -105,6 +106,7 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
   static view_name = 'BabylonPointCloudView';
 }
 
+
 export class BabylonPointCloudView extends BabylonBaseView {
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
@@ -114,6 +116,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       var isTopo = false;
       var isGltf = false;
 
+      var dataIn: any
       var data: any
 
       if (this.values.mode === "time"){
@@ -129,16 +132,19 @@ export class BabylonPointCloudView extends BabylonBaseView {
       if (this.values.source === "cloud"){
         var dataUnsorted = await loadPointCloud(this.values).then((results) => {return results});        
         if (isTime){
-          data = sortDataArrays(dataUnsorted);
+          dataIn = sortDataArrays(dataUnsorted);
         }else{
-          data = dataUnsorted;
+          dataIn = dataUnsorted;
         }
       }else{
-        data = this.values.data;
+        dataIn = this.values.data;
       }
       
-      console.log("data")
-      console.log(data)
+      if (this.values.show_fraction){ 
+        data = reduceDataArrays(dataIn, this.values.show_fraction);
+      }else{
+        data = dataIn;
+      }
 
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
@@ -156,6 +162,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
       const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const zmin = data.Z.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+      const zmax = data.Z.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));    
       const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
@@ -181,7 +189,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
           (data.Z[i]-topo_offset) * scale,
           data.Y[i]
         );
-
         if (isTime) {
           particle.color = scene.clearColor;
         }
@@ -202,10 +209,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
         var blob = new Blob([gltfData]);
         var url = URL.createObjectURL(blob);
         tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf"));
-      }
+      };
 
       await Promise.all(tasks);
       scene.createDefaultCameraOrLight(true, true, false);
+
       if (isTime || isClass) {
 
         var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
@@ -318,12 +326,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
       if (this.wheelPrecision > 0)
         camera.wheelPrecision = this.wheelPrecision;
       camera.alpha += Math.PI;
-      camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
+      camera.setTarget(new Vector3((xmin + xmax) / 2, ((zmin + zmax) / 2)*0.5, (ymin + ymax) / 2));
       camera.attachControl(this.canvas, false);
       return scene;
     });
   }
 }
+
 
 export class BabylonMBRSModel extends BabylonBaseModel {
   defaults(): any {
@@ -341,6 +350,7 @@ export class BabylonMBRSModel extends BabylonBaseModel {
   static model_name = 'BabylonMBRSModel';
   static view_name = 'BabylonMBRSView';
 }
+
 
 export class BabylonMBRSView extends BabylonBaseView {
   protected async createScene(): Promise<Scene> {
@@ -412,6 +422,7 @@ export class BabylonMBRSView extends BabylonBaseView {
   }
 }
 
+
 export class BabylonImageModel extends BabylonBaseModel {
   defaults(): any {
     return {
@@ -428,6 +439,7 @@ export class BabylonImageModel extends BabylonBaseModel {
   static model_name = 'BabylonImageModel';
   static view_name = 'BabylonImageView';
 }
+
 
 export class BabylonImageView extends BabylonBaseView {
 
@@ -476,6 +488,7 @@ export class BabylonImageView extends BabylonBaseView {
   }
 }
 
+
 async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string, tiledb_env: string}) {
 
   const config: Record<string, any> = {};
@@ -505,6 +518,7 @@ async function loadPointCloud(values: {name_space: string, array_name: string, b
   
 }  
 
+
 function sortDataArrays(data: any){
   
   const GpsTime = data.GpsTime
@@ -520,6 +534,7 @@ function sortDataArrays(data: any){
   return sortedData;
 
 }        
+
 
 function sortArrays(arrays: any, comparator = (a: number, b: number) => (a < b) ? -1 : (a > b) ? 1 : 0) {
   
@@ -539,4 +554,37 @@ function sortArrays(arrays: any, comparator = (a: number, b: number) => (a < b) 
     });
     return sortedArrays;
   }
+}
+
+
+function reduceDataArrays(data: any, show_fraction: number){
+
+  const GpsTime = data.GpsTime
+  const X = data.X
+  const Y = data.Y
+  const Z = data.Z
+  const Red = data.Red
+  const Green = data.Green
+  const Blue = data.Blue
+
+  const reducedData = reduceArrays({GpsTime, X, Y, Z, Red, Green, Blue}, show_fraction)
+
+  return reducedData;
+}
+
+
+function reduceArrays(arrays: any, show_fraction: number){
+
+  const arrayKeys = Object.keys(arrays);
+  const reducedArrays: any = {};
+
+  for (let arrayKey of arrayKeys) {
+    if (Array.isArray(arrays[arrayKey])){
+      reducedArrays[arrayKey] = arrays[arrayKey].filter(function(value: any, index: any, Arr: any) {
+        return index % show_fraction == 0;  
+      });
+    }      
+  }
+
+  return reducedArrays;
 }
