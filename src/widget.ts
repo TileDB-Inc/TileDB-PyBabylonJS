@@ -157,13 +157,31 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
       let doClear = false;
+      
+      var xmin: number
+      var xmax: number
+      var ymin: number
+      var ymax: number
+      var zmin: number
+      var zmax: number
 
-      const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-      const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-      const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const zmin = data.Z.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-      const zmax = data.Z.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));    
+      if (this.values.bbox) {
+        xmin = this.values.bbox.X[0];
+        xmax = this.values.bbox.X[1];
+        ymin = this.values.bbox.Y[0];
+        ymax = this.values.bbox.Y[1];
+        zmin = this.values.bbox.Z[0];
+        zmax = this.values.bbox.Z[1];
+      }
+      else {
+        xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+        xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+        ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+        ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+        zmin = data.Z.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+        zmax = data.Z.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      }    
+
       const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
       const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
