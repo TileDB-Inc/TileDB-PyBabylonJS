@@ -15,7 +15,8 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "wheel_precision": -1,
     "point_size": 1,
     "background_color": [0, 0, 0, 1],
-    "bbox": {"X": [0, 1], "Y": [0, 1], "Z": [0, 1]},
+    "bbox": None,
+    "rgb_max": None,
     "time_offset": 0,
     "classes": {"numbers": [], "names": []},
     "mbtoken": None,
@@ -27,6 +28,7 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "array_name": None,
     "token": None,
     "tiledb_env": None,
+    "show_fraction": None,
 }
 
 
