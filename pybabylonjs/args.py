@@ -35,7 +35,6 @@ POINT_CLOUD_ARGS_DEFAULTS = {
 }
 
 
-
 def check_point_cloud_args(mode, point_cloud_args_in):
 
     if mode == "classes":
