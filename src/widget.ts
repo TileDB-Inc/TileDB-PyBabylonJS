@@ -17,7 +17,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import '../css/widget.css';
 
-import { setPointCloudSwitches, getPointCloud, getPointCloudLimits } from "./data";
+import { setPointCloudSwitches, getPointCloud } from "./data";
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -113,13 +113,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const {isTime, isClass, isTopo, isGltf} = setPointCloudSwitches(this.values.mode);
 
-      const data: any = await getPointCloud(this.values).then((results) => {return results});
+      var {data, xmin, xmax, ymin, ymax, rgbMax}  = await getPointCloud(this.values).then((results) => {return results});
       
-      const {xmin, xmax, ymin, ymax, rgbMax} = getPointCloudLimits(this.values,data);
-
       const numCoords = data.X.length;
       const times = data.GpsTime;
-      const classification = data.Classification;  // this right?
+      const classification = data.Classification; 
       
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;

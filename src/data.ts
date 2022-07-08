@@ -43,17 +43,30 @@ export async function getPointCloud(values: any){
   }else{
     data = dataIn;
   }
-  return data;
+
+  if (values.origin_shift_x){
+    data.X = data.X.map((n: any) => n + values.origin_shift_x);
+  }
+  if (values.origin_shift_y){
+    data.Y = data.Y.map((n: any) => n + values.origin_shift_y);
+  }
+  if (values.origin_shift_z){
+    data.Z = data.Z.map((n: any) => n + values.origin_shift_z);
+  }
+      
+  const {xmin, xmax, ymin, ymax, rgbMax} = getPointCloudLimits(values, data);
+
+  return {data, xmin, xmax, ymin, ymax, rgbMax};
  }
     
-export function getPointCloudLimits(values: any, data: any){
+function getPointCloudLimits(values: any, data: any){
         
   var xmin: number;
   var xmax: number;
   var ymin: number; 
   var ymax: number;
   var rgbMax: number;
-
+  
   if (values.bbox) {
     xmin = values.bbox.X[0];
     xmax = values.bbox.X[1];

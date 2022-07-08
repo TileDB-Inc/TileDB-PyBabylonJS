@@ -29,7 +29,11 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "token": None,
     "tiledb_env": None,
     "show_fraction": None,
+    "origin_shift_x": None,
+    "origin_shift_y": None,
+    "origin_shift_z": None,
 }
+
 
 
 def check_point_cloud_args(mode, point_cloud_args_in):
