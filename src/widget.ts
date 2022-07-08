@@ -8,18 +8,16 @@ import {
 } from '@jupyter-widgets/base';
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
-import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, StandardMaterial,
-  SolidParticleSystem, MeshBuilder,
+import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, 
+  StandardMaterial, SolidParticleSystem, MeshBuilder,
   Vector3, Texture } from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
-
-// Import the CSS
 import '../css/widget.css';
-import Client from '@tiledb-inc/tiledb-cloud';
-import { Layout } from '@tiledb-inc/tiledb-cloud/lib/v1';
+
+import { setPointCloudSwitches, getPointCloud, getPointCloudLimits } from "./data";
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -62,6 +60,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
     this.model.on_some_change(['width', 'height'], this.resizeCanvas, this);
 
     this.engine = new Engine(this.canvas, true);
+    
     const engine = this.engine;
 
     SceneLoader.ShowLoadingScreen = false;
@@ -76,6 +75,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
   }
 
   protected async createScene(): Promise<Scene> {
+
     const scene = new Scene(this.engine as Engine);
 
     if (this.inspector) {
@@ -111,88 +111,26 @@ export class BabylonPointCloudView extends BabylonBaseView {
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
 
-      var isTime = false;
-      var isClass = false;
-      var isTopo = false;
-      var isGltf = false;
+      const {isTime, isClass, isTopo, isGltf} = setPointCloudSwitches(this.values.mode);
 
-      var dataIn: any
-      var data: any
-
-      if (this.values.mode === "time"){
-        isTime = true;
-      }else if (this.values.mode === "classes") {
-        isClass = true;
-      }else if(this.values.mode == "topo"){
-        isTopo = true;
-      }else if(this.values.mode == "gltf"){
-        isGltf = true;
-      } 
+      const data: any = await getPointCloud(this.values).then((results) => {return results});
       
-      if (this.values.source === "cloud"){
-        var dataUnsorted = await loadPointCloud(this.values).then((results) => {return results});        
-        if (isTime){
-          dataIn = sortDataArrays(dataUnsorted);
-        }else{
-          dataIn = dataUnsorted;
-        }
-      }else{
-        dataIn = this.values.data;
-      }
-      
-      if (this.values.show_fraction){ 
-        data = reduceDataArrays(dataIn, this.values.show_fraction);
-      }else{
-        data = dataIn;
-      }
+      const {xmin, xmax, ymin, ymax, rgbMax} = getPointCloudLimits(this.values,data);
 
       const numCoords = data.X.length;
+      const times = data.GpsTime;
+      const classification = data.Classification;  // this right?
+      
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
       const backgroundColor = this.values.background_color;
-      const times = data.GpsTime;
       const offset = this.values.time_offset;
-      const classification = this.values.data.Classification;
       const classes = this.values.classes;
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
+
       let doClear = false;
       
-      var xmin: number
-      var xmax: number
-      var ymin: number
-      var ymax: number
-      var zmin: number
-      var zmax: number
-      var rgbMax: number
-
-      if (this.values.bbox) {
-        xmin = this.values.bbox.X[0];
-        xmax = this.values.bbox.X[1];
-        ymin = this.values.bbox.Y[0];
-        ymax = this.values.bbox.Y[1];
-        zmin = this.values.bbox.Z[0];
-        zmax = this.values.bbox.Z[1];
-      }
-      else {
-        xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-        xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-        ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-        ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-        zmin = data.Z.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-        zmax = data.Z.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      }    
-
-      if (this.values.rgb_max) {
-        rgbMax = this.values.rgb_max;
-      }
-      else {
-        const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-        const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-        const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-        rgbMax = Math.max(redmax, greenmax, bluemax);
-      }    
-
       scene.clearColor = new Color4(backgroundColor[0], backgroundColor[1], backgroundColor[2],backgroundColor[3]);
       
       if (isClass) {
@@ -350,7 +288,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       if (this.wheelPrecision > 0)
         camera.wheelPrecision = this.wheelPrecision;
       camera.alpha += Math.PI;
-      camera.setTarget(new Vector3((xmin + xmax) / 2, ((zmin + zmax) / 2)*0.5, (ymin + ymax) / 2));
+      camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
       camera.attachControl(this.canvas, false);
       return scene;
     });
@@ -513,102 +451,5 @@ export class BabylonImageView extends BabylonBaseView {
 }
 
 
-async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string, tiledb_env: string}) {
-
-  const config: Record<string, any> = {};
-  
-  config.apiKey = values.token;
-
-  if (values.tiledb_env){
-    config.basePath = values.tiledb_env;
-  }
-
-  const tiledbClient = new Client(config);
-
-  const query: { layout: any, ranges: number[][], bufferSize: number, attributes: any} = {
-    layout: Layout.Unordered,
-    ranges: [values.bbox.X, values.bbox.Y, values.bbox.Z],
-    bufferSize: 150000000000,
-    attributes: ['X','Y','Z','Red','Green','Blue','GpsTime','Classification']
-  };
-
-  for await (let results of tiledbClient.query.ReadQuery(
-    values.name_space,
-    values.array_name,
-    query
-  )) {
-    return results
-  }
-  
-}  
 
 
-function sortDataArrays(data: any){
-  
-  const GpsTime = data.GpsTime
-  const X = data.X
-  const Y = data.Y
-  const Z = data.Z
-  const Red = data.Red
-  const Green = data.Green
-  const Blue = data.Blue
-
-  const sortedData = sortArrays({GpsTime, X, Y, Z, Red, Green, Blue})
-
-  return sortedData;
-
-}        
-
-
-function sortArrays(arrays: any, comparator = (a: number, b: number) => (a < b) ? -1 : (a > b) ? 1 : 0) {
-  
-  const arrayKeys = Object.keys(arrays);
-  const [sortableArray] = Object.values(arrays) as any[];
-  const indexes = Object.keys(sortableArray);
-  const sortedIndexes = indexes.sort((a, b) => comparator(sortableArray[a], sortableArray[b]));
-
-  const sortByIndexes = (array: { [x: string]: any; }, sortedIndexes: any[]) => sortedIndexes.map(sortedIndex => array[sortedIndex]);
-
-  if (Array.isArray(arrays)) {
-    return arrayKeys.map((arrayIndex: string) => sortByIndexes(arrays[arrayIndex as any], sortedIndexes));
-  } else {
-    const sortedArrays: any = {};
-    arrayKeys.forEach((arrayKey) => {
-      sortedArrays[arrayKey] = sortByIndexes(arrays[arrayKey as any], sortedIndexes) as any;
-    });
-    return sortedArrays;
-  }
-}
-
-
-function reduceDataArrays(data: any, show_fraction: number){
-
-  const GpsTime = data.GpsTime
-  const X = data.X
-  const Y = data.Y
-  const Z = data.Z
-  const Red = data.Red
-  const Green = data.Green
-  const Blue = data.Blue
-
-  const reducedData = reduceArrays({GpsTime, X, Y, Z, Red, Green, Blue}, show_fraction)
-
-  return reducedData;
-}
-
-
-function reduceArrays(arrays: any, show_fraction: number){
-
-  const arrayKeys = Object.keys(arrays);
-  const reducedArrays: any = {};
-
-  for (let arrayKey of arrayKeys) {
-    if (Array.isArray(arrays[arrayKey])){
-      reducedArrays[arrayKey] = arrays[arrayKey].filter(function(value: any, index: any, Arr: any) {
-        return index % show_fraction == 0;  
-      });
-    }      
-  }
-
-  return reducedArrays;
-}
