@@ -49,6 +49,8 @@ def check_point_cloud_args(mode, point_cloud_args_in):
             raise ValueError(
                 "The crs (coordinate reference system) of the data is not specified"
             )
+        if not "bbox" in point_cloud_args_in:
+            raise ValueError("The bbox is not specified")
     elif mode == "gltf":
         if not "gltf_data" in point_cloud_args_in:
             raise ValueError("gltf_data is not specified")
@@ -96,7 +98,7 @@ def check_point_cloud_data_local(mode, uri, point_cloud_args):
     if os.path.isdir(uri) == False:
         raise ValueError("uri: " + uri + " does not exist.")
     if not "bbox" in point_cloud_args:
-        raise ValueError("The bbox for slicing data from " + uri + " is not specified")
+        raise ValueError("The bbox for slicing data from the array is not specified")
 
     data = create_point_cloud(mode, uri, point_cloud_args["bbox"])
 

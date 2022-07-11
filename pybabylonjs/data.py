@@ -45,16 +45,20 @@ def create_mapbox_image(data: dict, point_cloud_args):
     mbtoken = point_cloud_args["mbtoken"]
     style_id = point_cloud_args["mbstyle"]
     data_crs = point_cloud_args["crs"]
+    bbox_in = point_cloud_args["bbox"]
 
     dst_crs = {"init": "EPSG:4326"}  # lat/lon
 
-    bbox = BoundingBox(
-        data["X"].min(), data["Y"].min(), data["X"].max(), data["Y"].max()
-    )
+    if bbox_in:
+        bbox = BoundingBox(
+            bbox_in["X"][0], bbox_in["Y"][0], bbox_in["X"][1], bbox_in["Y"][1]
+        )
+    else:
+        bbox = BoundingBox(
+            data["X"].min(), data["Y"].min(), data["X"].max(), data["Y"].max()
+        )
 
     dst_bbox = transform_bounds(data_crs, dst_crs, *bbox)
-
-    # convert point cloud coordinates and replace in `data`
 
     w = bbox[2] - bbox[0]
     h = bbox[3] - bbox[1]
