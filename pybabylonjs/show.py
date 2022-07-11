@@ -101,9 +101,9 @@ class Show:
     @classmethod
     def add_model(
         self,
-        **kwargs
+        info: Optional[dict] = {},
     ):
-        self._dataviz.send(kwargs["gltf_data"])
+        self._dataviz.send(info)
 
 
 

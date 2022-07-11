@@ -136,26 +136,20 @@ export class BabylonPointCloudView extends BabylonBaseView {
         'msg:custom',
         function()
         {
-          console.log("ARGUMENTS 0");
-          console.log(arguments[0]);
-
-          console.log("ARGUMENTS 1");
-          console.log(arguments[1]);
-
-          if (arguments[0] == 'add_model')
+          if (arguments[0].cmd == 'add_model')
           {
-            //let pos = new Vector3(arguments[1].x, arguments[1].y, arguments[1].z);
-//
-            //console.log("LOADING GLTF...");
-//
-            //var blob = new Blob([arguments[2]]);
-            //var url = URL.createObjectURL(blob);
-//
-            //SceneLoader.ImportMeshAsync("", url, "", scene, null, ".gltf").then(function(container)
-            //{
-            //  console.log("MODEL IS LOADED: " + container.meshes.length + " MESHES");
-            //  container.meshes[0].position.copyFrom(pos);
-            //});
+            console.log("LOADING GLTF...");
+
+            let pos = new Vector3(arguments[0].x, arguments[0].y, arguments[0].z);
+
+            var blob = new Blob([arguments[0].gltf_data]);
+            var url = URL.createObjectURL(blob);
+
+            SceneLoader.ImportMeshAsync("", url, "", scene, null, ".gltf").then(function(container)
+            {
+              console.log("MODEL IS LOADED: " + container.meshes.length + " MESHES");
+              container.meshes[0].position.copyFrom(pos);
+            });
           }
         }
       );
