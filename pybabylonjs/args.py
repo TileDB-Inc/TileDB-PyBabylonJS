@@ -50,9 +50,7 @@ def check_point_cloud_args(mode, point_cloud_args_in):
                 "The crs (coordinate reference system) of the data is not specified"
             )
         if not "bbox" in point_cloud_args_in:
-            raise ValueError(
-                "The bbox is not specified"
-            )    
+            raise ValueError("The bbox is not specified")
     elif mode == "gltf":
         if not "gltf_data" in point_cloud_args_in:
             raise ValueError("gltf_data is not specified")
