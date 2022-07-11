@@ -18,6 +18,8 @@ export function setPointCloudSwitches(mode: string){
       isTopo = true;
     }else if(mode == "gltf"){
       isGltf = true;
+    //}else if(mode == "pcl"){
+    //    isPCL = true;
     }  
     return {isTime, isClass, isTopo, isGltf}
   }
