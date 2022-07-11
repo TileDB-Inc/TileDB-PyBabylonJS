@@ -76,9 +76,9 @@ class Show:
             img = create_mapbox_image(data, point_cloud_args)
             d = {**d, "mapbox_img": img}
 
-        dataviz = BabylonPointCloud()
-        dataviz.value = {**d}
-        display(dataviz)
+        self._dataviz = BabylonPointCloud()
+        self._dataviz.value = {**d}
+        display(self._dataviz)
 
     @classmethod
     def image(
@@ -97,6 +97,14 @@ class Show:
     ):
         d = create_mbrs(array_uri)
         create_dataviz(BabylonMBRS(), d, **kwargs)
+
+    @classmethod
+    def add_model(
+        self,
+        **kwargs
+    ):
+        self._dataviz.send(kwargs["gltf_data"])
+
 
 
 class BabylonJS:

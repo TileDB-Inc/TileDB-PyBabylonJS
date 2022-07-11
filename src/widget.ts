@@ -48,7 +48,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
   values = this.model.get('value');
   width = this.values.width;
   height = this.values.height;
-  wheelPrecision = 0.25; //this.values.wheel_precision;
+  wheelPrecision = this.values.wheel_precision;
   zScale = this.values.z_scale;
   inspector = this.values.inspector;
 
@@ -130,6 +130,35 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       let main = this;
       //main._scene = scene;
+
+      main.listenTo(
+        main.model,
+        'msg:custom',
+        function()
+        {
+          console.log("ARGUMENTS 0");
+          console.log(arguments[0]);
+
+          console.log("ARGUMENTS 1");
+          console.log(arguments[1]);
+
+          if (arguments[0] == 'add_model')
+          {
+            //let pos = new Vector3(arguments[1].x, arguments[1].y, arguments[1].z);
+//
+            //console.log("LOADING GLTF...");
+//
+            //var blob = new Blob([arguments[2]]);
+            //var url = URL.createObjectURL(blob);
+//
+            //SceneLoader.ImportMeshAsync("", url, "", scene, null, ".gltf").then(function(container)
+            //{
+            //  console.log("MODEL IS LOADED: " + container.meshes.length + " MESHES");
+            //  container.meshes[0].position.copyFrom(pos);
+            //});
+          }
+        }
+      );
 
       var data!: {
         [x: string]: any; X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[], GpsTime: number[], Classification: number[]}; 
@@ -233,7 +262,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       let tasks:Promise<any>[] = [];
       
-      if (isGltf) {
+      if (isGltf && false) {
         var blob = new Blob([gltfData]);
         var url = URL.createObjectURL(blob);
         console.log("LOADING GLTF...");
@@ -404,6 +433,12 @@ export class BabylonPointCloudView extends BabylonBaseView {
         resolve(true);
       }
     );
+  }
+
+  addModel(data: any): void
+  {
+    console.log("ADD MODEL");
+    console.log(data);
   }
 
   makeDraggable(mesh: Mesh, scene: Scene): void
