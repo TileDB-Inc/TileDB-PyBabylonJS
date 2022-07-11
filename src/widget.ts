@@ -202,6 +202,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
           );  
         }
 
+        /*
         // check if inside meshes
         let minDist = 999999999999;
         particle.color.set(0, .8, 0, 1);
@@ -224,9 +225,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
 
         // color based on distance
-        particle.color.r /= minDist;
-        particle.color.g /= minDist;
-        particle.color.b /= minDist;
+        //particle.color.r /= minDist;
+        //particle.color.g /= minDist;
+        //particle.color.b /= minDist;
+        */
       };
 
       let tasks:Promise<any>[] = [];
@@ -256,6 +258,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
               //main.makeDraggable((inst.getChildMeshes()[0] as Mesh), main._scene);
               main._instances.push(inst);
             }
+          }
+
+          // hide the main mesh
+          for (let i=0; i<container.meshes.length; i++) {
+            container.meshes[i].setEnabled(false);
           }
 
         }));
