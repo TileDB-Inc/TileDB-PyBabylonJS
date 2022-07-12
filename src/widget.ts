@@ -309,6 +309,17 @@ export class BabylonPointCloudView extends BabylonBaseView {
       );
       const rgbMax = Math.max(redmax, greenmax, bluemax);
 
+      console.log(
+        'Bounds: ' + xmin + ', ' + ymin + ', ' + ' .. ' + xmax + ', ' + ymax
+      );
+
+      const center_x = xmin + (xmax - xmin) / 2;
+      const offset_x = -center_x;
+      const center_y = ymin + (ymax - ymin) / 2;
+      const offset_y = -center_y;
+
+      console.log('Offset: ' + offset_x + ', ' + offset_y);
+
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isClass
