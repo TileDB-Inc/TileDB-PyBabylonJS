@@ -5,44 +5,41 @@ import Client from '@tiledb-inc/tiledb-cloud';
 import { Layout } from '@tiledb-inc/tiledb-cloud/lib/v1';
 
 export function setPointCloudSwitches(mode: string){
-    var isTime = false;
-    var isClass = false;
-    var isTopo = false;
-    var isGltf = false;
+  let isTime = false;
+  let isClass = false;
+  let isTopo = false;
+  let isGltf = false;
 
-    if (mode === "time"){
-      isTime = true;
-    }else if (mode === "classes") {
-      isClass = true;
-    }else if(mode == "topo"){
-      isTopo = true;
-    }else if(mode == "gltf"){
-      isGltf = true;
-    //}else if(mode == "pcl"){
-    //    isPCL = true;
-    }  
-    return {isTime, isClass, isTopo, isGltf}
+  if (mode === "time") {
+    isTime = true;
+  } else if (mode === "classes") {
+    isClass = true;
+  } else if(mode == "topo") {
+    isTopo = true;
+  } else if(mode == "gltf") {
+    isGltf = true;
   }
+  return { isTime, isClass, isTopo, isGltf };
+}
 
 export async function getPointCloud(values: any){
-        
-    var dataIn: any
-    var data: any
+  let dataIn: any;
+  let data: any;
 
-    if (values.source === "cloud"){
-      var dataUnsorted = await loadPointCloud(values).then((results) => {return results});        
-      if (values.mode === "time"){
+  if (values.source === "cloud"){
+    const dataUnsorted = await loadPointCloud(values);
+    if (values.mode === "time"){
       dataIn = sortDataArrays(dataUnsorted);
-    }else{
+    } else {
       dataIn = dataUnsorted;
     }
-    }else{
-      dataIn = values.data;
-    }
-  
-  if (values.show_fraction){ 
+  } else {
+    dataIn = values.data;
+  }
+
+  if (values.show_fraction) {
     data = reduceDataArrays(dataIn, values.show_fraction);
-  }else{
+  } else {
     data = dataIn;
   }
 
@@ -55,72 +52,73 @@ export async function getPointCloud(values: any){
   if (values.origin_shift_z){
     data.Z = data.Z.map((n: any) => n + values.origin_shift_z);
   }
-      
-  const {xmin, xmax, ymin, ymax, rgbMax} = getPointCloudLimits(values, data);
 
-  return {data, xmin, xmax, ymin, ymax, rgbMax};
- }
-    
-function getPointCloudLimits(values: any, data: any){
-        
-  var xmin: number;
-  var xmax: number;
-  var ymin: number; 
-  var ymax: number;
-  var rgbMax: number;
-  
+  const { xmin, xmax, ymin, ymax, rgbMax } = getPointCloudLimits(values, data);
+
+  return { data, xmin, xmax, ymin, ymax, rgbMax };
+}
+
+function getPointCloudLimits(values: any, data: any) {
+  let xmin: number;
+  let xmax: number;
+  let ymin: number;
+  let ymax: number;
+  let rgbMax: number;
+
   if (values.bbox) {
     xmin = values.bbox.X[0];
     xmax = values.bbox.X[1];
     ymin = values.bbox.Y[0];
     ymax = values.bbox.Y[1];
+  } else {
+    xmin = Math.min(...data.X);
+    xmax = Math.max(...data.X);
+    ymin = Math.min(...data.Y);
+    ymax = Math.max(...data.Y);
   }
-  else {
-    xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-    xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-    ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-    ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-  }    
 
   if (values.rgb_max) {
     rgbMax = values.rgb_max;
-  }
-  else {
-    const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-    const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-    const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+  } else {
+    const redmax = Math.max(...data.Red);
+    const greenmax = Math.max(...data.Green);
+    const bluemax = Math.max(...data.Blue);
     rgbMax = Math.max(redmax, greenmax, bluemax);
-  } 
-  return {xmin, xmax, ymin, ymax, rgbMax};
+  }
+  return { xmin, xmax, ymin, ymax, rgbMax };
 }
 
 async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string, tiledb_env: string}) {
 
   const config: Record<string, any> = {};
-    
+
   config.apiKey = values.token;
-  
+
   if (values.tiledb_env){
     config.basePath = values.tiledb_env;
   }
-  
+
   const tiledbClient = new Client(config);
-  
+
   const query: { layout: any, ranges: number[][], bufferSize: number, attributes: any} = {
     layout: Layout.Unordered,
     ranges: [values.bbox.X, values.bbox.Y, values.bbox.Z],
     bufferSize: 150000000000,
     attributes: ['X','Y','Z','Red','Green','Blue','GpsTime','Classification']
   };
-  
-  for await (let results of tiledbClient.query.ReadQuery(
+
+  const concatenatedResults = [];
+
+  for await (const results of tiledbClient.query.ReadQuery(
     values.name_space,
     values.array_name,
     query
    )) {
-    return results;
-  }    
-}  
+    concatenatedResults.push(results);
+  }
+
+  return concatenatedResults;
+}
 
 
 function sortDataArrays(data: any){
@@ -159,10 +157,8 @@ function sortArrays(arrays: any, comparator = (a: number, b: number) => (a < b) 
     return sortedArrays;
   }
 }
-  
-  
+
 function reduceDataArrays(data: any, show_fraction: number){
-  
   const GpsTime = data.GpsTime;
   const X = data.X;
   const Y = data.Y;
