@@ -8,22 +8,37 @@ import {
 } from '@jupyter-widgets/base';
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
-import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, StandardMaterial,
-  SolidParticleSystem, MeshBuilder,
+import {
+  ArcRotateCamera,
+  Color3,
+  Color4,
+  Engine,
+  PointsCloudSystem,
+  Scene,
+  SceneLoader,
+  StandardMaterial,
+  SolidParticleSystem,
+  MeshBuilder,
   Vector3,
   Texture,
   Axis,
   Ray,
   TransformNode,
-  BoundingBoxGizmo,
   UtilityLayerRenderer,
-  SixDofDragBehavior,
-  MultiPointerScaleBehavior,
-  } from '@babylonjs/core';
-import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
-import "@babylonjs/loaders/glTF";
-import "@babylonjs/core/Debug/debugLayer";
-import "@babylonjs/inspector";
+  KeyboardEventTypes,
+  PointerEventTypes,
+  AxisDragGizmo
+} from '@babylonjs/core';
+import {
+  AdvancedDynamicTexture,
+  Control,
+  StackPanel,
+  Slider,
+  TextBlock
+} from 'babylonjs-gui';
+import '@babylonjs/loaders/glTF';
+import '@babylonjs/core/Debug/debugLayer';
+import '@babylonjs/inspector';
 
 // Import the CSS
 import '../css/widget.css';
@@ -106,7 +121,7 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
       _model_module_version: BabylonPointCloudModel.model_module_version,
       _view_name: BabylonPointCloudModel.view_name,
       _view_module: BabylonPointCloudModel.view_module,
-      _view_module_version: BabylonPointCloudModel.view_module_version,
+      _view_module_version: BabylonPointCloudModel.view_module_version
     };
   }
 
@@ -118,62 +133,143 @@ export class BabylonPointCloudView extends BabylonBaseView {
   // this is to keep all imported models on a common parent
   private _instances: TransformNode[] = new Array<TransformNode>();
   // take note of scene
-  //private _scene!: Scene;
+  private _scene!: Scene;
+  private _util_layer!: UtilityLayerRenderer;
+  //private _mesh_mode: int = 0;     // 0 = none, 1 = move, 2 = rotate, 3 = scale
+  private _moved_after_click = false;
+  private _shift_pressed = false;
+  private _selected: Array<Mesh> = new Array<Mesh>();
+  private _axes: Array<DragGizmos> = new Array<DragGizmos>();
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
+      let isTime = false;
+      let isClass = false;
+      let isTopo = false;
+      let isGltf = false;
 
-      var isTime = false;
-      var isClass = false;
-      var isTopo = false;
-      var isGltf = false;
+      const main = this;
+      main._scene = scene;
 
-      let main = this;
-      //main._scene = scene;
+      // listen to commands from the notebook
+      main.listenTo(main.model, 'msg:custom', function () {
+        if (arguments[0].cmd === 'add_model') {
+          // px, py, pz, rx, ry, rz, sx, sy, sz, gltf_data
 
-      main.listenTo(
-        main.model,
-        'msg:custom',
-        function()
-        {
-          if (arguments[0].cmd == 'add_model')
-          {
-            console.log("LOADING GLTF...");
+          console.log('LOADING GLTF...');
 
-            let pos = new Vector3(arguments[0].x, arguments[0].y, arguments[0].z);
+          const pos = new Vector3(
+            arguments[0].px,
+            arguments[0].py,
+            arguments[0].pz
+          );
+          const rot = new Vector3(
+            arguments[0].rx,
+            arguments[0].ry,
+            arguments[0].rz
+          );
+          const scale = new Vector3(
+            arguments[0].sx,
+            arguments[0].sy,
+            arguments[0].sz
+          );
 
-            var blob = new Blob([arguments[0].gltf_data]);
-            var url = URL.createObjectURL(blob);
+          const blob = new Blob([arguments[0].gltf_data]);
+          const url = URL.createObjectURL(blob);
 
-            SceneLoader.ImportMeshAsync("", url, "", scene, null, ".gltf").then(function(container)
-            {
-              console.log("MODEL IS LOADED: " + container.meshes.length + " MESHES");
+          SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
+            container => {
+              console.log(
+                'MODEL IS LOADED: ' + container.meshes.length + ' MESHES'
+              );
               container.meshes[0].position.copyFrom(pos);
-            });
-          }
+              container.meshes[0].rotation = rot;
+              container.meshes[0].scaling = scale;
+              main._instances.push(container.meshes[0]);
+            }
+          );
         }
-      );
+      });
 
-      var data!: {
-        [x: string]: any; X: number[], Y: number[], Z: number[], Red: number[], Green: number[], Blue: number[], GpsTime: number[], Classification: number[]}; 
+      // create gizmos utility
+      main._util_layer = new UtilityLayerRenderer(scene);
 
-      if (this.values.mode === "time"){
+      // handle mouse clicks to select/deselect meshes
+      scene.onPointerObservable.add(pointerInfo => {
+        switch (pointerInfo.type) {
+          case PointerEventTypes.POINTERDOWN:
+            main._moved_after_click = false;
+            break;
+          case PointerEventTypes.POINTERUP:
+            if (!main._moved_after_click) {
+              main.pickMesh();
+            }
+            break;
+          case PointerEventTypes.POINTERMOVE:
+            main._moved_after_click = true;
+            break;
+          case PointerEventTypes.POINTERWHEEL:
+            break;
+          case PointerEventTypes.POINTERPICK:
+            break;
+          case PointerEventTypes.POINTERTAP:
+            break;
+          case PointerEventTypes.POINTERDOUBLETAP:
+            break;
+        }
+      });
+
+      // handle key presses
+      scene.onKeyboardObservable.add(kbInfo => {
+        console.log(kbInfo.event.key);
+        switch (kbInfo.type) {
+          case KeyboardEventTypes.KEYDOWN:
+            if (kbInfo.event.key === 'Shift') {
+              // shift
+              main._shift_pressed = true;
+            }
+
+            break;
+          case KeyboardEventTypes.KEYUP:
+            if (kbInfo.event.key === 'Shift') {
+              // shift
+              main._shift_pressed = false;
+            }
+            break;
+        }
+      });
+
+      let data!: {
+        [x: string]: any;
+        X: number[];
+        Y: number[];
+        Z: number[];
+        Red: number[];
+        Green: number[];
+        Blue: number[];
+        GpsTime: number[];
+        Classification: number[];
+      };
+
+      if (this.values.mode === 'time') {
         isTime = true;
-      }else if (this.values.mode === "classes") {
+      } else if (this.values.mode === 'classes') {
         isClass = true;
-      }else if(this.values.mode == "topo"){
+      } else if (this.values.mode == 'topo') {
         isTopo = true;
-      }else if(this.values.mode == "gltf"){
+      } else if (this.values.mode == 'gltf') {
         isGltf = true;
-      } 
-      
-      if (this.values.source === "cloud"){
-        data = await loadPointCloud(this.values).then((results) => {return results}); 
+      }
+
+      if (this.values.source === 'cloud') {
+        data = await loadPointCloud(this.values).then(results => {
+          return results;
+        });
         //if (isTime = true){sort data by GpsTime}
-      }else{
+      } else {
         data = this.values.data;
       }
-      
+
       const numCoords = data.X.length;
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
@@ -186,21 +282,34 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const scale = this.zScale;
       let doClear = false;
 
-      const xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-      const xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
-      const ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
-      const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+      const xmin = data.X.reduce((accum: number, currentNumber: number) =>
+        Math.min(accum, currentNumber)
+      );
+      const xmax = data.X.reduce((accum: number, currentNumber: number) =>
+        Math.max(accum, currentNumber)
+      );
+      const ymin = data.Y.reduce((accum: number, currentNumber: number) =>
+        Math.min(accum, currentNumber)
+      );
+      const ymax = data.Y.reduce((accum: number, currentNumber: number) =>
+        Math.max(accum, currentNumber)
+      );
+      const redmax = data.Red.reduce((accum: number, currentNumber: number) =>
+        Math.max(accum, currentNumber)
+      );
+      const greenmax = data.Green.reduce(
+        (accum: number, currentNumber: number) => Math.max(accum, currentNumber)
+      );
+      const bluemax = data.Blue.reduce((accum: number, currentNumber: number) =>
+        Math.max(accum, currentNumber)
+      );
       const rgbMax = Math.max(redmax, greenmax, bluemax);
 
       if (isClass) {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isClass
         });
-      }
-      else {
+      } else {
         var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isTime
         });
@@ -210,19 +319,18 @@ export class BabylonPointCloudView extends BabylonBaseView {
         // Y is up
         particle.position = new Vector3(
           data.X[i],
-          (data.Z[i]-topo_offset) * scale,
+          (data.Z[i] - topo_offset) * scale,
           data.Y[i]
         );
 
         if (isTime) {
           particle.color = scene.clearColor;
-        }
-        else {
+        } else {
           particle.color = new Color3(
-            data.Red[i]/ rgbMax,
-            data.Green[i]/ rgbMax,
-            data.Blue[i]/ rgbMax
-          );  
+            data.Red[i] / rgbMax,
+            data.Green[i] / rgbMax,
+            data.Blue[i] / rgbMax
+          );
         }
 
         /*
@@ -254,84 +362,93 @@ export class BabylonPointCloudView extends BabylonBaseView {
         */
       };
 
-      let tasks:Promise<any>[] = [];
-      
+      const tasks: Promise<any>[] = [];
+
       if (isGltf && false) {
-        var blob = new Blob([gltfData]);
-        var url = URL.createObjectURL(blob);
-        console.log("LOADING GLTF...");
+        const blob = new Blob([gltfData]);
+        const url = URL.createObjectURL(blob);
+        console.log('LOADING GLTF...');
 
-        tasks.push(SceneLoader.ImportMeshAsync("", url, "", scene, null, ".gltf").then(function(container)
-        {
-          console.log("MODEL IS LOADED: " + container.meshes.length + " MESHES");
-          for (let i=0; i<container.meshes.length; i++) {
-            let mesh = (container.meshes[i] as Mesh);
-            console.log("Wireframing: " + mesh.name);
-            if (mesh.material) mesh.material.wireframe = true;
-          }
+        tasks.push(
+          SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
+            container => {
+              console.log(
+                'MODEL IS LOADED: ' + container.meshes.length + ' MESHES'
+              );
+              for (let i = 0; i < container.meshes.length; i++) {
+                const mesh = container.meshes[i] as Mesh;
+                console.log('Wireframing: ' + mesh.name);
+                if (mesh.material) {
+                  mesh.material.wireframe = true;
+                }
+              }
 
-          for (let i=0; i<100; i++)
-          {
-            // create some instances
-            let inst = (container.meshes[0] as Mesh).instantiateHierarchy();
-            if (inst)
-            {
-              inst.getChildMeshes()[0].showBoundingBox = true;
-              inst.position.set(-400+Math.random()*800, 0, -400+Math.random()*800);
-              //main.makeDraggable((inst.getChildMeshes()[0] as Mesh), main._scene);
-              main._instances.push(inst);
+              for (let i = 0; i < 100; i++) {
+                // create some instances
+                const inst = (
+                  container.meshes[0] as Mesh
+                ).instantiateHierarchy();
+                if (inst) {
+                  inst.getChildMeshes()[0].showBoundingBox = true;
+                  inst.position.set(
+                    -400 + Math.random() * 800,
+                    0,
+                    -400 + Math.random() * 800
+                  );
+                  //main.makeDraggable((inst.getChildMeshes()[0] as Mesh), main._scene);
+                  main._instances.push(inst);
+                }
+              }
+
+              // hide the main mesh
+              for (let i = 0; i < container.meshes.length; i++) {
+                container.meshes[i].setEnabled(false);
+              }
             }
-          }
-
-          // hide the main mesh
-          for (let i=0; i<container.meshes.length; i++) {
-            container.meshes[i].setEnabled(false);
-          }
-
-        }));
+          )
+        );
       }
 
-      console.log("WAITING FOR LOAD...");
+      console.log('WAITING FOR LOAD...');
       await Promise.all(tasks);
       pcs.addPoints(numCoords, pcLoader);
       tasks.push(pcs.buildMeshAsync());
 
-      console.log("WAITING FOR TASKS...");
+      console.log('WAITING FOR TASKS...');
       await Promise.all(tasks);
-      console.log("ALL READY!");
+      console.log('ALL READY!');
       scene.createDefaultCameraOrLight(true, true, false);
       if (isTime || isClass) {
-
-        var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
-          "UI",
+        const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
+          'UI',
           true,
-          scene);
+          scene
+        );
 
-        var panel = new StackPanel();
-        panel.width = "220px";
+        const panel = new StackPanel();
+        panel.width = '220px';
         panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
         panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
         advancedTexture.addControl(panel);
 
-        var header = new TextBlock();
-        header.height = "30px";
-        header.color = "white";
+        const header = new TextBlock();
+        header.height = '30px';
+        header.color = 'white';
 
-        var slider = new Slider("Slider");
+        const slider = new Slider('Slider');
         slider.minimum = 0;
         slider.step = 1;
-        slider.height = "20px";
-        slider.width = "200px";
+        slider.height = '20px';
+        slider.width = '200px';
 
         if (isTime) {
-          header.text = "Time: " + (offset + times[0]).toFixed(2);
+          header.text = 'Time: ' + (offset + times[0]).toFixed(2);
 
           slider.maximum = times.length - 1;
           slider.value = 0;
-
         }
         if (isClass) {
-          header.text = "All";
+          header.text = 'All';
 
           var slider_classes: number[] = Array.from(new Set(classification));
           slider.maximum = slider_classes.length;
@@ -341,78 +458,89 @@ export class BabylonPointCloudView extends BabylonBaseView {
         panel.addControl(header);
 
         pcs.updateParticle = function (particle_3: any) {
-          if (doClear)
+          if (doClear) {
             particle_3.color = scene.clearColor;
-
-          else
+          } else {
             particle_3.color = new Color3(
-              data.Red[particle_3.idx]/ rgbMax,
-              data.Green[particle_3.idx]/ rgbMax,
-              data.Blue[particle_3.idx]/ rgbMax
+              data.Red[particle_3.idx] / rgbMax,
+              data.Green[particle_3.idx] / rgbMax,
+              data.Blue[particle_3.idx] / rgbMax
             );
+          }
 
           return particle_3;
         };
 
-        slider.onValueChangedObservable.add(
-          function (value: any) {
-            if (isTime) {
-              header.text = "Time: " + (offset + times[value]).toFixed(2);
+        slider.onValueChangedObservable.add((value: any) => {
+          if (isTime) {
+            header.text = 'Time: ' + (offset + times[value]).toFixed(2);
 
-              if (value > pcs.counter) {
-                doClear = false;
-                pcs.setParticles(pcs.counter, value);
-              } else {
-                doClear = true;
-                pcs.setParticles(value, pcs.counter);
-              }
-              pcs.counter = value;
-            }
-            if (isClass) {
-              var v: number = classes.numbers.indexOf(slider_classes[value]);
-              header.text = classes.names[v];
-
-              var start_1: number = classification.indexOf(slider_classes[value]);
-              var finish: number = classification.lastIndexOf(slider_classes[value]);
-
-              doClear = true;
-              pcs.setParticles(0, numCoords);
-
+            if (value > pcs.counter) {
               doClear = false;
-              pcs.setParticles(start_1, finish);
+              pcs.setParticles(pcs.counter, value);
+            } else {
+              doClear = true;
+              pcs.setParticles(value, pcs.counter);
             }
-          });
+            pcs.counter = value;
+          }
+          if (isClass) {
+            const v: number = classes.numbers.indexOf(slider_classes[value]);
+            header.text = classes.names[v];
+
+            const start_1: number = classification.indexOf(
+              slider_classes[value]
+            );
+            const finish: number = classification.lastIndexOf(
+              slider_classes[value]
+            );
+
+            doClear = true;
+            pcs.setParticles(0, numCoords);
+
+            doClear = false;
+            pcs.setParticles(start_1, finish);
+          }
+        });
 
         panel.addControl(slider);
       }
       if (isTopo) {
-
         const mapbox_img = this.values.mapbox_img;
-        var blob_1 = new Blob([mapbox_img]);
-        var url_1 = URL.createObjectURL(blob_1);
+        const blob_1 = new Blob([mapbox_img]);
+        const url_1 = URL.createObjectURL(blob_1);
 
-        const mat = new StandardMaterial("mat", scene);
+        const mat = new StandardMaterial('mat', scene);
         mat.emissiveColor = Color3.Random();
         mat.diffuseTexture = new Texture(url_1, scene);
         mat.ambientTexture = new Texture(url_1, scene);
 
         const options = { xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax };
-        const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
+        const ground = MeshBuilder.CreateTiledGround(
+          'tiled ground',
+          options,
+          scene
+        );
         ground.material = mat;
-
       }
-      
-      scene.clearColor = new Color4(backgroundColor[0], backgroundColor[1], backgroundColor[2],backgroundColor[3]);
-      
-      let camera = scene.activeCamera as ArcRotateCamera;
+
+      scene.clearColor = new Color4(
+        backgroundColor[0],
+        backgroundColor[1],
+        backgroundColor[2],
+        backgroundColor[3]
+      );
+
+      const camera = scene.activeCamera as ArcRotateCamera;
       // possibly make these configurable, but they are good defaults
       camera.panningAxis = new Vector3(1, 1, 0);
       camera.upperBetaLimit = Math.PI / 2;
       camera.panningSensibility = 1;
       camera.panningInertia = 0.2;
       camera._panningMouseButton = 0;
-      if (this.wheelPrecision > 0)
+      if (this.wheelPrecision > 0) {
         camera.wheelPrecision = this.wheelPrecision;
+      }
       camera.alpha += Math.PI;
       camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
       camera.attachControl(this.canvas, false);
@@ -420,43 +548,87 @@ export class BabylonPointCloudView extends BabylonBaseView {
     });
   }
 
-  runImportPoints(): Promise<boolean>
-  {
-    return new Promise(
-      function (resolve, reject) {
-        resolve(true);
-      }
-    );
+  runImportPoints(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      resolve(true);
+    });
   }
 
-  addModel(data: any): void
-  {
-    console.log("ADD MODEL");
+  addModel(data: any): void {
+    console.log('ADD MODEL');
     console.log(data);
   }
 
-  makeDraggable(mesh: Mesh, scene: Scene): void
-  {
-    let boundingBox = BoundingBoxGizmo.MakeNotPickableAndWrapInBoundingBox(mesh);
-
-    // Create bounding box gizmo
-    let utilLayer = new UtilityLayerRenderer(scene);
-    utilLayer.utilityLayerScene.autoClearDepthAndStencil = false;
-    let gizmo = new BoundingBoxGizmo(Color3.FromHexString("#0984e3"), utilLayer);
-    gizmo.attachedMesh = boundingBox;
-
-    // Create behaviors to drag and scale with pointers in VR
-    let sixDofDragBehavior = new SixDofDragBehavior();
-    boundingBox.addBehavior(sixDofDragBehavior);
-    let multiPointerScaleBehavior = new MultiPointerScaleBehavior();
-    boundingBox.addBehavior(multiPointerScaleBehavior);
+  addAxes(mesh: Mesh): DragGizmos {
+    const gizmo = new DragGizmos(mesh, this._util_layer);
+    return gizmo;
   }
 
-  pointIsInsideMesh(mesh: Mesh, boundInfo:{min:Vector3, max:Vector3}, point: Vector3): boolean
-  {
-    let max = boundInfo.max.add(mesh.position);
-    let min = boundInfo.min.add(mesh.position);
-    let diameter = max.subtract(min).length() * 2;
+  select(mesh: Mesh, toggle: boolean): void {
+    if (this._selected.includes(mesh)) {
+      if (toggle) {
+        this.unselect(mesh);
+      }
+      return;
+    }
+
+    this._selected.push(mesh);
+    this._axes.push(this.addAxes(mesh));
+  }
+
+  unselect(mesh: Mesh): void {
+    const index = this._selected.findIndex(e => e === mesh);
+    if (index == undefined) {
+      return;
+    }
+
+    console.log('Unselecting: ' + this._selected[index].name);
+
+    this._axes[index].dispose();
+    this._axes.splice(index, 1);
+    this._selected.splice(index, 1);
+  }
+
+  unselectAll(): void {
+    console.log('Unselecting ' + this._selected.length + ' meshes');
+
+    for (let i = 0; i < this._selected.length; i++) {
+      console.log('Unselect: ' + this._selected[i].name);
+      this._axes[i].dispose();
+    }
+
+    this._selected = [];
+    this._axes = [];
+  }
+
+  pickMesh(): void {
+    const pick = this._scene.pick(this._scene.pointerX, this._scene.pointerY);
+    if (!pick || !pick.ray) {
+      return;
+    }
+
+    const ray = new Ray(pick.ray.origin, pick.ray.direction, 100000);
+    const hit = this._scene.pickWithRay(ray);
+
+    if (hit && hit.pickedMesh) {
+      console.log('Select: ' + hit.pickedMesh.name);
+      if (!this._shift_pressed) {
+        this.unselectAll();
+      }
+      this.select(hit.pickedMesh as Mesh, true);
+    } else {
+      this.unselectAll();
+    }
+  }
+
+  pointIsInsideMesh(
+    mesh: Mesh,
+    boundInfo: { min: Vector3; max: Vector3 },
+    point: Vector3
+  ): boolean {
+    const max = boundInfo.max.add(mesh.position);
+    const min = boundInfo.min.add(mesh.position);
+    const diameter = max.subtract(min).length() * 2;
 
     if (point.x < min.x || point.x > max.x) {
       return false;
@@ -470,20 +642,20 @@ export class BabylonPointCloudView extends BabylonBaseView {
       return false;
     }
 
-    const directions:Vector3[] =
-    [
+    const directions: Vector3[] = [
       new Vector3(0, 1, 0),
       //new Vector3(0, -1, 0),
-      new Vector3(-.89, 0.45, 0),
-      new Vector3(.89, 0.45, 0),
-    ]
+      new Vector3(-0.89, 0.45, 0),
+      new Vector3(0.89, 0.45, 0)
+    ];
 
-    let ray = new Ray(point, Axis.X, diameter);
+    const ray = new Ray(point, Axis.X, diameter);
 
-    for (let c=0; c<directions.length; c++)
-    {
+    for (let c = 0; c < directions.length; c++) {
       ray.direction = directions[c];
-      if (!ray.intersectsMesh(mesh).hit) return false;
+      if (!ray.intersectsMesh(mesh).hit) {
+        return false;
+      }
     }
 
     return true;
@@ -499,7 +671,7 @@ export class BabylonMBRSModel extends BabylonBaseModel {
       _model_module_version: BabylonMBRSModel.model_module_version,
       _view_name: BabylonMBRSModel.view_name,
       _view_module: BabylonMBRSModel.view_module,
-      _view_module_version: BabylonMBRSModel.view_module_version,
+      _view_module_version: BabylonMBRSModel.view_module_version
     };
   }
 
@@ -509,7 +681,7 @@ export class BabylonMBRSModel extends BabylonBaseModel {
 
 export class BabylonMBRSView extends BabylonBaseView {
   protected async createScene(): Promise<Scene> {
-    return super.createScene().then( ( scene ) => {
+    return super.createScene().then(scene => {
       const data = this.values.data;
       const extents = this.values.extents;
       const minx = extents[0];
@@ -517,12 +689,15 @@ export class BabylonMBRSView extends BabylonBaseView {
       const miny = extents[2];
       const maxy = extents[3];
       const minz = extents[4];
-      const xy_length = Math.min(Math.max(maxx)-Math.min(minx),Math.max(maxy)-Math.min(miny))
+      const xy_length = Math.min(
+        Math.max(maxx) - Math.min(minx),
+        Math.max(maxy) - Math.min(miny)
+      );
       const scale = this.zScale;
 
       // set up camera
-      scene.createDefaultCameraOrLight(true, true, true)
-      let camera = scene.activeCamera as ArcRotateCamera;
+      scene.createDefaultCameraOrLight(true, true, true);
+      const camera = scene.activeCamera as ArcRotateCamera;
       camera.alpha += Math.PI;
       camera.upperBetaLimit = Math.PI / 2;
       camera.panningAxis = new Vector3(1, 1, 0);
@@ -530,36 +705,54 @@ export class BabylonMBRSView extends BabylonBaseView {
       camera.panningInertia = 0.2;
       camera._panningMouseButton = 0;
 
-      if (this.wheelPrecision > 0)
+      if (this.wheelPrecision > 0) {
         camera.wheelPrecision = this.wheelPrecision;
+      }
 
-      camera.setTarget(new Vector3((((maxx+minx)/2) - minx) / xy_length, 0, (((maxy+miny)/2) - miny) / xy_length));
+      camera.setTarget(
+        new Vector3(
+          ((maxx + minx) / 2 - minx) / xy_length,
+          0,
+          ((maxy + miny) / 2 - miny) / xy_length
+        )
+      );
       camera.attachControl(this.canvas, false);
 
-      var mat = new StandardMaterial('mt1', scene);
+      const mat = new StandardMaterial('mt1', scene);
       mat.alpha = 0.85;
       mat.diffuseColor = new Color3(0, 0, 0);
       mat.emissiveColor = new Color3(0.5, 0.5, 0.5);
 
       // create initial particles
-      const SPS = new SolidParticleSystem("SPS", scene, {enableDepthSort: true});
-      const box = MeshBuilder.CreateBox("b", {height: 1, width: 1, depth: 1});
+      const SPS = new SolidParticleSystem('SPS', scene, {
+        enableDepthSort: true
+      });
+      const box = MeshBuilder.CreateBox('b', { height: 1, width: 1, depth: 1 });
       SPS.addShape(box, data.Xmin.length);
-      var mesh = SPS.buildMesh();
+      const mesh = SPS.buildMesh();
       mesh.material = mat;
-      box.dispose(); 
-      
+      box.dispose();
+
       // add dimensions and a random color to each of the particles
       SPS.initParticles = () => {
         for (let p = 0; p < SPS.nbParticles; p++) {
           const particle = SPS.particles[p];
-          particle.position.x = (((data.Xmax[p]+data.Xmin[p])/2) - minx) / xy_length;
-          particle.position.y = ((((data.Zmax[p]+data.Zmin[p])/2) - minz) / xy_length ) * scale;  
-          particle.position.z = (((data.Ymax[p]+data.Ymin[p])/2) - miny) / xy_length;
-          particle.scaling.x = (data.Xmax[p]-data.Xmin[p]) / xy_length;
-          particle.scaling.y = ((data.Zmax[p]-data.Zmin[p]) / xy_length) * scale;  
-          particle.scaling.z = (data.Ymax[p]-data.Ymin[p]) / xy_length;
-          particle.color = new Color4(0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6,0.9);   
+          particle.position.x =
+            ((data.Xmax[p] + data.Xmin[p]) / 2 - minx) / xy_length;
+          particle.position.y =
+            (((data.Zmax[p] + data.Zmin[p]) / 2 - minz) / xy_length) * scale;
+          particle.position.z =
+            ((data.Ymax[p] + data.Ymin[p]) / 2 - miny) / xy_length;
+          particle.scaling.x = (data.Xmax[p] - data.Xmin[p]) / xy_length;
+          particle.scaling.y =
+            ((data.Zmax[p] - data.Zmin[p]) / xy_length) * scale;
+          particle.scaling.z = (data.Ymax[p] - data.Ymin[p]) / xy_length;
+          particle.color = new Color4(
+            0.5 + Math.random() * 0.6,
+            0.5 + Math.random() * 0.6,
+            0.5 + Math.random() * 0.6,
+            0.9
+          );
         }
       };
 
@@ -568,10 +761,10 @@ export class BabylonMBRSView extends BabylonBaseView {
       SPS.setParticles();
 
       // animation
-      scene.registerBeforeRender(function() {
+      scene.registerBeforeRender(() => {
         SPS.setParticles();
       });
-      
+
       return scene;
     });
   }
@@ -586,7 +779,7 @@ export class BabylonImageModel extends BabylonBaseModel {
       _model_module_version: BabylonImageModel.model_module_version,
       _view_name: BabylonImageModel.view_name,
       _view_module: BabylonImageModel.view_module,
-      _view_module_version: BabylonImageModel.view_module_version,
+      _view_module_version: BabylonImageModel.view_module_version
     };
   }
 
@@ -595,19 +788,18 @@ export class BabylonImageModel extends BabylonBaseModel {
 }
 
 export class BabylonImageView extends BabylonBaseView {
-
   protected async createScene(): Promise<Scene> {
-    return super.createScene().then( ( scene ) => {
+    return super.createScene().then(scene => {
       const data = this.values.data;
       const bbox = this.values.xy_bbox;
 
       scene.createDefaultCameraOrLight(true, true, true);
       scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
-            
-      var blob = new Blob([data]);
-      var url = URL.createObjectURL(blob);
-      
-      const groundMaterial = new StandardMaterial("ground", scene);
+
+      const blob = new Blob([data]);
+      const url = URL.createObjectURL(blob);
+
+      const groundMaterial = new StandardMaterial('ground', scene);
       groundMaterial.diffuseTexture = new Texture(url, scene);
       groundMaterial.ambientTexture = new Texture(url, scene);
       groundMaterial.ambientColor = new Color3(0.5, 0.5, 0.5);
@@ -620,18 +812,27 @@ export class BabylonImageView extends BabylonBaseView {
       const ymin = bbox[2];
       const ymax = bbox[3];
 
-      const ground = MeshBuilder.CreateGround("ground", {height: (xmax-xmin)*0.005, width: (ymax-ymin)*0.005, subdivisions: 36}, scene);
+      const ground = MeshBuilder.CreateGround(
+        'ground',
+        {
+          height: (xmax - xmin) * 0.005,
+          width: (ymax - ymin) * 0.005,
+          subdivisions: 36
+        },
+        scene
+      );
       ground.material = groundMaterial;
-      
-      let camera = scene.activeCamera as ArcRotateCamera;
+
+      const camera = scene.activeCamera as ArcRotateCamera;
       camera.panningAxis = new Vector3(1, 1, 0);
       camera.upperBetaLimit = Math.PI / 2;
       camera.panningSensibility = 1;
       camera.panningInertia = 0.2;
       camera._panningMouseButton = 0;
-      
-      if (this.wheelPrecision > 0)
+
+      if (this.wheelPrecision > 0) {
         camera.wheelPrecision = this.wheelPrecision;
+      }
 
       camera.alpha += Math.PI;
       camera.attachControl(this.canvas, false);
@@ -641,27 +842,85 @@ export class BabylonImageView extends BabylonBaseView {
   }
 }
 
-async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string}) {
-
+async function loadPointCloud(values: {
+  name_space: string;
+  array_name: string;
+  bbox: { X: number[]; Y: number[]; Z: number[] };
+  token: string;
+}) {
   const config = {
     apiKey: values.token
   };
 
   const tiledbClient = new Client(config);
 
-  const query: { layout: any, ranges: number[][], bufferSize: number, attributes: any} = {
+  const query: {
+    layout: any;
+    ranges: number[][];
+    bufferSize: number;
+    attributes: any;
+  } = {
     layout: Layout.Unordered,
     ranges: [values.bbox.X, values.bbox.Y, values.bbox.Z],
     bufferSize: 150000000000,
-    attributes: ['X','Y','Z','Red','Green','Blue','GpsTime','Classification']
+    attributes: [
+      'X',
+      'Y',
+      'Z',
+      'Red',
+      'Green',
+      'Blue',
+      'GpsTime',
+      'Classification'
+    ]
   };
 
-  for await (let results of tiledbClient.query.ReadQuery(
+  for await (const results of tiledbClient.query.ReadQuery(
     values.name_space,
     values.array_name,
     query
   )) {
-    return results
+    return results;
   }
-  
-};  
+}
+
+class DragGizmos {
+  private gizmo_x: AxisDragGizmo;
+  private gizmo_y: AxisDragGizmo;
+  private gizmo_z: AxisDragGizmo;
+
+  constructor(mesh: Mesh, util_layer: UtilityLayerRenderer) {
+    this.gizmo_x = new AxisDragGizmo(
+      new Vector3(1, 0, 0),
+      Color3.FromHexString('#ff0000'),
+      util_layer
+    );
+    this.gizmo_x.updateGizmoRotationToMatchAttachedMesh = false;
+    this.gizmo_x.updateGizmoPositionToMatchAttachedMesh = true;
+    this.gizmo_x.attachedMesh = mesh;
+
+    this.gizmo_y = new AxisDragGizmo(
+      new Vector3(0, 1, 0),
+      Color3.FromHexString('#00ff00'),
+      util_layer
+    );
+    this.gizmo_y.updateGizmoRotationToMatchAttachedMesh = false;
+    this.gizmo_y.updateGizmoPositionToMatchAttachedMesh = true;
+    this.gizmo_y.attachedMesh = mesh;
+
+    this.gizmo_z = new AxisDragGizmo(
+      new Vector3(0, 0, 1),
+      Color3.FromHexString('#0000ff'),
+      util_layer
+    );
+    this.gizmo_z.updateGizmoRotationToMatchAttachedMesh = false;
+    this.gizmo_z.updateGizmoPositionToMatchAttachedMesh = true;
+    this.gizmo_z.attachedMesh = mesh;
+  }
+
+  dispose() {
+    this.gizmo_x.dispose();
+    this.gizmo_y.dispose();
+    this.gizmo_z.dispose();
+  }
+}
