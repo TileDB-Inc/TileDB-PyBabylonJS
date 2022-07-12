@@ -224,6 +224,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
         console.log(kbInfo.event.key);
         switch (kbInfo.type) {
           case KeyboardEventTypes.KEYDOWN:
+            if (kbInfo.event.key === 'w') {
+              main.toggleSelectedWireframe();
+            }
+
             if (kbInfo.event.key === 'Shift') {
               // shift
               main._shift_pressed = true;
@@ -599,6 +603,16 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
     this._selected = [];
     this._axes = [];
+  }
+
+  toggleSelectedWireframe(): void {
+    for (let s = 0; s < this._selected.length; s++) {
+      const mesh = this._selected[s] as Mesh;
+      console.log('Wireframing: ' + mesh.name);
+      if (mesh.material) {
+        mesh.material.wireframe = !mesh.material.wireframe;
+      }
+    }
   }
 
   pickMesh(): void {

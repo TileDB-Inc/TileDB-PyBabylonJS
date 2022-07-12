@@ -99,7 +99,7 @@ class Show:
         create_dataviz(BabylonMBRS(), d, **kwargs)
 
     @classmethod
-    def add_model(
+    def cmd(
         self,
         info: Optional[dict] = {},
     ):
