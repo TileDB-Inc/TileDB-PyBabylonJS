@@ -71,18 +71,18 @@ function getPointCloudLimits(values: any, data: any) {
     ymin = values.bbox.Y[0];
     ymax = values.bbox.Y[1];
   } else {
-    xmin = Math.min(...data.X);
-    xmax = Math.max(...data.X);
-    ymin = Math.min(...data.Y);
-    ymax = Math.max(...data.Y);
+    xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+    xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+    ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+    ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
   }
 
   if (values.rgb_max) {
     rgbMax = values.rgb_max;
   } else {
-    const redmax = Math.max(...data.Red);
-    const greenmax = Math.max(...data.Green);
-    const bluemax = Math.max(...data.Blue);
+    const redmax = data.Red.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+    const greenmax = data.Green.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+    const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
     rgbMax = Math.max(redmax, greenmax, bluemax);
   }
   return { xmin, xmax, ymin, ymax, rgbMax };
