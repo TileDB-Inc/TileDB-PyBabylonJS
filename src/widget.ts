@@ -27,7 +27,8 @@ import {
   UtilityLayerRenderer,
   KeyboardEventTypes,
   PointerEventTypes,
-  AxisDragGizmo
+  AxisDragGizmo,
+  CloudPoint
 } from '@babylonjs/core';
 import {
   AdvancedDynamicTexture,
@@ -130,6 +131,8 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 }
 
 export class BabylonPointCloudView extends BabylonBaseView {
+  // grid of particle systems
+  private _pcs: Array<PointsCloudSystem> = new Array<PointsCloudSystem>();
   // this is to keep all imported models on a common parent
   private _instances: TransformNode[] = new Array<TransformNode>();
   // take note of scene
@@ -189,6 +192,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
             }
           );
         }
+        else if (arguments[0].cmd === 'add_pointcloud') {
+          // px, py, pz, data
+
+          console.log('LOADING POINTCLOUD...');
+
+        }
+
       });
 
       // create gizmos utility
@@ -284,6 +294,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const classes = this.values.classes;
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
+      const grid_cells = this.values.grid_cells;
       let doClear = false;
 
       const xmin = data.X.reduce((accum: number, currentNumber: number) =>
@@ -313,21 +324,39 @@ export class BabylonPointCloudView extends BabylonBaseView {
         'Bounds: ' + xmin + ', ' + ymin + ', ' + ' .. ' + xmax + ', ' + ymax
       );
 
-      const center_x = xmin + (xmax - xmin) / 2;
+      const size_x = (xmax - xmin);
+      const size_y = (ymax - ymin);
+      const center_x = xmin + size_x / 2;
       const offset_x = -center_x;
-      const center_y = ymin + (ymax - ymin) / 2;
+      const center_y = ymin + size_y / 2;
       const offset_y = -center_y;
+
+      const cell_size_x = size_x / grid_cells;
+      const cell_size_y = size_y / grid_cells;
+
 
       console.log('Offset: ' + offset_x + ', ' + offset_y);
 
       if (isClass) {
-        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
-          updatable: isClass
-        });
+        for (let x = 0; x < grid_cells; x++) {
+          for (let y = 0; y < grid_cells; y++) {
+            this._pcs.push(
+              new PointsCloudSystem(x + ':' + y, pointSize, scene, {
+                updatable: isClass
+              })
+            );
+          }
+        }
       } else {
-        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
-          updatable: isTime
-        });
+        for (let x = 0; x < grid_cells; x++) {
+          for (let y = 0; y < grid_cells; y++) {
+            this._pcs.push(
+              new PointsCloudSystem(x + ':' + y, pointSize, scene, {
+                updatable: isTime
+              })
+            );
+          }
+        }
       }
 
       const pcLoader = function (particle: any, i: number, _: string) {
@@ -379,6 +408,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const tasks: Promise<any>[] = [];
 
+      /*
       if (isGltf && false) {
         const blob = new Blob([gltfData]);
         const url = URL.createObjectURL(blob);
@@ -423,6 +453,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
           )
         );
       }
+      */
 
       console.log('WAITING FOR LOAD...');
       await Promise.all(tasks);
