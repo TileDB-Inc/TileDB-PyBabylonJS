@@ -157,8 +157,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
           const pos = new Vector3(
             arguments[0].px,
-            arguments[0].py,
-            arguments[0].pz
+            arguments[0].pz,
+            arguments[0].py
           );
           const rot = new Vector3(
             arguments[0].rx,
@@ -189,6 +189,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
           let isTime = false;
           let isClass = false;
           let isTopo = false;
+
+          let px = arguments[0].px;
+          let py = arguments[0].pz;
+          let pz = arguments[0].py;
 
           let data!: {
             [x: string]: any;
@@ -272,9 +276,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
               const pcLoader = function (particle: any, i: number, _: string) {
                 // Y is up
                 particle.position = new Vector3(
-                  data.X[i],
-                  data.Z[i],
-                  data.Y[i]
+                  data.X[i] + px,
+                  data.Z[i] + pz,
+                  data.Y[i] + py
                 );
 
                 if (isTime) {
