@@ -142,6 +142,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
   private _shift_pressed = false;
   private _selected: Array<Mesh> = new Array<Mesh>();
   private _axes: Array<DragGizmos> = new Array<DragGizmos>();
+  private _camera!: ArcRotateCamera;
+  private _debug!: Mesh;
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
@@ -152,8 +154,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       main.listenTo(main.model, 'msg:custom', function () {
         if (arguments[0].cmd === 'add_model') {
           // px, py, pz, rx, ry, rz, sx, sy, sz, gltf_data
-
-          console.log('LOADING GLTF...');
 
           const pos = new Vector3(
             arguments[0].px,
@@ -176,9 +176,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
           SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
             container => {
-              console.log(
-                'MODEL IS LOADED: ' + container.meshes.length + ' MESHES'
-              );
+              console.log("Added mesh: " + container.meshes[0].name);
               container.meshes[0].position.copyFrom(pos);
               container.meshes[0].rotation = rot;
               container.meshes[0].scaling = scale;
@@ -187,8 +185,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
           );
         } else if (arguments[0].cmd === 'add_pointcloud') {
           // px, py, pz, data
-
-          console.log('LOADING POINTCLOUD...');
 
           let isTime = false;
           let isClass = false;
@@ -236,8 +232,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
               const classes = arguments[0].classes;
               let doClear = false;
 
-              console.log("Point size: " + pointSize);
-
               const xmin = data.X.reduce(
                 (accum: number, currentNumber: number) => {
                   return Math.min(accum, currentNumber);
@@ -269,18 +263,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
               );
               const rgbMax = Math.max(redmax, greenmax, bluemax);
 
-              console.log(
-                'Bounds: ' +
-                  xmin +
-                  ', ' +
-                  ymin +
-                  ', ' +
-                  ' .. ' +
-                  xmax +
-                  ', ' +
-                  ymax
-              );
-
               let pcs = new PointsCloudSystem('pcs', pointSize, main._scene, {
                 updatable: isClass || isTime
               });
@@ -304,8 +286,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
                     data.Blue[i]
                   );
                 }
-
-                console.log(particle.position.x + ", " + particle.position.y + ", " + particle.position.z);
 
                 /*
                 // check if inside meshes
@@ -341,9 +321,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
               pcs.addPoints(numCoords, pcLoader);
               tasks.push(pcs.buildMeshAsync());
 
-              console.log('WAITING FOR TASKS...');
               Promise.all(tasks).then(() => {
-                console.log('ALL READY!');
 
                 if (isTime || isClass) {
                   const advancedTexture =
@@ -503,11 +481,16 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       // handle key presses
       scene.onKeyboardObservable.add(kbInfo => {
-        console.log(kbInfo.event.key);
         switch (kbInfo.type) {
           case KeyboardEventTypes.KEYDOWN:
+            // toggle wireframe
             if (kbInfo.event.key === 'w') {
               main.toggleSelectedWireframe();
+            }
+
+            // focus on selected object
+            if (kbInfo.event.key === 'f') {
+              main.focusSelected();
             }
 
             if (kbInfo.event.key === 'Shift') {
@@ -525,9 +508,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
       });
 
-      //scene.createDefaultCameraOrLight(true, true, false);
-      //const camera = scene.activeCamera as ArcRotateCamera;
-      const camera = new ArcRotateCamera("", 0, Math.PI/2, 1000, Vector3.Zero(), scene);
+      scene.createDefaultCameraOrLight(true, true, false);
+      this._camera = scene.activeCamera as ArcRotateCamera;
+      this._debug = MeshBuilder.CreateIcoSphere("", { radius:1, subdivisions:2 });
 
       const backgroundColor = this.values.background_color;
       scene.clearColor = new Color4(
@@ -538,19 +521,19 @@ export class BabylonPointCloudView extends BabylonBaseView {
       );
 
       // possibly make these configurable, but they are good defaults
-      camera.minZ = 0.1;
-      camera.maxZ = 128000;
-      camera.panningAxis = new Vector3(1, 1, 0);
-      camera.upperBetaLimit = Math.PI / 2;
-      camera.panningSensibility = 1;
-      camera.panningInertia = 0.2;
-      camera._panningMouseButton = 0;
+      this._camera.minZ = 0.1;
+      this._camera.maxZ = 128000;
+      this._camera.panningAxis = new Vector3(1, 1, 0);
+      this._camera.upperBetaLimit = Math.PI / 2;
+      this._camera.panningSensibility = 1;
+      this._camera.panningInertia = 0.2;
+      this._camera._panningMouseButton = 0;
       if (this.wheelPrecision > 0) {
-        camera.wheelPrecision = this.wheelPrecision;
+        this._camera.wheelPrecision = this.wheelPrecision;
       }
-      camera.alpha += Math.PI;
-      camera.setTarget(new Vector3(0, 0, 0));
-      camera.attachControl(this.canvas, false);
+      this._camera.alpha += Math.PI;
+      this._camera.setTarget(new Vector3(0, 0, 0));
+      this._camera.attachControl(this.canvas, false);
       return scene;
     });
   }
@@ -584,18 +567,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
       return;
     }
 
-    console.log('Unselecting: ' + this._selected[index].name);
-
     this._axes[index].dispose();
     this._axes.splice(index, 1);
     this._selected.splice(index, 1);
   }
 
   unselectAll(): void {
-    console.log('Unselecting ' + this._selected.length + ' meshes');
-
     for (let i = 0; i < this._selected.length; i++) {
-      console.log('Unselect: ' + this._selected[i].name);
       this._axes[i].dispose();
     }
 
@@ -603,14 +581,33 @@ export class BabylonPointCloudView extends BabylonBaseView {
     this._axes = [];
   }
 
+  toggleMeshWireframe(mesh: Mesh) {
+    if (mesh.material) {
+      mesh.material.wireframe = !mesh.material.wireframe;
+    }
+
+    let children = mesh.getChildMeshes();
+    for (let c = 0; c < children.length; c++) {
+      this.toggleMeshWireframe(children[c] as Mesh);
+    }
+  }
+
   toggleSelectedWireframe(): void {
     for (let s = 0; s < this._selected.length; s++) {
       const mesh = this._selected[s] as Mesh;
-      console.log('Wireframing: ' + mesh.name);
-      if (mesh.material) {
-        mesh.material.wireframe = !mesh.material.wireframe;
-      }
+      this.toggleMeshWireframe(mesh);
     }
+  }
+
+  focusSelected(): void {
+    if (this._selected.length === 0) return;
+    const center = new Vector3(0, 0, 0);
+    for (let s = 0; s < this._selected.length; s++) {
+      center.addInPlace(this._selected[s].position);
+    }
+    center.scaleInPlace(this._selected.length);
+    this._camera.setTarget(center);
+    this._debug.position.copyFrom(center);
   }
 
   pickMesh(): void {
@@ -623,11 +620,12 @@ export class BabylonPointCloudView extends BabylonBaseView {
     const hit = this._scene.pickWithRay(ray);
 
     if (hit && hit.pickedMesh) {
-      console.log('Select: ' + hit.pickedMesh.name);
+      let sel = hit.pickedMesh;
+      while (sel.parent) sel = sel.parent as Mesh;
       if (!this._shift_pressed) {
         this.unselectAll();
       }
-      this.select(hit.pickedMesh as Mesh, true);
+      this.select(sel as Mesh, true);
     } else {
       this.unselectAll();
     }
