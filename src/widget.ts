@@ -27,8 +27,7 @@ import {
   UtilityLayerRenderer,
   KeyboardEventTypes,
   PointerEventTypes,
-  AxisDragGizmo,
-  CloudPoint
+  AxisDragGizmo
 } from '@babylonjs/core';
 import {
   AdvancedDynamicTexture,
@@ -146,11 +145,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
-      let isTime = false;
-      let isClass = false;
-      let isTopo = false;
-      let isGltf = false;
-
       const main = this;
       main._scene = scene;
 
@@ -191,15 +185,293 @@ export class BabylonPointCloudView extends BabylonBaseView {
               main._instances.push(container.meshes[0]);
             }
           );
-        }
-        else if (arguments[0].cmd === 'add_pointcloud') {
+        } else if (arguments[0].cmd === 'add_pointcloud') {
           // px, py, pz, data
 
           console.log('LOADING POINTCLOUD...');
 
-        }
+          let isTime = false;
+          let isClass = false;
+          let isTopo = false;
 
+          let data!: {
+            [x: string]: any;
+            X: number[];
+            Y: number[];
+            Z: number[];
+            Red: number[];
+            Green: number[];
+            Blue: number[];
+            GpsTime: number[];
+            Classification: number[];
+          };
+
+          if (arguments[0].mode === 'time') {
+            isTime = true;
+          } else if (arguments[0].mode === 'classes') {
+            isClass = true;
+          } else if (arguments[0].mode === 'topo') {
+            isTopo = true;
+          }
+
+          if (arguments[0].source !== 'cloud')
+          {
+            console.log("Loading from memory");
+            data = arguments[0].data;
+          }
+          else
+          {
+            console.log("Loading from pointcloud");
+          }
+
+          loadPointCloud(arguments[0], data === undefined).then((res) => {
+
+              if (data === undefined) data = res;
+
+              const numCoords = data.X.length;
+              const pointSize = arguments[0].point_size;
+              const times = data.GpsTime;
+              const offset = arguments[0].time_offset;
+              const classification = arguments[0].data.Classification;
+              const classes = arguments[0].classes;
+              let doClear = false;
+
+              console.log("Point size: " + pointSize);
+
+              const xmin = data.X.reduce(
+                (accum: number, currentNumber: number) => {
+                  return Math.min(accum, currentNumber);
+                }
+              );
+              const xmax = data.X.reduce(
+                (accum: number, currentNumber: number) =>
+                  Math.max(accum, currentNumber)
+              );
+              const ymin = data.Y.reduce(
+                (accum: number, currentNumber: number) =>
+                  Math.min(accum, currentNumber)
+              );
+              const ymax = data.Y.reduce(
+                (accum: number, currentNumber: number) =>
+                  Math.max(accum, currentNumber)
+              );
+              const redmax = data.Red.reduce(
+                (accum: number, currentNumber: number) =>
+                  Math.max(accum, currentNumber)
+              );
+              const greenmax = data.Green.reduce(
+                (accum: number, currentNumber: number) =>
+                  Math.max(accum, currentNumber)
+              );
+              const bluemax = data.Blue.reduce(
+                (accum: number, currentNumber: number) =>
+                  Math.max(accum, currentNumber)
+              );
+              const rgbMax = Math.max(redmax, greenmax, bluemax);
+
+              console.log(
+                'Bounds: ' +
+                  xmin +
+                  ', ' +
+                  ymin +
+                  ', ' +
+                  ' .. ' +
+                  xmax +
+                  ', ' +
+                  ymax
+              );
+
+              let pcs = new PointsCloudSystem('pcs', pointSize, main._scene, {
+                updatable: isClass || isTime
+              });
+
+              main._pcs.push(pcs);
+
+              const pcLoader = function (particle: any, i: number, _: string) {
+                // Y is up
+                particle.position = new Vector3(
+                  data.X[i],
+                  data.Z[i],
+                  data.Y[i]
+                );
+
+                if (isTime) {
+                  particle.color = scene.clearColor;
+                } else {
+                  particle.color = new Color3(
+                    data.Red[i],
+                    data.Green[i],
+                    data.Blue[i]
+                  );
+                }
+
+                console.log(particle.position.x + ", " + particle.position.y + ", " + particle.position.z);
+
+                /*
+                // check if inside meshes
+                let minDist = 999999999999;
+                particle.color.set(0, .8, 0, 1);
+        
+                for (let i=0; i<main._instances.length; i++)
+                {
+                  let mesh = (main._instances[i].getChildMeshes()[0] as Mesh);
+                  let bounds = main._instances[i].getHierarchyBoundingVectors(true);
+                  if (main.pointIsInsideMesh(mesh, bounds, particle.position))
+                  {
+                    particle.color.set(1, 0, 0, 1);
+                    minDist = 1;
+                  }
+                  else
+                  {
+                    // find minimum distance
+                    let dist = Math.max(1, particle.position.subtract(main._instances[i].position).lengthSquared() * 0.0004);
+                    if (dist < minDist) minDist = dist;
+                  }
+                }
+        
+                // color based on distance
+                //particle.color.r /= minDist;
+                //particle.color.g /= minDist;
+                //particle.color.b /= minDist;
+                */
+              };
+
+              const tasks: Promise<any>[] = [];
+
+              pcs.addPoints(numCoords, pcLoader);
+              tasks.push(pcs.buildMeshAsync());
+
+              console.log('WAITING FOR TASKS...');
+              Promise.all(tasks).then(() => {
+                console.log('ALL READY!');
+
+                if (isTime || isClass) {
+                  const advancedTexture =
+                    AdvancedDynamicTexture.CreateFullscreenUI(
+                      'UI',
+                      true,
+                      scene
+                    );
+
+                  const panel = new StackPanel();
+                  panel.width = '220px';
+                  panel.horizontalAlignment =
+                    Control.HORIZONTAL_ALIGNMENT_CENTER;
+                  panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+                  advancedTexture.addControl(panel);
+
+                  const header = new TextBlock();
+                  header.height = '30px';
+                  header.color = 'white';
+
+                  const slider = new Slider('Slider');
+                  slider.minimum = 0;
+                  slider.step = 1;
+                  slider.height = '20px';
+                  slider.width = '200px';
+
+                  if (isTime) {
+                    header.text = 'Time: ' + (offset + times[0]).toFixed(2);
+
+                    slider.maximum = times.length - 1;
+                    slider.value = 0;
+                  }
+
+                  if (isClass) {
+                    header.text = 'All';
+
+                    const slider_classes: number[] = Array.from(
+                      new Set(classification)
+                    );
+
+                    slider.maximum = slider_classes.length;
+                    slider.value = slider_classes[0];
+
+                    slider.onValueChangedObservable.add((value: any) => {
+                      if (isTime) {
+                        header.text =
+                          'Time: ' + (offset + times[value]).toFixed(2);
+
+                        if (value > pcs.counter) {
+                          doClear = false;
+                          pcs.setParticles(pcs.counter, value);
+                        } else {
+                          doClear = true;
+                          pcs.setParticles(value, pcs.counter);
+                        }
+                        pcs.counter = value;
+                      }
+                      if (isClass) {
+                        const v: number = classes.numbers.indexOf(
+                          slider_classes[value]
+                        );
+                        header.text = classes.names[v];
+
+                        const start_1: number = classification.indexOf(
+                          slider_classes[value]
+                        );
+                        const finish: number = classification.lastIndexOf(
+                          slider_classes[value]
+                        );
+
+                        doClear = true;
+                        pcs.setParticles(0, numCoords);
+
+                        doClear = false;
+                        pcs.setParticles(start_1, finish);
+                      }
+                    });
+
+                    panel.addControl(slider);
+                  }
+
+                  panel.addControl(header);
+
+                  pcs.updateParticle = function (particle_3: any) {
+                    if (doClear) {
+                      particle_3.color = scene.clearColor;
+                    } else {
+                      particle_3.color = new Color3(
+                        data.Red[particle_3.idx] / rgbMax,
+                        data.Green[particle_3.idx] / rgbMax,
+                        data.Blue[particle_3.idx] / rgbMax
+                      );
+                    }
+
+                    return particle_3;
+                  };
+
+                  if (isTopo) {
+                    const mapbox_img = arguments[0].mapbox_img;
+                    const blob_1 = new Blob([mapbox_img]);
+                    const url_1 = URL.createObjectURL(blob_1);
+
+                    const mat = new StandardMaterial('mat', scene);
+                    mat.emissiveColor = Color3.Random();
+                    mat.diffuseTexture = new Texture(url_1, scene);
+                    mat.ambientTexture = new Texture(url_1, scene);
+
+                    const options = {
+                      xmin: xmin,
+                      zmin: ymin,
+                      xmax: xmax,
+                      zmax: ymax
+                    };
+                    const ground = MeshBuilder.CreateTiledGround(
+                      'tiled ground',
+                      options,
+                      scene
+                    );
+                    ground.material = mat;
+                  }
+                }
+              });
+            }
+          );
+        }
       });
+
+      // ==========================
 
       // create gizmos utility
       main._util_layer = new UtilityLayerRenderer(scene);
@@ -253,323 +525,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
       });
 
-      let data!: {
-        [x: string]: any;
-        X: number[];
-        Y: number[];
-        Z: number[];
-        Red: number[];
-        Green: number[];
-        Blue: number[];
-        GpsTime: number[];
-        Classification: number[];
-      };
+      //scene.createDefaultCameraOrLight(true, true, false);
+      //const camera = scene.activeCamera as ArcRotateCamera;
+      const camera = new ArcRotateCamera("", 0, Math.PI/2, 1000, Vector3.Zero(), scene);
 
-      if (this.values.mode === 'time') {
-        isTime = true;
-      } else if (this.values.mode === 'classes') {
-        isClass = true;
-      } else if (this.values.mode == 'topo') {
-        isTopo = true;
-      } else if (this.values.mode == 'gltf') {
-        isGltf = true;
-      }
-
-      if (this.values.source === 'cloud') {
-        data = await loadPointCloud(this.values).then(results => {
-          return results;
-        });
-        //if (isTime = true){sort data by GpsTime}
-      } else {
-        data = this.values.data;
-      }
-
-      const numCoords = data.X.length;
-      const gltfData = this.values.gltf_data;
-      const pointSize = this.values.point_size;
       const backgroundColor = this.values.background_color;
-      const times = data.GpsTime;
-      const offset = this.values.time_offset;
-      const classification = this.values.data.Classification;
-      const classes = this.values.classes;
-      const topo_offset = this.values.topo_offset;
-      const scale = this.zScale;
-      const grid_cells = this.values.grid_cells;
-      let doClear = false;
-
-      const xmin = data.X.reduce((accum: number, currentNumber: number) =>
-        Math.min(accum, currentNumber)
-      );
-      const xmax = data.X.reduce((accum: number, currentNumber: number) =>
-        Math.max(accum, currentNumber)
-      );
-      const ymin = data.Y.reduce((accum: number, currentNumber: number) =>
-        Math.min(accum, currentNumber)
-      );
-      const ymax = data.Y.reduce((accum: number, currentNumber: number) =>
-        Math.max(accum, currentNumber)
-      );
-      const redmax = data.Red.reduce((accum: number, currentNumber: number) =>
-        Math.max(accum, currentNumber)
-      );
-      const greenmax = data.Green.reduce(
-        (accum: number, currentNumber: number) => Math.max(accum, currentNumber)
-      );
-      const bluemax = data.Blue.reduce((accum: number, currentNumber: number) =>
-        Math.max(accum, currentNumber)
-      );
-      const rgbMax = Math.max(redmax, greenmax, bluemax);
-
-      console.log(
-        'Bounds: ' + xmin + ', ' + ymin + ', ' + ' .. ' + xmax + ', ' + ymax
-      );
-
-      const size_x = (xmax - xmin);
-      const size_y = (ymax - ymin);
-      const center_x = xmin + size_x / 2;
-      const offset_x = -center_x;
-      const center_y = ymin + size_y / 2;
-      const offset_y = -center_y;
-
-      const cell_size_x = size_x / grid_cells;
-      const cell_size_y = size_y / grid_cells;
-
-
-      console.log('Offset: ' + offset_x + ', ' + offset_y);
-
-      if (isClass) {
-        for (let x = 0; x < grid_cells; x++) {
-          for (let y = 0; y < grid_cells; y++) {
-            this._pcs.push(
-              new PointsCloudSystem(x + ':' + y, pointSize, scene, {
-                updatable: isClass
-              })
-            );
-          }
-        }
-      } else {
-        for (let x = 0; x < grid_cells; x++) {
-          for (let y = 0; y < grid_cells; y++) {
-            this._pcs.push(
-              new PointsCloudSystem(x + ':' + y, pointSize, scene, {
-                updatable: isTime
-              })
-            );
-          }
-        }
-      }
-
-      const pcLoader = function (particle: any, i: number, _: string) {
-        // Y is up
-        particle.position = new Vector3(
-          data.X[i],
-          (data.Z[i] - topo_offset) * scale,
-          data.Y[i]
-        );
-
-        if (isTime) {
-          particle.color = scene.clearColor;
-        } else {
-          particle.color = new Color3(
-            data.Red[i] / rgbMax,
-            data.Green[i] / rgbMax,
-            data.Blue[i] / rgbMax
-          );
-        }
-
-        /*
-        // check if inside meshes
-        let minDist = 999999999999;
-        particle.color.set(0, .8, 0, 1);
-
-        for (let i=0; i<main._instances.length; i++)
-        {
-          let mesh = (main._instances[i].getChildMeshes()[0] as Mesh);
-          let bounds = main._instances[i].getHierarchyBoundingVectors(true);
-          if (main.pointIsInsideMesh(mesh, bounds, particle.position))
-          {
-            particle.color.set(1, 0, 0, 1);
-            minDist = 1;
-          }
-          else
-          {
-            // find minimum distance
-            let dist = Math.max(1, particle.position.subtract(main._instances[i].position).lengthSquared() * 0.0004);
-            if (dist < minDist) minDist = dist;
-          }
-        }
-
-        // color based on distance
-        //particle.color.r /= minDist;
-        //particle.color.g /= minDist;
-        //particle.color.b /= minDist;
-        */
-      };
-
-      const tasks: Promise<any>[] = [];
-
-      /*
-      if (isGltf && false) {
-        const blob = new Blob([gltfData]);
-        const url = URL.createObjectURL(blob);
-        console.log('LOADING GLTF...');
-
-        tasks.push(
-          SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
-            container => {
-              console.log(
-                'MODEL IS LOADED: ' + container.meshes.length + ' MESHES'
-              );
-              for (let i = 0; i < container.meshes.length; i++) {
-                const mesh = container.meshes[i] as Mesh;
-                console.log('Wireframing: ' + mesh.name);
-                if (mesh.material) {
-                  mesh.material.wireframe = true;
-                }
-              }
-
-              for (let i = 0; i < 100; i++) {
-                // create some instances
-                const inst = (
-                  container.meshes[0] as Mesh
-                ).instantiateHierarchy();
-                if (inst) {
-                  inst.getChildMeshes()[0].showBoundingBox = true;
-                  inst.position.set(
-                    -400 + Math.random() * 800,
-                    0,
-                    -400 + Math.random() * 800
-                  );
-                  //main.makeDraggable((inst.getChildMeshes()[0] as Mesh), main._scene);
-                  main._instances.push(inst);
-                }
-              }
-
-              // hide the main mesh
-              for (let i = 0; i < container.meshes.length; i++) {
-                container.meshes[i].setEnabled(false);
-              }
-            }
-          )
-        );
-      }
-      */
-
-      console.log('WAITING FOR LOAD...');
-      await Promise.all(tasks);
-      pcs.addPoints(numCoords, pcLoader);
-      tasks.push(pcs.buildMeshAsync());
-
-      console.log('WAITING FOR TASKS...');
-      await Promise.all(tasks);
-      console.log('ALL READY!');
-      scene.createDefaultCameraOrLight(true, true, false);
-      if (isTime || isClass) {
-        const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
-          'UI',
-          true,
-          scene
-        );
-
-        const panel = new StackPanel();
-        panel.width = '220px';
-        panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-        panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-        advancedTexture.addControl(panel);
-
-        const header = new TextBlock();
-        header.height = '30px';
-        header.color = 'white';
-
-        const slider = new Slider('Slider');
-        slider.minimum = 0;
-        slider.step = 1;
-        slider.height = '20px';
-        slider.width = '200px';
-
-        if (isTime) {
-          header.text = 'Time: ' + (offset + times[0]).toFixed(2);
-
-          slider.maximum = times.length - 1;
-          slider.value = 0;
-        }
-        if (isClass) {
-          header.text = 'All';
-
-          var slider_classes: number[] = Array.from(new Set(classification));
-          slider.maximum = slider_classes.length;
-          slider.value = slider_classes[0];
-        }
-
-        panel.addControl(header);
-
-        pcs.updateParticle = function (particle_3: any) {
-          if (doClear) {
-            particle_3.color = scene.clearColor;
-          } else {
-            particle_3.color = new Color3(
-              data.Red[particle_3.idx] / rgbMax,
-              data.Green[particle_3.idx] / rgbMax,
-              data.Blue[particle_3.idx] / rgbMax
-            );
-          }
-
-          return particle_3;
-        };
-
-        slider.onValueChangedObservable.add((value: any) => {
-          if (isTime) {
-            header.text = 'Time: ' + (offset + times[value]).toFixed(2);
-
-            if (value > pcs.counter) {
-              doClear = false;
-              pcs.setParticles(pcs.counter, value);
-            } else {
-              doClear = true;
-              pcs.setParticles(value, pcs.counter);
-            }
-            pcs.counter = value;
-          }
-          if (isClass) {
-            const v: number = classes.numbers.indexOf(slider_classes[value]);
-            header.text = classes.names[v];
-
-            const start_1: number = classification.indexOf(
-              slider_classes[value]
-            );
-            const finish: number = classification.lastIndexOf(
-              slider_classes[value]
-            );
-
-            doClear = true;
-            pcs.setParticles(0, numCoords);
-
-            doClear = false;
-            pcs.setParticles(start_1, finish);
-          }
-        });
-
-        panel.addControl(slider);
-      }
-      if (isTopo) {
-        const mapbox_img = this.values.mapbox_img;
-        const blob_1 = new Blob([mapbox_img]);
-        const url_1 = URL.createObjectURL(blob_1);
-
-        const mat = new StandardMaterial('mat', scene);
-        mat.emissiveColor = Color3.Random();
-        mat.diffuseTexture = new Texture(url_1, scene);
-        mat.ambientTexture = new Texture(url_1, scene);
-
-        const options = { xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax };
-        const ground = MeshBuilder.CreateTiledGround(
-          'tiled ground',
-          options,
-          scene
-        );
-        ground.material = mat;
-      }
-
       scene.clearColor = new Color4(
         backgroundColor[0],
         backgroundColor[1],
@@ -577,8 +537,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
         backgroundColor[3]
       );
 
-      const camera = scene.activeCamera as ArcRotateCamera;
       // possibly make these configurable, but they are good defaults
+      camera.minZ = 0.1;
+      camera.maxZ = 128000;
       camera.panningAxis = new Vector3(1, 1, 0);
       camera.upperBetaLimit = Math.PI / 2;
       camera.panningSensibility = 1;
@@ -588,7 +549,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         camera.wheelPrecision = this.wheelPrecision;
       }
       camera.alpha += Math.PI;
-      camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
+      camera.setTarget(new Vector3(0, 0, 0));
       camera.attachControl(this.canvas, false);
       return scene;
     });
@@ -598,11 +559,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
     return new Promise((resolve, reject) => {
       resolve(true);
     });
-  }
-
-  addModel(data: any): void {
-    console.log('ADD MODEL');
-    console.log(data);
   }
 
   addAxes(mesh: Mesh): DragGizmos {
@@ -898,12 +854,19 @@ export class BabylonImageView extends BabylonBaseView {
   }
 }
 
-async function loadPointCloud(values: {
-  name_space: string;
-  array_name: string;
-  bbox: { X: number[]; Y: number[]; Z: number[] };
-  token: string;
-}) {
+async function loadPointCloud(
+  values: {
+    name_space: string;
+    array_name: string;
+    bbox: { X: number[]; Y: number[]; Z: number[] };
+    token: string;
+  },
+  process: boolean
+) {
+  if (!process) {
+    return values;
+  }
+
   const config = {
     apiKey: values.token
   };
