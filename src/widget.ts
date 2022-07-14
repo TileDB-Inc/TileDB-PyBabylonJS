@@ -181,7 +181,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
           SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
             container => {
-              console.log("Added mesh: " + container.meshes[0].name);
+              console.log('Added mesh: ' + container.meshes[0].name);
               container.meshes[0].position.copyFrom(pos);
               container.meshes[0].rotation = rot;
               container.meshes[0].scaling = scale;
@@ -195,9 +195,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
           let isClass = false;
           let isTopo = false;
 
-          let px = arguments[0].px;
-          let py = arguments[0].pz;
-          let pz = arguments[0].py;
+          const px = arguments[0].px;
+          const py = arguments[0].pz;
+          const pz = arguments[0].py;
 
           let data!: {
             [x: string]: any;
@@ -219,104 +219,101 @@ export class BabylonPointCloudView extends BabylonBaseView {
             isTopo = true;
           }
 
-          let isCloud = arguments[0].source === 'cloud';
-          if (!isCloud)
-          {
-            console.log("Loading from memory");
+          const isCloud = arguments[0].source === 'cloud';
+          if (!isCloud) {
+            console.log('Loading from memory');
             data = arguments[0].data;
-          }
-          else
-          {
-            console.log("Loading from pointcloud");
+          } else {
+            console.log('Loading from pointcloud');
           }
 
-          loadPointCloud((isCloud ? arguments[0].uri : arguments[0]), isCloud).then((res) => {
+          loadPointCloud(
+            isCloud ? arguments[0].uri : arguments[0],
+            isCloud
+          ).then(res => {
+            if (isCloud) {
+              data = res;
+            }
 
-              if (isCloud) data = res;
+            const numCoords = data.X.length;
+            const pointSize = arguments[0].point_size;
+            const times = data.GpsTime;
+            const offset = arguments[0].time_offset;
+            const classification = arguments[0].data.Classification;
+            const classes = arguments[0].classes;
+            let doClear = false;
 
-              const numCoords = data.X.length;
-              const pointSize = arguments[0].point_size;
-              const times = data.GpsTime;
-              const offset = arguments[0].time_offset;
-              const classification = arguments[0].data.Classification;
-              const classes = arguments[0].classes;
-              let doClear = false;
+            const xmin = data.X.reduce(
+              (accum: number, currentNumber: number) => {
+                return Math.min(accum, currentNumber);
+              }
+            );
+            const xmax = data.X.reduce((accum: number, currentNumber: number) =>
+              Math.max(accum, currentNumber)
+            );
+            const ymin = data.Y.reduce((accum: number, currentNumber: number) =>
+              Math.min(accum, currentNumber)
+            );
+            const ymax = data.Y.reduce((accum: number, currentNumber: number) =>
+              Math.max(accum, currentNumber)
+            );
+            const zmin = data.Z.reduce(
+              (accum: number, currentNumber: number) => {
+                return Math.min(accum, currentNumber);
+              }
+            );
+            const zmax = data.Z.reduce((accum: number, currentNumber: number) =>
+              Math.max(accum, currentNumber)
+            );
+            const redmax = data.Red.reduce(
+              (accum: number, currentNumber: number) =>
+                Math.max(accum, currentNumber)
+            );
+            const greenmax = data.Green.reduce(
+              (accum: number, currentNumber: number) =>
+                Math.max(accum, currentNumber)
+            );
+            const bluemax = data.Blue.reduce(
+              (accum: number, currentNumber: number) =>
+                Math.max(accum, currentNumber)
+            );
+            const rgbMax = Math.max(redmax, greenmax, bluemax);
 
-              const xmin = data.X.reduce(
-                (accum: number, currentNumber: number) => {
-                  return Math.min(accum, currentNumber);
-                }
-              );
-              const xmax = data.X.reduce(
-                (accum: number, currentNumber: number) =>
-                  Math.max(accum, currentNumber)
-              );
-              const ymin = data.Y.reduce(
-                (accum: number, currentNumber: number) =>
-                  Math.min(accum, currentNumber)
-              );
-              const ymax = data.Y.reduce(
-                (accum: number, currentNumber: number) =>
-                  Math.max(accum, currentNumber)
-              );
-              const zmin = data.Z.reduce(
-                (accum: number, currentNumber: number) => {
-                  return Math.min(accum, currentNumber);
-                }
-              );
-              const zmax = data.Z.reduce(
-                (accum: number, currentNumber: number) =>
-                  Math.max(accum, currentNumber)
-              );
-              const redmax = data.Red.reduce(
-                (accum: number, currentNumber: number) =>
-                  Math.max(accum, currentNumber)
-              );
-              const greenmax = data.Green.reduce(
-                (accum: number, currentNumber: number) =>
-                  Math.max(accum, currentNumber)
-              );
-              const bluemax = data.Blue.reduce(
-                (accum: number, currentNumber: number) =>
-                  Math.max(accum, currentNumber)
-              );
-              const rgbMax = Math.max(redmax, greenmax, bluemax);
+            const pcs = new PointsCloudSystem('pcs', pointSize, main._scene, {
+              updatable: isClass || isTime
+            });
 
-              let pcs = new PointsCloudSystem('pcs', pointSize, main._scene, {
-                updatable: isClass || isTime
-              });
+            const size_x = xmax - xmin;
+            const size_y = ymax - ymin;
+            const size_z = zmax - zmin;
+            const center_x = xmin + size_x / 2;
+            const center_y = ymin + size_y / 2;
+            const center_z = zmin + size_z / 2;
+            const offset_x = -center_x;
+            const offset_y = -center_y;
+            const offset_z = -center_z;
 
-              const size_x = (xmax - xmin);
-              const size_y = (ymax - ymin);
-              const size_z = (zmax - zmin);
-              const center_x = xmin + size_x / 2;
-              const center_y = ymin + size_y / 2;
-              const center_z = zmin + size_z / 2;
-              const offset_x = -center_x;
-              const offset_y = -center_y;
-              const offset_z = -center_z;
+            main._pcs.push(pcs);
 
-              main._pcs.push(pcs);
+            const pcLoader = function (particle: any, i: number, _: string) {
+              // Y is up
+              particle.position = new Vector3(
+                data.X[i] + px + offset_x,
+                data.Z[i] + pz + offset_z,
+                data.Y[i] + py + offset_y
+              );
 
-              const pcLoader = function (particle: any, i: number, _: string) {
-                // Y is up
-                particle.position = new Vector3(
-                  data.X[i] + px + offset_x,
-                  data.Z[i] + pz + offset_z,
-                  data.Y[i] + py + offset_y
+              if (isTime) {
+                particle.color = scene.clearColor;
+              } else {
+                particle.color = new Color3(
+                  data.Red[i] / rgbMax,
+                  data.Green[i] / rgbMax,
+                  data.Blue[i] / rgbMax
                 );
+              }
 
-                if (isTime) {
-                  particle.color = scene.clearColor;
-                } else {
-                  particle.color = new Color3(
-                    data.Red[i] / rgbMax,
-                    data.Green[i] / rgbMax,
-                    data.Blue[i] / rgbMax
-                  );
-                }
-
-                /*
+              /*
                 // check if inside meshes
                 let minDist = 999999999999;
                 particle.color.set(0, .8, 0, 1);
@@ -343,140 +340,133 @@ export class BabylonPointCloudView extends BabylonBaseView {
                 //particle.color.g /= minDist;
                 //particle.color.b /= minDist;
                 */
-              };
+            };
 
-              const tasks: Promise<any>[] = [];
+            const tasks: Promise<any>[] = [];
 
-              pcs.addPoints(numCoords, pcLoader);
-              tasks.push(pcs.buildMeshAsync());
+            pcs.addPoints(numCoords, pcLoader);
+            tasks.push(pcs.buildMeshAsync());
 
-              Promise.all(tasks).then(() => {
+            Promise.all(tasks).then(() => {
+              console.log('Pointcloud loaded: ' + numCoords + ' points.');
 
-                console.log("Pointcloud loaded: " + numCoords + " points.");
+              if (isTime || isClass) {
+                const advancedTexture =
+                  AdvancedDynamicTexture.CreateFullscreenUI('UI', true, scene);
 
-                if (isTime || isClass) {
-                  const advancedTexture =
-                    AdvancedDynamicTexture.CreateFullscreenUI(
-                      'UI',
-                      true,
-                      scene
-                    );
+                const panel = new StackPanel();
+                panel.width = '220px';
+                panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+                panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+                advancedTexture.addControl(panel);
 
-                  const panel = new StackPanel();
-                  panel.width = '220px';
-                  panel.horizontalAlignment =
-                    Control.HORIZONTAL_ALIGNMENT_CENTER;
-                  panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-                  advancedTexture.addControl(panel);
+                const header = new TextBlock();
+                header.height = '30px';
+                header.color = 'white';
 
-                  const header = new TextBlock();
-                  header.height = '30px';
-                  header.color = 'white';
+                const slider = new Slider('Slider');
+                slider.minimum = 0;
+                slider.step = 1;
+                slider.height = '20px';
+                slider.width = '200px';
 
-                  const slider = new Slider('Slider');
-                  slider.minimum = 0;
-                  slider.step = 1;
-                  slider.height = '20px';
-                  slider.width = '200px';
+                if (isTime) {
+                  header.text = 'Time: ' + (offset + times[0]).toFixed(2);
 
-                  if (isTime) {
-                    header.text = 'Time: ' + (offset + times[0]).toFixed(2);
-
-                    slider.maximum = times.length - 1;
-                    slider.value = 0;
-                  }
-
-                  if (isClass) {
-                    header.text = 'All';
-
-                    const slider_classes: number[] = Array.from(
-                      new Set(classification)
-                    );
-
-                    slider.maximum = slider_classes.length;
-                    slider.value = slider_classes[0];
-
-                    slider.onValueChangedObservable.add((value: any) => {
-                      if (isTime) {
-                        header.text =
-                          'Time: ' + (offset + times[value]).toFixed(2);
-
-                        if (value > pcs.counter) {
-                          doClear = false;
-                          pcs.setParticles(pcs.counter, value);
-                        } else {
-                          doClear = true;
-                          pcs.setParticles(value, pcs.counter);
-                        }
-                        pcs.counter = value;
-                      }
-                      if (isClass) {
-                        const v: number = classes.numbers.indexOf(
-                          slider_classes[value]
-                        );
-                        header.text = classes.names[v];
-
-                        const start_1: number = classification.indexOf(
-                          slider_classes[value]
-                        );
-                        const finish: number = classification.lastIndexOf(
-                          slider_classes[value]
-                        );
-
-                        doClear = true;
-                        pcs.setParticles(0, numCoords);
-
-                        doClear = false;
-                        pcs.setParticles(start_1, finish);
-                      }
-                    });
-
-                    panel.addControl(slider);
-                  }
-
-                  panel.addControl(header);
-
-                  pcs.updateParticle = function (particle_3: any) {
-                    if (doClear) {
-                      particle_3.color = scene.clearColor;
-                    } else {
-                      particle_3.color = new Color3(
-                        data.Red[particle_3.idx] / rgbMax,
-                        data.Green[particle_3.idx] / rgbMax,
-                        data.Blue[particle_3.idx] / rgbMax
-                      );
-                    }
-
-                    return particle_3;
-                  };
-
-                  if (isTopo) {
-                    const mapbox_img = arguments[0].mapbox_img;
-                    const blob_1 = new Blob([mapbox_img]);
-                    const url_1 = URL.createObjectURL(blob_1);
-
-                    const mat = new StandardMaterial('mat', scene);
-                    mat.emissiveColor = Color3.Random();
-                    mat.diffuseTexture = new Texture(url_1, scene);
-                    mat.ambientTexture = new Texture(url_1, scene);
-
-                    const options = {
-                      xmin: xmin,
-                      zmin: ymin,
-                      xmax: xmax,
-                      zmax: ymax
-                    };
-                    const ground = MeshBuilder.CreateTiledGround(
-                      'tiled ground',
-                      options,
-                      scene
-                    );
-                    ground.material = mat;
-                  }
+                  slider.maximum = times.length - 1;
+                  slider.value = 0;
                 }
-              });
-            }
-          );
+
+                if (isClass) {
+                  header.text = 'All';
+
+                  const slider_classes: number[] = Array.from(
+                    new Set(classification)
+                  );
+
+                  slider.maximum = slider_classes.length;
+                  slider.value = slider_classes[0];
+
+                  slider.onValueChangedObservable.add((value: any) => {
+                    if (isTime) {
+                      header.text =
+                        'Time: ' + (offset + times[value]).toFixed(2);
+
+                      if (value > pcs.counter) {
+                        doClear = false;
+                        pcs.setParticles(pcs.counter, value);
+                      } else {
+                        doClear = true;
+                        pcs.setParticles(value, pcs.counter);
+                      }
+                      pcs.counter = value;
+                    }
+                    if (isClass) {
+                      const v: number = classes.numbers.indexOf(
+                        slider_classes[value]
+                      );
+                      header.text = classes.names[v];
+
+                      const start_1: number = classification.indexOf(
+                        slider_classes[value]
+                      );
+                      const finish: number = classification.lastIndexOf(
+                        slider_classes[value]
+                      );
+
+                      doClear = true;
+                      pcs.setParticles(0, numCoords);
+
+                      doClear = false;
+                      pcs.setParticles(start_1, finish);
+                    }
+                  });
+
+                  panel.addControl(slider);
+                }
+
+                panel.addControl(header);
+
+                pcs.updateParticle = function (particle_3: any) {
+                  if (doClear) {
+                    particle_3.color = scene.clearColor;
+                  } else {
+                    particle_3.color = new Color3(
+                      data.Red[particle_3.idx] / rgbMax,
+                      data.Green[particle_3.idx] / rgbMax,
+                      data.Blue[particle_3.idx] / rgbMax
+                    );
+                  }
+
+                  return particle_3;
+                };
+
+                if (isTopo) {
+                  const mapbox_img = arguments[0].mapbox_img;
+                  const blob_1 = new Blob([mapbox_img]);
+                  const url_1 = URL.createObjectURL(blob_1);
+
+                  const mat = new StandardMaterial('mat', scene);
+                  mat.emissiveColor = Color3.Random();
+                  mat.diffuseTexture = new Texture(url_1, scene);
+                  mat.ambientTexture = new Texture(url_1, scene);
+
+                  const options = {
+                    xmin: xmin,
+                    zmin: ymin,
+                    xmax: xmax,
+                    zmax: ymax
+                  };
+                  const ground = MeshBuilder.CreateTiledGround(
+                    'tiled ground',
+                    options,
+                    scene
+                  );
+                  ground.material = mat;
+                }
+              }
+            });
+          });
         }
       });
 
@@ -514,15 +504,17 @@ export class BabylonPointCloudView extends BabylonBaseView {
       scene.onKeyboardObservable.add(kbInfo => {
         switch (kbInfo.type) {
           case KeyboardEventTypes.KEYDOWN:
-
             // toggle current camera
             if (kbInfo.event.key === 'c') {
-                main._cameras[main._curr_camera].detachControl();
-                main._curr_camera = (main._curr_camera + 1) % main._cameras.length;
-                main._cameras[main._curr_camera].attachControl(true);
-                let cam_name = main._cameras[main._curr_camera].name;
-                main._scene.setActiveCameraByName(cam_name);
-                console.log("Current camera: [" + main._curr_camera + "] " + cam_name);
+              main._cameras[main._curr_camera].detachControl();
+              main._curr_camera =
+                (main._curr_camera + 1) % main._cameras.length;
+              main._cameras[main._curr_camera].attachControl(true);
+              const cam_name = main._cameras[main._curr_camera].name;
+              main._scene.setActiveCameraByName(cam_name);
+              console.log(
+                'Current camera: [' + main._curr_camera + '] ' + cam_name
+              );
             }
 
             // toggle selected objects wireframe
@@ -555,10 +547,21 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
       });
 
-      const light = new DirectionalLight("sun", new Vector3(0.1, 1, 0.2), scene);
+      const light = new DirectionalLight(
+        'sun',
+        new Vector3(0.1, 1, 0.2),
+        scene
+      );
       light.intensity = 1;
 
-      const camera1 = new ArcRotateCamera("arc_rotate", 0, 1.4, 200, Vector3.Zero(), scene);
+      const camera1 = new ArcRotateCamera(
+        'arc_rotate',
+        0,
+        1.4,
+        200,
+        Vector3.Zero(),
+        scene
+      );
       camera1.minZ = 0.1;
       camera1.maxZ = 128000;
       camera1.panningAxis = new Vector3(1, 1, 0);
@@ -572,20 +575,20 @@ export class BabylonPointCloudView extends BabylonBaseView {
       camera1.attachControl(this.canvas, false);
       this._cameras.push(camera1);
 
-      const camera2 = new FreeCamera("free", new Vector3(0, 200, -200), scene);
+      const camera2 = new FreeCamera('free', new Vector3(0, 200, -200), scene);
       camera2.minZ = 0.1;
       camera2.maxZ = 128000;
-      //camera2.touchAngularSensibility = 10000;
-      camera2.speed = 0.25;
-      camera2.keysUp.push(87);    		// W
-      camera2.keysDown.push(83)   		// D
-      camera2.keysLeft.push(65);  		// A
-      camera2.keysRight.push(68); 		// S
-      camera2.keysUpward.push(69);		// E
-      camera2.keysDownward.push(81);     // Q
       if (this.moveSpeed > 0) {
         camera2.speed = this.moveSpeed;
+      } else {
+        camera2.speed = 0.5;
       }
+      camera2.keysUp.push(87); // W
+      camera2.keysDown.push(83); // D
+      camera2.keysLeft.push(65); // A
+      camera2.keysRight.push(68); // S
+      camera2.keysUpward.push(69); // E
+      camera2.keysDownward.push(81); // Q
       this._cameras.push(camera2);
       const backgroundColor = this.values.background_color;
       scene.clearColor = new Color4(
@@ -648,7 +651,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       mesh.material.wireframe = !mesh.material.wireframe;
     }
 
-    let children = mesh.getChildMeshes();
+    const children = mesh.getChildMeshes();
     for (let c = 0; c < children.length; c++) {
       this.toggleMeshWireframe(children[c] as Mesh);
     }
@@ -662,7 +665,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
   }
 
   focusSelected(): void {
-    if (this._selected.length === 0) return;
+    if (this._selected.length === 0) {
+      return;
+    }
     const center = new Vector3(0, 0, 0);
     for (let s = 0; s < this._selected.length; s++) {
       center.addInPlace(this._selected[s].position);
@@ -672,9 +677,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
   }
 
   infoSelected(): void {
-    if (this._selected.length === 0) return;
+    if (this._selected.length === 0) {
+      return;
+    }
     for (let s = 0; s < this._selected.length; s++) {
-      console.log(this._selected[s].name + ": " + this._selected[s].position);
+      console.log(this._selected[s].name + ': ' + this._selected[s].position);
     }
   }
 
@@ -689,7 +696,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
     if (hit && hit.pickedMesh) {
       let sel = hit.pickedMesh;
-      while (sel.parent) sel = sel.parent as Mesh;
+      while (sel.parent) {
+        sel = sel.parent as Mesh;
+      }
       if (!this._shift_pressed) {
         this.unselectAll();
       }
@@ -930,11 +939,13 @@ async function loadPointCloud(
   process: boolean
 ) {
   if (!process) {
-    console.log("Returning pointcloud data without further processing (from memory)");
+    console.log(
+      'Returning pointcloud data without further processing (from memory)'
+    );
     return values;
   }
 
-  console.log("Loading pointcloud data...");
+  console.log('Loading pointcloud data...');
 
   const config = {
     apiKey: values.token
@@ -963,14 +974,14 @@ async function loadPointCloud(
     ]
   };
 
-  console.log("Querying pointcloud data...");
+  console.log('Querying pointcloud data...');
 
   for await (const results of tiledbClient.query.ReadQuery(
     values.name_space,
     values.array_name,
     query
   )) {
-    console.log("Returning loaded pointcloud data...");
+    console.log('Returning loaded pointcloud data...');
     return results;
   }
 }
