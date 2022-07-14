@@ -27,7 +27,11 @@ import {
   UtilityLayerRenderer,
   KeyboardEventTypes,
   PointerEventTypes,
-  AxisDragGizmo
+  AxisDragGizmo,
+  DirectionalLight,
+  FreeCamera,
+  Camera,
+  int
 } from '@babylonjs/core';
 import {
   AdvancedDynamicTexture,
@@ -64,6 +68,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
   width = this.values.width;
   height = this.values.height;
   wheelPrecision = this.values.wheel_precision;
+  moveSpeed = this.values.move_speed;
   zScale = this.values.z_scale;
   inspector = this.values.inspector;
 
@@ -142,7 +147,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
   private _shift_pressed = false;
   private _selected: Array<Mesh> = new Array<Mesh>();
   private _axes: Array<DragGizmos> = new Array<DragGizmos>();
-  private _camera!: ArcRotateCamera;
+  private _cameras: Array<Camera> = new Array<Camera>();
+  private _curr_camera: int = 0;
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
@@ -508,12 +514,23 @@ export class BabylonPointCloudView extends BabylonBaseView {
       scene.onKeyboardObservable.add(kbInfo => {
         switch (kbInfo.type) {
           case KeyboardEventTypes.KEYDOWN:
-            // toggle wireframe
-            if (kbInfo.event.key === 'w') {
+
+            // toggle current camera
+            if (kbInfo.event.key === 'c') {
+                main._cameras[main._curr_camera].detachControl();
+                main._curr_camera = (main._curr_camera + 1) % main._cameras.length;
+                main._cameras[main._curr_camera].attachControl(true);
+                let cam_name = main._cameras[main._curr_camera].name;
+                main._scene.setActiveCameraByName(cam_name);
+                console.log("Current camera: [" + main._curr_camera + "] " + cam_name);
+            }
+
+            // toggle selected objects wireframe
+            if (kbInfo.event.key === 'r') {
               main.toggleSelectedWireframe();
             }
 
-            // focus on selected object
+            // focus on selected objects
             if (kbInfo.event.key === 'f') {
               main.focusSelected();
             }
@@ -538,9 +555,38 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
       });
 
-      scene.createDefaultCameraOrLight(true, true, false);
-      this._camera = scene.activeCamera as ArcRotateCamera;
+      const light = new DirectionalLight("sun", new Vector3(0.1, 1, 0.2), scene);
+      light.intensity = 1;
 
+      const camera1 = new ArcRotateCamera("arc_rotate", 0, 1.4, 200, Vector3.Zero(), scene);
+      camera1.minZ = 0.1;
+      camera1.maxZ = 128000;
+      camera1.panningAxis = new Vector3(1, 1, 0);
+      camera1.upperBetaLimit = Math.PI / 2;
+      camera1.panningSensibility = 1;
+      camera1.panningInertia = 0.2;
+      camera1._panningMouseButton = 0;
+      if (this.wheelPrecision > 0) {
+        camera1.wheelPrecision = this.wheelPrecision;
+      }
+      camera1.attachControl(this.canvas, false);
+      this._cameras.push(camera1);
+
+      const camera2 = new FreeCamera("free", new Vector3(0, 200, -200), scene);
+      camera2.minZ = 0.1;
+      camera2.maxZ = 128000;
+      //camera2.touchAngularSensibility = 10000;
+      camera2.speed = 0.25;
+      camera2.keysUp.push(87);    		// W
+      camera2.keysDown.push(83)   		// D
+      camera2.keysLeft.push(65);  		// A
+      camera2.keysRight.push(68); 		// S
+      camera2.keysUpward.push(69);		// E
+      camera2.keysDownward.push(81);     // Q
+      if (this.moveSpeed > 0) {
+        camera2.speed = this.moveSpeed;
+      }
+      this._cameras.push(camera2);
       const backgroundColor = this.values.background_color;
       scene.clearColor = new Color4(
         backgroundColor[0],
@@ -550,19 +596,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       );
 
       // possibly make these configurable, but they are good defaults
-      this._camera.minZ = 0.1;
-      this._camera.maxZ = 128000;
-      this._camera.panningAxis = new Vector3(1, 1, 0);
-      this._camera.upperBetaLimit = Math.PI / 2;
-      this._camera.panningSensibility = 1;
-      this._camera.panningInertia = 0.2;
-      this._camera._panningMouseButton = 0;
-      if (this.wheelPrecision > 0) {
-        this._camera.wheelPrecision = this.wheelPrecision;
-      }
-      this._camera.alpha += Math.PI;
-      this._camera.setTarget(new Vector3(0, 0, 0));
-      this._camera.attachControl(this.canvas, false);
       return scene;
     });
   }
@@ -635,7 +668,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       center.addInPlace(this._selected[s].position);
     }
     center.scaleInPlace(this._selected.length);
-    this._camera.setTarget(center);
+    (this._cameras[this._curr_camera] as ArcRotateCamera).setTarget(center);
   }
 
   infoSelected(): void {
