@@ -214,7 +214,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
             isTopo = true;
           }
 
-          if (arguments[0].source !== 'cloud')
+          let isDict = arguments[0].source === 'dict';
+          if (isDict)
           {
             console.log("Loading from memory");
             data = arguments[0].data;
@@ -224,9 +225,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
             console.log("Loading from pointcloud");
           }
 
-          loadPointCloud(arguments[0], data === undefined).then((res) => {
+          loadPointCloud((isDict ? arguments[0] : arguments[0].uri), !isDict).then((res) => {
 
-              if (data === undefined) data = res;
+              if (!isDict) data = res;
 
               const numCoords = data.X.length;
               const pointSize = arguments[0].point_size;
@@ -866,8 +867,11 @@ async function loadPointCloud(
   process: boolean
 ) {
   if (!process) {
+    console.log("Returning pointcloud data without further processing (from memory)");
     return values;
   }
+
+  console.log("Loading pointcloud data...");
 
   const config = {
     apiKey: values.token
@@ -896,11 +900,14 @@ async function loadPointCloud(
     ]
   };
 
+  console.log("Querying pointcloud data...");
+
   for await (const results of tiledbClient.query.ReadQuery(
     values.name_space,
     values.array_name,
     query
   )) {
+    console.log("Returning loaded pointcloud data...");
     return results;
   }
 }
