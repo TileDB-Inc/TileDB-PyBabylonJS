@@ -55,12 +55,12 @@ class Show:
 
         """
 
-        if source == "dict":
-            data = check_point_cloud_data_dict(mode, data)
-        if source == "local":
-            data = check_point_cloud_data_local(mode, uri, kwargs)
-        if source == "cloud":
-            check_point_cloud_data_cloud(kwargs)
+        #if source == "dict":
+        #    data = check_point_cloud_data_dict(mode, data)
+        #if source == "local":
+        #    data = check_point_cloud_data_local(mode, uri, kwargs)
+        #if source == "cloud":
+        #    check_point_cloud_data_cloud(kwargs)
 
         point_cloud_args = check_point_cloud_args(mode, kwargs)
 

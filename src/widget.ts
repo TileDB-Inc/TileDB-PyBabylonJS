@@ -31,7 +31,8 @@ import {
   DirectionalLight,
   FreeCamera,
   Camera,
-  int
+  int,
+  HemisphericLight
 } from '@babylonjs/core';
 import {
   AdvancedDynamicTexture,
@@ -97,6 +98,11 @@ abstract class BabylonBaseView extends DOMWidgetView {
 
     this.resizeCanvas();
 
+    // window resize event handler
+    window.addEventListener('resize', () => {
+      this.engine?.resize();
+    });
+
     this.createScene().then(scene => {
       engine.runRenderLoop(() => {
         scene.render();
@@ -154,6 +160,16 @@ export class BabylonPointCloudView extends BabylonBaseView {
     return super.createScene().then(async scene => {
       const main = this;
       main._scene = scene;
+
+      // add button for fullscreen switching
+      var fullDiv = document.createElement("div");
+      fullDiv.style.cssText = "position:absolute; bottom:32px; right:32px; color:#FFFF00";
+      let fullButton = document.createElement('button');
+      fullButton.onclick = function () { main.canvas!.requestFullscreen(); };
+      fullButton.innerText = '[ ]';
+      fullButton.className = 'button';
+      fullDiv.appendChild(fullButton);
+      document.body.appendChild(fullDiv);
 
       // listen to commands from the notebook
       main.listenTo(main.model, 'msg:custom', function () {
@@ -298,9 +314,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
             const pcLoader = function (particle: any, i: number, _: string) {
               // Y is up
               particle.position = new Vector3(
-                data.X[i] + px + offset_x,
-                data.Z[i] + pz + offset_z,
-                data.Y[i] + py + offset_y
+                data.X[i] + offset_x,
+                data.Z[i] + offset_z,
+                data.Y[i] + offset_y
               );
 
               if (isTime) {
@@ -349,6 +365,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
             Promise.all(tasks).then(() => {
               console.log('Pointcloud loaded: ' + numCoords + ' points.');
+
+              pcs.mesh.position.set(px, pz, py);
 
               if (isTime || isClass) {
                 const advancedTexture =
@@ -549,10 +567,18 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const light = new DirectionalLight(
         'sun',
-        new Vector3(0.1, 1, 0.2),
+        new Vector3(0.15, 1, 0.2),
         scene
       );
       light.intensity = 1;
+
+      const light2 = new HemisphericLight(
+        'light2',
+        new Vector3(0, 1, 0),
+        scene
+      );
+      light2.intensity = 0.9;
+      light2.specular = Color3.White();
 
       const camera1 = new ArcRotateCamera(
         'arc_rotate',
