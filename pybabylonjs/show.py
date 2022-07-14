@@ -103,6 +103,18 @@ class Show:
         self,
         info: Optional[dict] = {},
     ):
+        source = info['source']
+        mode = info['mode']
+
+        if source == "dict" and mode != "gltf":
+            data = check_point_cloud_data_dict(info['mode'], info['data'])
+            info['data'] = data
+        if source == "local":
+            data = check_point_cloud_data_local(info['mode'], info['uri'], { 'bbox': info['bbox'] })
+            info['data'] = data
+        if source == "cloud":
+            check_point_cloud_data_cloud(**{ 'name_space': info['name_space'], 'array_name': info['array_name'], 'token': info['token'], 'bbox': info['bbox'] })
+
         self._dataviz.send(info)
 
 

@@ -171,7 +171,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
             arguments[0].sz
           );
 
-          const blob = new Blob([arguments[0].gltf_data]);
+          const blob = new Blob([arguments[0].data]);
           const url = URL.createObjectURL(blob);
 
           SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
@@ -214,8 +214,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
             isTopo = true;
           }
 
-          let isDict = arguments[0].source === 'dict';
-          if (isDict)
+          let isCloud = arguments[0].source === 'cloud';
+          if (!isCloud)
           {
             console.log("Loading from memory");
             data = arguments[0].data;
@@ -225,9 +225,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
             console.log("Loading from pointcloud");
           }
 
-          loadPointCloud((isDict ? arguments[0] : arguments[0].uri), !isDict).then((res) => {
+          loadPointCloud((isCloud ? arguments[0].uri : arguments[0]), isCloud).then((res) => {
 
-              if (!isDict) data = res;
+              if (isCloud) data = res;
 
               const numCoords = data.X.length;
               const pointSize = arguments[0].point_size;
@@ -254,6 +254,15 @@ export class BabylonPointCloudView extends BabylonBaseView {
                 (accum: number, currentNumber: number) =>
                   Math.max(accum, currentNumber)
               );
+              const zmin = data.Z.reduce(
+                (accum: number, currentNumber: number) => {
+                  return Math.min(accum, currentNumber);
+                }
+              );
+              const zmax = data.Z.reduce(
+                (accum: number, currentNumber: number) =>
+                  Math.max(accum, currentNumber)
+              );
               const redmax = data.Red.reduce(
                 (accum: number, currentNumber: number) =>
                   Math.max(accum, currentNumber)
@@ -272,23 +281,33 @@ export class BabylonPointCloudView extends BabylonBaseView {
                 updatable: isClass || isTime
               });
 
+              const size_x = (xmax - xmin);
+              const size_y = (ymax - ymin);
+              const size_z = (zmax - zmin);
+              const center_x = xmin + size_x / 2;
+              const center_y = ymin + size_y / 2;
+              const center_z = zmin + size_z / 2;
+              const offset_x = -center_x;
+              const offset_y = -center_y;
+              const offset_z = -center_z;
+
               main._pcs.push(pcs);
 
               const pcLoader = function (particle: any, i: number, _: string) {
                 // Y is up
                 particle.position = new Vector3(
-                  data.X[i] + px,
-                  data.Z[i] + pz,
-                  data.Y[i] + py
+                  data.X[i] + px + offset_x,
+                  data.Z[i] + pz + offset_z,
+                  data.Y[i] + py + offset_y
                 );
 
                 if (isTime) {
                   particle.color = scene.clearColor;
                 } else {
                   particle.color = new Color3(
-                    data.Red[i],
-                    data.Green[i],
-                    data.Blue[i]
+                    data.Red[i] / rgbMax,
+                    data.Green[i] / rgbMax,
+                    data.Blue[i] / rgbMax
                   );
                 }
 
@@ -327,6 +346,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
               tasks.push(pcs.buildMeshAsync());
 
               Promise.all(tasks).then(() => {
+
+                console.log("Pointcloud loaded");
 
                 if (isTime || isClass) {
                   const advancedTexture =
