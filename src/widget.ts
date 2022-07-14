@@ -143,7 +143,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
   private _selected: Array<Mesh> = new Array<Mesh>();
   private _axes: Array<DragGizmos> = new Array<DragGizmos>();
   private _camera!: ArcRotateCamera;
-  private _debug!: Mesh;
 
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
@@ -153,7 +152,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       // listen to commands from the notebook
       main.listenTo(main.model, 'msg:custom', function () {
         if (arguments[0].cmd === 'add_model') {
-          // px, py, pz, rx, ry, rz, sx, sy, sz, gltf_data
+          // px, py, pz, rx, ry, rz, sx, sy, sz, data
 
           const pos = new Vector3(
             arguments[0].px,
@@ -162,13 +161,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
           );
           const rot = new Vector3(
             arguments[0].rx,
-            arguments[0].ry,
-            arguments[0].rz
+            arguments[0].rz,
+            arguments[0].ry
           );
           const scale = new Vector3(
             arguments[0].sx,
-            arguments[0].sy,
-            arguments[0].sz
+            arguments[0].sz,
+            arguments[0].sy
           );
 
           const blob = new Blob([arguments[0].data]);
@@ -519,6 +518,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
               main.focusSelected();
             }
 
+            // show info about selected objects
+            if (kbInfo.event.key === 'i') {
+              main.infoSelected();
+            }
+
             if (kbInfo.event.key === 'Shift') {
               // shift
               main._shift_pressed = true;
@@ -536,7 +540,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       scene.createDefaultCameraOrLight(true, true, false);
       this._camera = scene.activeCamera as ArcRotateCamera;
-      this._debug = MeshBuilder.CreateIcoSphere("", { radius:1, subdivisions:2 });
 
       const backgroundColor = this.values.background_color;
       scene.clearColor = new Color4(
@@ -633,7 +636,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
     }
     center.scaleInPlace(this._selected.length);
     this._camera.setTarget(center);
-    this._debug.position.copyFrom(center);
+  }
+
+  infoSelected(): void {
+    if (this._selected.length === 0) return;
+    for (let s = 0; s < this._selected.length; s++) {
+      console.log(this._selected[s].name + ": " + this._selected[s].position);
+    }
   }
 
   pickMesh(): void {

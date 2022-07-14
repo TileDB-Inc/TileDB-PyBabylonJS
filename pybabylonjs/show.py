@@ -115,6 +115,10 @@ class Show:
         if source == "cloud":
             check_point_cloud_data_cloud(**{ 'name_space': info['name_space'], 'array_name': info['array_name'], 'token': info['token'], 'bbox': info['bbox'] })
 
+        if mode == "topo":
+            img = create_mapbox_image(data, point_cloud_args)
+            d = {**d, "mapbox_img": img}
+
         self._dataviz.send(info)
 
 
