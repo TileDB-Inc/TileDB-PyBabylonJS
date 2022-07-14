@@ -347,7 +347,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
               Promise.all(tasks).then(() => {
 
-                console.log("Pointcloud loaded");
+                console.log("Pointcloud loaded: " + numCoords + " points.");
 
                 if (isTime || isClass) {
                   const advancedTexture =
