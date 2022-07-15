@@ -1,3 +1,5 @@
+/* eslint-disable curly */
+/* eslint-disable prettier/prettier */
 // Copyright 2022 TileDB Inc.
 // Licensed under the MIT License.
 
@@ -32,7 +34,8 @@ import {
   FreeCamera,
   Camera,
   int,
-  HemisphericLight
+  HemisphericLight,
+  CloudPoint
 } from '@babylonjs/core';
 import {
   AdvancedDynamicTexture,
@@ -44,6 +47,7 @@ import {
 import '@babylonjs/loaders/glTF';
 import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
+//import ColorUtils from color_utils;
 
 // Import the CSS
 import '../css/widget.css';
@@ -198,10 +202,23 @@ export class BabylonPointCloudView extends BabylonBaseView {
           SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
             container => {
               console.log('Added mesh: ' + container.meshes[0].name);
-              container.meshes[0].position.copyFrom(pos);
-              container.meshes[0].rotation = rot;
-              container.meshes[0].scaling = scale;
-              main._instances.push(container.meshes[0]);
+              if (false) {
+                const meshes:Mesh[] = [];
+                const children = container.meshes[0].getChildMeshes();
+                for (let c = 0; c < children.length; c++) {
+                  meshes.push(children[c] as Mesh);
+                }
+                const merged_mesh = Mesh.MergeMeshes(meshes, true, true, undefined, false, true);
+                merged_mesh.position.copyFrom(pos);
+                merged_mesh.rotation = rot;
+                merged_mesh.scaling = scale;
+                main._instances.push(merged_mesh);
+              } else {
+                container.meshes[0].position.copyFrom(pos);
+                container.meshes[0].rotation = rot;
+                container.meshes[0].scaling = scale;
+                main._instances.push(container.meshes[0]);
+              }
             }
           );
         } else if (arguments[0].cmd === 'add_pointcloud') {
@@ -535,6 +552,11 @@ export class BabylonPointCloudView extends BabylonBaseView {
               );
             }
 
+            // color points based on their distances to meshes
+            if (kbInfo.event.key === '=') {
+              main.colorByDistance();
+            }
+
             // toggle selected objects wireframe
             if (kbInfo.event.key === 'r') {
               main.toggleSelectedWireframe();
@@ -650,6 +672,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
     this._selected.push(mesh);
     this._axes.push(this.addAxes(mesh));
+    mesh.showBoundingBox = true;
   }
 
   unselect(mesh: Mesh): void {
@@ -661,11 +684,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
     this._axes[index].dispose();
     this._axes.splice(index, 1);
     this._selected.splice(index, 1);
+    mesh.showBoundingBox = false;
   }
 
   unselectAll(): void {
     for (let i = 0; i < this._selected.length; i++) {
       this._axes[i].dispose();
+      this._selected[i].showBoundingBox = true;
     }
 
     this._selected = [];
@@ -681,6 +706,64 @@ export class BabylonPointCloudView extends BabylonBaseView {
     for (let c = 0; c < children.length; c++) {
       this.toggleMeshWireframe(children[c] as Mesh);
     }
+  }
+
+  colorByDistance(): void {
+    console.log("Checking intersections...");
+
+    let main = this;
+
+    // for each pcs
+    for (let ps = 0; ps < this._pcs.length; ps++) {
+
+      const pcs = this._pcs[ps];
+
+      // for each mesh
+      for (let m = 0; m < this._instances.length; m++) {
+        const children = this._instances[m].getChildMeshes();
+        for (let n=0; n<children.length; n++) {
+
+          const mesh = children[n] as Mesh;
+          console.log("  " + mesh.name + "...");
+
+          // check if bouding boxes intersect
+          const pcs_bounds = this._pcs[ps].mesh.getBoundingInfo();
+          const mesh_bounds = mesh.getHierarchyBoundingVectors(true);
+
+          if (pcs_bounds.boundingBox.intersectsMinMax(mesh_bounds.min, mesh_bounds.max)) {
+            // intersects - check which points are inside mesh
+            let min_dist = 999999999999;
+            console.log("Intersection: pcs #" + ps + " (" + pcs.nbParticles + " points) against mesh " + mesh.name);
+
+            pcs.updateParticle = (particle: CloudPoint): CloudPoint => {
+              if (main.pointIsInsideMesh(mesh, mesh_bounds, particle.position))
+              {
+                particle.color.set(1, 0, 0, 1);
+                min_dist = 1;
+              }
+              else
+              {
+                // find minimum distance
+                const dist = Math.max(1, particle.position.subtract(mesh.position).lengthSquared() * 0.0004);
+                if (dist < min_dist) min_dist = dist;
+
+                // color based on distance
+                particle.color.set(0, 1, 0, 1);
+                //tmp_color.r /= min_dist;
+                //tmp_color.g /= min_dist;
+                //tmp_color.b /= min_dist;
+              }
+
+              return particle;
+            }
+
+            pcs.setParticles();
+          }
+        }
+      }
+    }
+
+    console.log("Done.");
   }
 
   toggleSelectedWireframe(): void {
