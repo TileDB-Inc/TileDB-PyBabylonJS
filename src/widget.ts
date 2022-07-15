@@ -117,7 +117,6 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 export class BabylonPointCloudView extends BabylonBaseView {
   private _scene!: Scene;
   private _util_layer!: UtilityLayerRenderer;
-  //private _mesh_mode: int = 0;     // 0 = none, 1 = move, 2 = rotate, 3 = scale
   private _moved_after_click = false;
   private _shift_pressed = false;
   private _selected: Array<Mesh> = new Array<Mesh>();
@@ -189,11 +188,38 @@ export class BabylonPointCloudView extends BabylonBaseView {
             data.Blue[i]/ rgbMax
           );  
         }
+
+        if (main.values.distance_colors) {
+          // check if inside meshes
+          let minDist = 999999999999;
+          particle.color.set(0, 1, 0, 1);
+  
+          for (let i=0; i<scene.meshes.length; i++)
+          {
+            let mesh = (scene.meshes[i] as Mesh);
+            let bounds = scene.meshes[i].getHierarchyBoundingVectors(true);
+            mesh.showBoundingBox = true;
+            if (main.pointIsInsideMesh(mesh, bounds, particle.position))
+            {
+              particle.color.set(1, 0, 0, 1);
+              minDist = 1;
+            }
+            else
+            {
+              // find minimum distance
+              let dist = Math.max(1, particle.position.subtract(scene.meshes[i].position).lengthSquared() * 0.0004);
+              if (dist < minDist) minDist = dist;
+            }
+          }
+
+          // color based on distance
+          //particle.color.r /= minDist;
+          //particle.color.g /= minDist;
+          //particle.color.b /= minDist;
+        }
       };
 
-      pcs.addPoints(numCoords, pcLoader);
-
-      let tasks:Promise<any>[] = [pcs.buildMeshAsync()];
+      const tasks:Promise<any>[] = [];
 
       if (isGltf) {
         var blob = new Blob([gltfData]);
@@ -201,7 +227,14 @@ export class BabylonPointCloudView extends BabylonBaseView {
         tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf"));
       };
 
+      // needed to force then synchronous
+      // because we needed the model loaded
+      // for clash detection on pointcloud load.
       await Promise.all(tasks);
+      pcs.addPoints(numCoords, pcLoader);
+      tasks.push(pcs.buildMeshAsync());
+      await Promise.all(tasks);
+
       scene.createDefaultCameraOrLight(true, true, false);
 
       if (isTime || isClass) {
@@ -349,11 +382,26 @@ export class BabylonPointCloudView extends BabylonBaseView {
                 'Current camera: [' + main._curr_camera + '] ' + cam_name
               );
             }
+            
+            // perform clash detection
+            if (kbInfo.event.key === '=') {
+              this.values.distance_colors = true;
+              pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+                updatable: isClass || isTime
+              });
+              pcs.addPoints(numCoords, pcLoader);
+              pcs.buildMeshAsync();
+            }
 
-            // color points based on their distances to meshes
-            //if (kbInfo.event.key === '=') {
-            //  main.colorByDistance();
-            //}
+            // perform clash detection
+            if (kbInfo.event.key === '-') {
+              this.values.distance_colors = false;
+              pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+                updatable: isClass || isTime
+              });
+              pcs.addPoints(numCoords, pcLoader);
+              pcs.buildMeshAsync();
+            }
 
             // toggle selected objects wireframe
             if (kbInfo.event.key === 'r') {
@@ -428,11 +476,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
   // --------------------
 
 
+  // Add dragging axes to mesh
   addAxes(mesh: Mesh): DragGizmos {
     const gizmo = new DragGizmos(mesh, this._util_layer);
     return gizmo;
   }
 
+  // Select a mesh
   select(mesh: Mesh, toggle: boolean): void {
     if (this._selected.includes(mesh)) {
       if (toggle) {
@@ -446,6 +496,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
     mesh.showBoundingBox = true;
   }
 
+  // Unselect a mesh
   unselect(mesh: Mesh): void {
     const index = this._selected.findIndex(e => e === mesh);
     if (index == undefined) {
@@ -458,6 +509,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
     mesh.showBoundingBox = false;
   }
 
+  // Unselect all meshes
   unselectAll(): void {
     for (let i = 0; i < this._selected.length; i++) {
       this._axes[i].dispose();
@@ -468,6 +520,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
     this._axes = [];
   }
 
+  // Toggle wireframe on mesh
   toggleMeshWireframe(mesh: Mesh) {
     if (mesh.material) {
       mesh.material.wireframe = !mesh.material.wireframe;
@@ -478,7 +531,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
       this.toggleMeshWireframe(children[c] as Mesh);
     }
   }
-  
+
+  // Toggle wireframe on selected meshes
   toggleSelectedWireframe(): void {
     for (let s = 0; s < this._selected.length; s++) {
       const mesh = this._selected[s] as Mesh;
@@ -486,6 +540,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
     }
   }
 
+  // Focus camera into selected mesh
   focusSelected(): void {
     if (this._selected.length === 0) {
       return;
@@ -498,6 +553,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
     (this._cameras[this._curr_camera] as ArcRotateCamera).setTarget(center);
   }
 
+  // Show info about selected mesh -- just position for now
   infoSelected(): void {
     if (this._selected.length === 0) {
       return;
@@ -507,6 +563,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
     }
   }
 
+  // Pick a mesh
   pickMesh(): void {
     const pick = this._scene.pick(this._scene.pointerX, this._scene.pointerY);
     if (!pick || !pick.ray) {

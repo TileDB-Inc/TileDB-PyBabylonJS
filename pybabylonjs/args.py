@@ -33,6 +33,7 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "origin_shift_x": None,
     "origin_shift_y": None,
     "origin_shift_z": None,
+    "distance_colors": False
 }
 
 
