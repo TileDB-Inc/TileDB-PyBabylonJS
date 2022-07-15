@@ -10,7 +10,7 @@ import {
 import { MODULE_NAME, MODULE_VERSION } from './version';
 import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, 
   StandardMaterial, SolidParticleSystem, MeshBuilder,
-  Vector3, Texture } from '@babylonjs/core';
+  Vector3, Texture, Axis, Camera, int, Mesh, Ray, UtilityLayerRenderer, FreeCamera, KeyboardEventTypes, PointerEventTypes } from '@babylonjs/core';
 import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/core/Debug/debugLayer";
@@ -18,6 +18,7 @@ import "@babylonjs/inspector";
 import '../css/widget.css';
 
 import { setPointCloudSwitches, getPointCloud } from "./data";
+import { DragGizmos } from './drag_gizmos';
 
 export class BabylonBaseModel extends DOMWidgetModel {
   static model_module = MODULE_NAME;
@@ -38,6 +39,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
   width = this.values.width;
   height = this.values.height;
   wheelPrecision = this.values.wheel_precision;
+  moveSpeed = this.values.move_speed;
   zScale = this.values.z_scale;
   inspector = this.values.inspector;
 
@@ -66,6 +68,11 @@ abstract class BabylonBaseView extends DOMWidgetView {
     SceneLoader.ShowLoadingScreen = false;
 
     this.resizeCanvas();
+
+    // window resize event handler
+    window.addEventListener('resize', () => {
+      this.engine?.resize();
+    });
 
     this.createScene().then(scene => {
       engine.runRenderLoop(() => {
@@ -108,8 +115,31 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 
 
 export class BabylonPointCloudView extends BabylonBaseView {
+  private _scene!: Scene;
+  private _util_layer!: UtilityLayerRenderer;
+  //private _mesh_mode: int = 0;     // 0 = none, 1 = move, 2 = rotate, 3 = scale
+  private _moved_after_click = false;
+  private _shift_pressed = false;
+  private _selected: Array<Mesh> = new Array<Mesh>();
+  private _axes: Array<DragGizmos> = new Array<DragGizmos>();
+  private _cameras: Array<Camera> = new Array<Camera>();
+  private _curr_camera: int = 0;
+  
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
+
+      const main = this;
+      main._scene = scene;
+
+      // add button for fullscreen switching
+      var fullDiv = document.createElement("div");
+      fullDiv.style.cssText = "position:absolute; bottom:32px; right:32px; color:#FFFF00";
+      let fullButton = document.createElement('button');
+      fullButton.onclick = function () { main.canvas!.requestFullscreen(); };
+      fullButton.innerText = '[ ]';
+      fullButton.className = 'button';
+      fullDiv.appendChild(fullButton);
+      document.body.appendChild(fullDiv);
 
       const {isTime, isClass, isTopo, isGltf} = setPointCloudSwitches(this.values.mode);
 
@@ -275,21 +305,269 @@ export class BabylonPointCloudView extends BabylonBaseView {
         ground.material = mat;
 
       }
-      
-      let camera = scene.activeCamera as ArcRotateCamera;
-      // possibly make these configurable, but they are good defaults
-      camera.panningAxis = new Vector3(1, 1, 0);
+
+      // create gizmos utility
+      main._util_layer = new UtilityLayerRenderer(scene);
+
+      // handle mouse clicks to select/deselect meshes
+      scene.onPointerObservable.add(pointerInfo => {
+        switch (pointerInfo.type) {
+          case PointerEventTypes.POINTERDOWN:
+            main._moved_after_click = false;
+            break;
+          case PointerEventTypes.POINTERUP:
+            if (!main._moved_after_click) {
+              main.pickMesh();
+            }
+            break;
+          case PointerEventTypes.POINTERMOVE:
+            main._moved_after_click = true;
+            break;
+          case PointerEventTypes.POINTERWHEEL:
+            break;
+          case PointerEventTypes.POINTERPICK:
+            break;
+          case PointerEventTypes.POINTERTAP:
+            break;
+          case PointerEventTypes.POINTERDOUBLETAP:
+            break;
+        }
+      });
+
+      // handle key presses
+      scene.onKeyboardObservable.add(kbInfo => {
+        switch (kbInfo.type) {
+          case KeyboardEventTypes.KEYDOWN:
+            // toggle current camera
+            if (kbInfo.event.key === 'c') {
+              main._cameras[main._curr_camera].detachControl();
+              main._curr_camera = (main._curr_camera + 1) % main._cameras.length;
+              main._cameras[main._curr_camera].attachControl(true);
+              const cam_name = main._cameras[main._curr_camera].name;
+              main._scene.setActiveCameraByName(cam_name);
+              console.log(
+                'Current camera: [' + main._curr_camera + '] ' + cam_name
+              );
+            }
+
+            // color points based on their distances to meshes
+            //if (kbInfo.event.key === '=') {
+            //  main.colorByDistance();
+            //}
+
+            // toggle selected objects wireframe
+            if (kbInfo.event.key === 'r') {
+              main.toggleSelectedWireframe();
+            }
+
+            // focus on selected objects
+            if (kbInfo.event.key === 'f') {
+              main.focusSelected();
+            }
+
+            // show info about selected objects
+            if (kbInfo.event.key === 'i') {
+              main.infoSelected();
+            }
+
+            if (kbInfo.event.key === 'Shift') {
+              // shift
+              main._shift_pressed = true;
+            }
+
+            break;
+          case KeyboardEventTypes.KEYUP:
+            if (kbInfo.event.key === 'Shift') {
+              // shift
+              main._shift_pressed = false;
+            }
+            break;
+        }
+      });
+
+      scene.createDefaultCameraOrLight(true, true, true);
+
+      const camera = scene.activeCamera as ArcRotateCamera;
+      camera.alpha += Math.PI;
       camera.upperBetaLimit = Math.PI / 2;
-      camera.panningSensibility = 1;
-      camera.panningInertia = 0.2;
-      camera._panningMouseButton = 0;
+      //camera.panningAxis = new Vector3(1, 1, 0);
+      //camera.panningSensibility = 0.9;
+      //camera.panningInertia = 0.2;
+      //camera._panningMouseButton = 0;
+
       if (this.wheelPrecision > 0)
         camera.wheelPrecision = this.wheelPrecision;
-      camera.alpha += Math.PI;
+
       camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
-      camera.attachControl(this.canvas, false);
+      this._cameras.push(camera);
+
+      const camera2 = new FreeCamera('free', new Vector3(0, 200, -200), scene);
+      camera2.minZ = 0.1;
+      camera2.maxZ = 128000;
+      if (this.moveSpeed > 0) {
+        camera2.speed = this.moveSpeed;
+      } else {
+        camera2.speed = 0.5;
+      }
+      camera2.setTarget(Vector3.Zero());
+      camera2.keysUp.push(87); // W
+      camera2.keysDown.push(83); // D
+      camera2.keysLeft.push(65); // A
+      camera2.keysRight.push(68); // S
+      camera2.keysUpward.push(69); // E
+      camera2.keysDownward.push(81); // Q
+      this._cameras.push(camera2);
+
       return scene;
     });
+  }
+
+
+  // --------------------
+  // Extras
+  // --------------------
+
+
+  addAxes(mesh: Mesh): DragGizmos {
+    const gizmo = new DragGizmos(mesh, this._util_layer);
+    return gizmo;
+  }
+
+  select(mesh: Mesh, toggle: boolean): void {
+    if (this._selected.includes(mesh)) {
+      if (toggle) {
+        this.unselect(mesh);
+      }
+      return;
+    }
+
+    this._selected.push(mesh);
+    this._axes.push(this.addAxes(mesh));
+    mesh.showBoundingBox = true;
+  }
+
+  unselect(mesh: Mesh): void {
+    const index = this._selected.findIndex(e => e === mesh);
+    if (index == undefined) {
+      return;
+    }
+
+    this._axes[index].dispose();
+    this._axes.splice(index, 1);
+    this._selected.splice(index, 1);
+    mesh.showBoundingBox = false;
+  }
+
+  unselectAll(): void {
+    for (let i = 0; i < this._selected.length; i++) {
+      this._axes[i].dispose();
+      this._selected[i].showBoundingBox = true;
+    }
+
+    this._selected = [];
+    this._axes = [];
+  }
+
+  toggleMeshWireframe(mesh: Mesh) {
+    if (mesh.material) {
+      mesh.material.wireframe = !mesh.material.wireframe;
+    }
+
+    const children = mesh.getChildMeshes();
+    for (let c = 0; c < children.length; c++) {
+      this.toggleMeshWireframe(children[c] as Mesh);
+    }
+  }
+  
+  toggleSelectedWireframe(): void {
+    for (let s = 0; s < this._selected.length; s++) {
+      const mesh = this._selected[s] as Mesh;
+      this.toggleMeshWireframe(mesh);
+    }
+  }
+
+  focusSelected(): void {
+    if (this._selected.length === 0) {
+      return;
+    }
+    const center = new Vector3(0, 0, 0);
+    for (let s = 0; s < this._selected.length; s++) {
+      center.addInPlace(this._selected[s].position);
+    }
+    center.scaleInPlace(this._selected.length);
+    (this._cameras[this._curr_camera] as ArcRotateCamera).setTarget(center);
+  }
+
+  infoSelected(): void {
+    if (this._selected.length === 0) {
+      return;
+    }
+    for (let s = 0; s < this._selected.length; s++) {
+      console.log(this._selected[s].name + ': ' + this._selected[s].position);
+    }
+  }
+
+  pickMesh(): void {
+    const pick = this._scene.pick(this._scene.pointerX, this._scene.pointerY);
+    if (!pick || !pick.ray) {
+      return;
+    }
+
+    const ray = new Ray(pick.ray.origin, pick.ray.direction, 100000);
+    const hit = this._scene.pickWithRay(ray);
+
+    if (hit && hit.pickedMesh) {
+      let sel = hit.pickedMesh;
+      while (sel.parent) {
+        sel = sel.parent as Mesh;
+      }
+      if (!this._shift_pressed) {
+        this.unselectAll();
+      }
+      this.select(sel as Mesh, true);
+    } else {
+      this.unselectAll();
+    }
+  }
+
+  pointIsInsideMesh(
+    mesh: Mesh,
+    boundInfo: { min: Vector3; max: Vector3 },
+    point: Vector3
+  ): boolean {
+    const max = boundInfo.max.add(mesh.position);
+    const min = boundInfo.min.add(mesh.position);
+    const diameter = max.subtract(min).length() * 2;
+
+    if (point.x < min.x || point.x > max.x) {
+      return false;
+    }
+
+    if (point.y < min.y || point.y > max.y) {
+      return false;
+    }
+
+    if (point.z < min.z || point.z > max.z) {
+      return false;
+    }
+
+    const directions: Vector3[] = [
+      new Vector3(0, 1, 0),
+      //new Vector3(0, -1, 0),
+      new Vector3(-0.89, 0.45, 0),
+      new Vector3(0.89, 0.45, 0)
+    ];
+
+    const ray = new Ray(point, Axis.X, diameter);
+
+    for (let c = 0; c < directions.length; c++) {
+      ray.direction = directions[c];
+      if (!ray.intersectsMesh(mesh).hit) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
 

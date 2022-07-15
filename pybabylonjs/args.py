@@ -13,6 +13,7 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "height": 600,
     "z_scale": 1,
     "wheel_precision": -1,
+    "move_speed": -1,
     "point_size": 1,
     "background_color": [0, 0, 0, 1],
     "bbox": None,
