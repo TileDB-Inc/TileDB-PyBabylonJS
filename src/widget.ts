@@ -143,7 +143,12 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const {isTime, isClass, isTopo, isGltf} = setPointCloudSwitches(this.values.mode);
 
       var {data, xmin, xmax, ymin, ymax, rgbMax}  = await getPointCloud(this.values).then((results) => {return results});
-      
+
+      const size_x = xmax - xmin;
+      const size_y = ymax - ymin;
+      const center_x = xmin + size_x / 2;
+      const center_y = ymin + size_y / 2;
+
       const numCoords = data.X.length;
       const times = data.GpsTime;
       const classification = data.Classification; 
@@ -198,7 +203,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
           {
             let mesh = (scene.meshes[i] as Mesh);
             let bounds = scene.meshes[i].getHierarchyBoundingVectors(true);
-            mesh.showBoundingBox = true;
             if (main.pointIsInsideMesh(mesh, bounds, particle.position))
             {
               particle.color.set(1, 0, 0, 1);
@@ -378,9 +382,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
               main._cameras[main._curr_camera].attachControl(true);
               const cam_name = main._cameras[main._curr_camera].name;
               main._scene.setActiveCameraByName(cam_name);
-              console.log(
-                'Current camera: [' + main._curr_camera + '] ' + cam_name
-              );
+              console.log('Current camera: [' + main._curr_camera + '] ' + cam_name);
+              console.log(main._cameras[main._curr_camera].position);
+              console.log(main._cameras[main._curr_camera].minZ + " .. " + main._cameras[main._curr_camera].maxZ);
             }
             
             // perform clash detection
@@ -449,15 +453,14 @@ export class BabylonPointCloudView extends BabylonBaseView {
       camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
       this._cameras.push(camera);
 
-      const camera2 = new FreeCamera('free', new Vector3(0, 200, -200), scene);
-      camera2.minZ = 0.1;
-      camera2.maxZ = 128000;
+      const camera2 = new FreeCamera('free', new Vector3(center_x, 0, center_y), scene);
+      camera2.minZ = camera.minZ;
+      camera2.maxZ = camera.maxZ;
       if (this.moveSpeed > 0) {
         camera2.speed = this.moveSpeed;
       } else {
         camera2.speed = 0.5;
       }
-      camera2.setTarget(Vector3.Zero());
       camera2.keysUp.push(87); // W
       camera2.keysDown.push(83); // D
       camera2.keysLeft.push(65); // A
@@ -493,7 +496,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
     this._selected.push(mesh);
     this._axes.push(this.addAxes(mesh));
-    mesh.showBoundingBox = true;
   }
 
   // Unselect a mesh
@@ -506,14 +508,12 @@ export class BabylonPointCloudView extends BabylonBaseView {
     this._axes[index].dispose();
     this._axes.splice(index, 1);
     this._selected.splice(index, 1);
-    mesh.showBoundingBox = false;
   }
 
   // Unselect all meshes
   unselectAll(): void {
     for (let i = 0; i < this._selected.length; i++) {
       this._axes[i].dispose();
-      this._selected[i].showBoundingBox = true;
     }
 
     this._selected = [];
