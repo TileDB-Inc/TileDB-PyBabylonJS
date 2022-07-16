@@ -225,11 +225,55 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const tasks:Promise<any>[] = [];
 
+      
       if (isGltf) {
-        var blob = new Blob([gltfData]);
-        var url = URL.createObjectURL(blob);
-        tasks.push(SceneLoader.AppendAsync(url, "", scene, null, ".gltf"));
-      };
+
+        if (this.values.gltf_multi===false){
+          var blob = new Blob([gltfData]);
+          var url = URL.createObjectURL(blob);
+    
+          tasks.push(SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
+            container => {
+    
+            container.meshes[0].rotation = new Vector3(
+              this.values.mesh_rotation[0],
+              this.values.mesh_rotation[1],
+              this.values.mesh_rotation[2]);
+            container.meshes[0].scaling = new Vector3(
+              this.values.mesh_scale[0],
+              this.values.mesh_scale[1],
+              this.values.mesh_scale[2]);
+            container.meshes[0].position.x = container.meshes[0].position.x + this.values.mesh_shift[0];
+            container.meshes[0].position.y = container.meshes[0].position.y + this.values.mesh_shift[1];
+            container.meshes[0].position.z = container.meshes[0].position.z + this.values.mesh_shift[2];
+            }
+          ));
+        }
+        else if (this.values.gltf_multi===true) {
+          for (let i=0; i<gltfData.length; i++){
+            var blob = new Blob([gltfData[i]]);
+            var url = URL.createObjectURL(blob);
+        
+            tasks.push(SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
+              container => {
+        
+                container.meshes[0].rotation = new Vector3(
+                  this.values.mesh_rotation[0],
+                  this.values.mesh_rotation[1],
+                  this.values.mesh_rotation[2]);
+                container.meshes[0].scaling = new Vector3(
+                  this.values.mesh_scale[0],
+                  this.values.mesh_scale[1],
+                  this.values.mesh_scale[2]);
+                container.meshes[0].position.x = container.meshes[0].position.x + this.values.mesh_shift[0];
+                container.meshes[0].position.y = container.meshes[0].position.y + this.values.mesh_shift[1];
+                container.meshes[0].position.z = container.meshes[0].position.z + this.values.mesh_shift[2];
+              }
+            ));
+          }
+        }
+
+      }
 
       // needed to force then synchronous
       // because we needed the model loaded
@@ -238,8 +282,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       pcs.addPoints(numCoords, pcLoader);
       tasks.push(pcs.buildMeshAsync());
       await Promise.all(tasks);
-
-      scene.createDefaultCameraOrLight(true, true, false);
 
       if (isTime || isClass) {
 

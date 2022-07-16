@@ -18,8 +18,6 @@ export function setPointCloudSwitches(mode: string){
       isTopo = true;
     }else if(mode == "gltf"){
       isGltf = true;
-    //}else if(mode == "pcl"){
-    //    isPCL = true;
     }  
     return {isTime, isClass, isTopo, isGltf}
   }
@@ -46,16 +44,12 @@ export async function getPointCloud(values: any){
     data = dataIn;
   }
 
-  if (values.origin_shift_x){
-    data.X = data.X.map((n: any) => n + values.origin_shift_x);
+  if (values.point_shift[0]){
+    data.X = data.X.map((n: any) => n + values.point_shift[0]);
+    data.Y = data.Y.map((n: any) => n + values.point_shift[1]);
+    data.Z = data.Z.map((n: any) => n + values.point_shift[2]);
   }
-  if (values.origin_shift_y){
-    data.Y = data.Y.map((n: any) => n + values.origin_shift_y);
-  }
-  if (values.origin_shift_z){
-    data.Z = data.Z.map((n: any) => n + values.origin_shift_z);
-  }
-      
+
   const {xmin, xmax, ymin, ymax, rgbMax} = getPointCloudLimits(values, data);
 
   return {data, xmin, xmax, ymin, ymax, rgbMax};
