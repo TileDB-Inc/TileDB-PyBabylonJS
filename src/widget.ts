@@ -142,12 +142,14 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const {isTime, isClass, isTopo, isGltf} = setPointCloudSwitches(this.values.mode);
 
-      var {data, xmin, xmax, ymin, ymax, rgbMax}  = await getPointCloud(this.values).then((results) => {return results});
+      var {data, xmin, xmax, ymin, ymax, zmin, zmax, rgbMax}  = await getPointCloud(this.values).then((results) => {return results});
 
       const size_x = xmax - xmin;
       const size_y = ymax - ymin;
+      const size_z = zmax - zmin;
       const center_x = xmin + size_x / 2;
       const center_y = ymin + size_y / 2;
+      const center_z = zmin + size_z / 2;
 
       const numCoords = data.X.length;
       const times = data.GpsTime;
@@ -225,7 +227,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const tasks:Promise<any>[] = [];
 
-      
+
       if (isGltf) {
 
         if (this.values.gltf_multi===false){
@@ -492,10 +494,10 @@ export class BabylonPointCloudView extends BabylonBaseView {
       if (this.wheelPrecision > 0)
         camera.wheelPrecision = this.wheelPrecision;
 
-      camera.setTarget(new Vector3((xmin + xmax) / 2, 0, (ymin + ymax) / 2));
+      camera.setTarget(new Vector3(center_x, center_z, center_y));
       this._cameras.push(camera);
 
-      const camera2 = new FreeCamera('free', new Vector3(center_x, 0, center_y), scene);
+      const camera2 = new FreeCamera('free', new Vector3(center_x, center_z, center_y), scene);
       camera2.minZ = camera.minZ;
       camera2.maxZ = camera.maxZ;
       if (this.moveSpeed > 0) {
