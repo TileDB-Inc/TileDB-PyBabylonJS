@@ -18,8 +18,6 @@ export function setPointCloudSwitches(mode: string){
       isTopo = true;
     }else if(mode == "gltf"){
       isGltf = true;
-    //}else if(mode == "pcl"){
-    //    isPCL = true;
     }  
     return {isTime, isClass, isTopo, isGltf}
   }
@@ -46,19 +44,15 @@ export async function getPointCloud(values: any){
     data = dataIn;
   }
 
-  if (values.origin_shift_x){
-    data.X = data.X.map((n: any) => n + values.origin_shift_x);
+  if (values.point_shift[0]){
+    data.X = data.X.map((n: any) => n + values.point_shift[0]);
+    data.Y = data.Y.map((n: any) => n + values.point_shift[1]);
+    data.Z = data.Z.map((n: any) => n + values.point_shift[2]);
   }
-  if (values.origin_shift_y){
-    data.Y = data.Y.map((n: any) => n + values.origin_shift_y);
-  }
-  if (values.origin_shift_z){
-    data.Z = data.Z.map((n: any) => n + values.origin_shift_z);
-  }
-      
-  const {xmin, xmax, ymin, ymax, rgbMax} = getPointCloudLimits(values, data);
 
-  return {data, xmin, xmax, ymin, ymax, rgbMax};
+  const {xmin, xmax, ymin, ymax, zmin, zmax, rgbMax} = getPointCloudLimits(values, data);
+
+  return {data, xmin, xmax, ymin, ymax, zmin, zmax, rgbMax};
  }
     
 function getPointCloudLimits(values: any, data: any){
@@ -67,19 +61,37 @@ function getPointCloudLimits(values: any, data: any){
   var xmax: number;
   var ymin: number; 
   var ymax: number;
+  var zmin: number; 
+  var zmax: number;
   var rgbMax: number;
   
   if (values.bbox) {
-    xmin = values.bbox.X[0];
-    xmax = values.bbox.X[1];
-    ymin = values.bbox.Y[0];
-    ymax = values.bbox.Y[1];
+    if (values.point_shift[0])
+    {
+      xmin = values.bbox.X[0] + values.point_shift[0];
+      xmax = values.bbox.X[1] + values.point_shift[0];
+      ymin = values.bbox.Y[0] + values.point_shift[1];
+      ymax = values.bbox.Y[1] + values.point_shift[1];
+      zmin = values.bbox.Z[0] + values.point_shift[2];
+      zmax = values.bbox.Z[1] + values.point_shift[2];
+    }
+    else 
+    {
+      xmin = values.bbox.X[0];
+      xmax = values.bbox.X[1];
+      ymin = values.bbox.Y[0];
+      ymax = values.bbox.Y[1];
+      zmin = values.bbox.Z[0];
+      zmax = values.bbox.Z[1];
+    }
   }
   else {
     xmin = data.X.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
     xmax = data.X.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
     ymin = data.Y.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
     ymax = data.Y.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
+    zmin = data.Z.reduce((accum: number, currentNumber: number) => Math.min(accum, currentNumber));
+    zmax = data.Z.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
   }    
 
   if (values.rgb_max) {
@@ -91,7 +103,7 @@ function getPointCloudLimits(values: any, data: any){
     const bluemax = data.Blue.reduce((accum: number, currentNumber: number) => Math.max(accum, currentNumber));
     rgbMax = Math.max(redmax, greenmax, bluemax);
   } 
-  return {xmin, xmax, ymin, ymax, rgbMax};
+  return {xmin, xmax, ymin, ymax, zmin, zmax, rgbMax};
 }
 
 async function loadPointCloud(values: {name_space: string, array_name: string, bbox: { X: number[], Y: number[], Z: number[]}, token: string, tiledb_env: string}) {
