@@ -547,10 +547,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const camera = scene.activeCamera as ArcRotateCamera;
       camera.alpha += Math.PI;
       camera.upperBetaLimit = Math.PI / 2;
-      //camera.panningAxis = new Vector3(1, 1, 0);
-      //camera.panningSensibility = 0.9;
-      //camera.panningInertia = 0.2;
-      //camera._panningMouseButton = 0;
 
       if (this.wheelPrecision > 0) {
         camera.wheelPrecision = this.wheelPrecision;
