@@ -157,6 +157,7 @@ async function loadPointCloud(values: {
       'Classification'
     ]
   };
+  // Concatenate all results in case of incomplete queries
   const concatenatedResults: Record<string, any> = {};
 
   for await (const results of tiledbClient.query.ReadQuery(
@@ -164,10 +165,14 @@ async function loadPointCloud(values: {
     values.array_name,
     query
   )) {
-    for (const [resultKey, result] of Object.entries(results)) {
-      concatenatedResults[resultKey] = concatenatedResults[resultKey]
-        ? concatenatedResults[resultKey].push(result)
-        : results[resultKey];
+    for (const [attributeKey, attributeValues] of Object.entries(results)) {
+      // If attribute key aready exists push attributes to the array
+      if (concatenatedResults[attributeKey]) {
+        concatenatedResults[attributeKey].push(attributeValues);
+      } else {
+        // If object key doesn't exist just assign it to the result
+        concatenatedResults[attributeKey] = attributeValues;
+      }
     }
   }
   return concatenatedResults;
