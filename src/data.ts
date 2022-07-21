@@ -27,9 +27,7 @@ export async function getPointCloud(values: any) {
   let data: any;
 
   if (values.source === 'cloud') {
-    const dataUnsorted = await loadPointCloud(values).then(results => {
-      return results;
-    });
+    const dataUnsorted = await loadPointCloud(values);
     if (values.mode === 'time') {
       dataIn = sortDataArrays(dataUnsorted);
     } else {
@@ -159,14 +157,20 @@ async function loadPointCloud(values: {
       'Classification'
     ]
   };
+  const concatenatedResults: Record<string, any> = {};
 
   for await (const results of tiledbClient.query.ReadQuery(
     values.name_space,
     values.array_name,
     query
   )) {
-    return results;
+    for (const [resultKey, result] of Object.entries(results)) {
+      concatenatedResults[resultKey] = concatenatedResults[resultKey]
+        ? concatenatedResults[resultKey].push(result)
+        : results[resultKey];
+    }
   }
+  return concatenatedResults;
 }
 
 function sortDataArrays(data: any) {
