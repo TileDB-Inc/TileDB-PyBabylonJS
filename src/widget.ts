@@ -8,16 +8,42 @@ import {
 } from '@jupyter-widgets/base';
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
-import { ArcRotateCamera, Color3, Color4, Engine, PointsCloudSystem, Scene, SceneLoader, 
-  StandardMaterial, SolidParticleSystem, MeshBuilder,
-  Vector3, Texture, Axis, Camera, int, Mesh, Ray, UtilityLayerRenderer, FreeCamera, KeyboardEventTypes, PointerEventTypes } from '@babylonjs/core';
-import {AdvancedDynamicTexture, Control, StackPanel, Slider, TextBlock} from 'babylonjs-gui';
-import "@babylonjs/loaders/glTF";
-import "@babylonjs/core/Debug/debugLayer";
-import "@babylonjs/inspector";
+import {
+  ArcRotateCamera,
+  Color3,
+  Color4,
+  Engine,
+  PointsCloudSystem,
+  Scene,
+  SceneLoader,
+  StandardMaterial,
+  SolidParticleSystem,
+  MeshBuilder,
+  Vector3,
+  Texture,
+  Axis,
+  Camera,
+  int,
+  Mesh,
+  Ray,
+  UtilityLayerRenderer,
+  FreeCamera,
+  KeyboardEventTypes,
+  PointerEventTypes
+} from '@babylonjs/core';
+import {
+  AdvancedDynamicTexture,
+  Control,
+  StackPanel,
+  Slider,
+  TextBlock
+} from 'babylonjs-gui';
+import '@babylonjs/loaders/glTF';
+import '@babylonjs/core/Debug/debugLayer';
+import '@babylonjs/inspector';
 import '../css/widget.css';
 
-import { setPointCloudSwitches, getPointCloud } from "./data";
+import { setPointCloudSwitches, getPointCloud } from './data';
 import { DragGizmos } from './drag_gizmos';
 
 export class BabylonBaseModel extends DOMWidgetModel {
@@ -30,7 +56,6 @@ export class BabylonBaseModel extends DOMWidgetModel {
     ...DOMWidgetModel.serializers
   };
 }
-
 
 abstract class BabylonBaseView extends DOMWidgetView {
   canvas?: HTMLCanvasElement;
@@ -62,7 +87,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
     this.model.on_some_change(['width', 'height'], this.resizeCanvas, this);
 
     this.engine = new Engine(this.canvas, true);
-    
+
     const engine = this.engine;
 
     SceneLoader.ShowLoadingScreen = false;
@@ -82,7 +107,6 @@ abstract class BabylonBaseView extends DOMWidgetView {
   }
 
   protected async createScene(): Promise<Scene> {
-
     const scene = new Scene(this.engine as Engine);
 
     if (this.inspector) {
@@ -95,7 +119,6 @@ abstract class BabylonBaseView extends DOMWidgetView {
   }
 }
 
-
 export class BabylonPointCloudModel extends BabylonBaseModel {
   defaults(): any {
     return {
@@ -105,14 +128,13 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
       _model_module_version: BabylonPointCloudModel.model_module_version,
       _view_name: BabylonPointCloudModel.view_name,
       _view_module: BabylonPointCloudModel.view_module,
-      _view_module_version: BabylonPointCloudModel.view_module_version,
+      _view_module_version: BabylonPointCloudModel.view_module_version
     };
   }
 
   static model_name = 'BabylonPointCloudModel';
   static view_name = 'BabylonPointCloudView';
 }
-
 
 export class BabylonPointCloudView extends BabylonBaseView {
   private _scene!: Scene;
@@ -123,26 +145,33 @@ export class BabylonPointCloudView extends BabylonBaseView {
   private _axes: Array<DragGizmos> = new Array<DragGizmos>();
   private _cameras: Array<Camera> = new Array<Camera>();
   private _curr_camera: int = 0;
-  
+
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
-
       const main = this;
       main._scene = scene;
 
       // add button for fullscreen switching
-      var fullDiv = document.createElement("div");
-      fullDiv.style.cssText = "position:absolute; bottom:32px; right:32px; color:#FFFF00";
-      let fullButton = document.createElement('button');
-      fullButton.onclick = function () { main.canvas!.requestFullscreen(); };
+      const fullDiv = document.createElement('div');
+      fullDiv.style.cssText =
+        'position:absolute; bottom:32px; right:32px; color:#FFFF00';
+      const fullButton = document.createElement('button');
+      fullButton.onclick = function () {
+        main.canvas?.requestFullscreen();
+      };
       fullButton.innerText = '[ ]';
       fullButton.className = 'button';
       fullDiv.appendChild(fullButton);
       document.body.appendChild(fullDiv);
 
-      const {isTime, isClass, isTopo, isGltf} = setPointCloudSwitches(this.values.mode);
+      const { isTime, isClass, isTopo, isGltf } = setPointCloudSwitches(
+        this.values.mode
+      );
 
-      var {data, xmin, xmax, ymin, ymax, zmin, zmax, rgbMax}  = await getPointCloud(this.values).then((results) => {return results});
+      const { data, xmin, xmax, ymin, ymax, zmin, zmax, rgbMax } =
+        await getPointCloud(this.values).then(results => {
+          return results;
+        });
 
       const size_x = xmax - xmin;
       const size_y = ymax - ymin;
@@ -153,8 +182,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const numCoords = data.X.length;
       const times = data.GpsTime;
-      const classification = data.Classification; 
-      
+      const classification = data.Classification;
+
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
       const backgroundColor = this.values.background_color;
@@ -164,16 +193,21 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const scale = this.zScale;
 
       let doClear = false;
-      
-      scene.clearColor = new Color4(backgroundColor[0], backgroundColor[1], backgroundColor[2],backgroundColor[3]);
-      
+
+      scene.clearColor = new Color4(
+        backgroundColor[0],
+        backgroundColor[1],
+        backgroundColor[2],
+        backgroundColor[3]
+      );
+      let pcs: PointsCloudSystem;
+
       if (isClass) {
-        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+        pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isClass
         });
-      }
-      else {
-        var pcs = new PointsCloudSystem('pcs', pointSize, scene, {
+      } else {
+        pcs = new PointsCloudSystem('pcs', pointSize, scene, {
           updatable: isTime
         });
       }
@@ -182,39 +216,41 @@ export class BabylonPointCloudView extends BabylonBaseView {
         // Y is up
         particle.position = new Vector3(
           data.X[i],
-          (data.Z[i]-topo_offset) * scale,
+          (data.Z[i] - topo_offset) * scale,
           data.Y[i]
         );
         if (isTime) {
           particle.color = scene.clearColor;
-        }
-        else {
+        } else {
           particle.color = new Color3(
-            data.Red[i]/ rgbMax,
-            data.Green[i]/ rgbMax,
-            data.Blue[i]/ rgbMax
-          );  
+            data.Red[i] / rgbMax,
+            data.Green[i] / rgbMax,
+            data.Blue[i] / rgbMax
+          );
         }
 
         if (main.values.distance_colors) {
           // check if inside meshes
           let minDist = 999999999999;
           particle.color.set(0, 1, 0, 1);
-  
-          for (let i=0; i<scene.meshes.length; i++)
-          {
-            let mesh = (scene.meshes[i] as Mesh);
-            let bounds = scene.meshes[i].getHierarchyBoundingVectors(true);
-            if (main.pointIsInsideMesh(mesh, bounds, particle.position))
-            {
+
+          for (let i = 0; i < scene.meshes.length; i++) {
+            const mesh = scene.meshes[i] as Mesh;
+            const bounds = scene.meshes[i].getHierarchyBoundingVectors(true);
+            if (main.pointIsInsideMesh(mesh, bounds, particle.position)) {
               particle.color.set(1, 0, 0, 1);
               minDist = 1;
-            }
-            else
-            {
+            } else {
               // find minimum distance
-              let dist = Math.max(1, particle.position.subtract(scene.meshes[i].position).lengthSquared() * 0.0004);
-              if (dist < minDist) minDist = dist;
+              const dist = Math.max(
+                1,
+                particle.position
+                  .subtract(scene.meshes[i].position)
+                  .lengthSquared() * 0.0004
+              );
+              if (dist < minDist) {
+                minDist = dist;
+              }
             }
           }
 
@@ -225,56 +261,69 @@ export class BabylonPointCloudView extends BabylonBaseView {
         }
       };
 
-      const tasks:Promise<any>[] = [];
-
+      const tasks: Promise<any>[] = [];
 
       if (isGltf) {
+        if (this.values.gltf_multi === false) {
+          const blob = new Blob([gltfData]);
+          const url = URL.createObjectURL(blob);
 
-        if (this.values.gltf_multi===false){
-          var blob = new Blob([gltfData]);
-          var url = URL.createObjectURL(blob);
-    
-          tasks.push(SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
-            container => {
-    
-            container.meshes[0].rotation = new Vector3(
-              this.values.mesh_rotation[0],
-              this.values.mesh_rotation[1],
-              this.values.mesh_rotation[2]);
-            container.meshes[0].scaling = new Vector3(
-              this.values.mesh_scale[0],
-              this.values.mesh_scale[1],
-              this.values.mesh_scale[2]);
-            container.meshes[0].position.x = container.meshes[0].position.x + this.values.mesh_shift[0];
-            container.meshes[0].position.y = container.meshes[0].position.y + this.values.mesh_shift[1];
-            container.meshes[0].position.z = container.meshes[0].position.z + this.values.mesh_shift[2];
-            }
-          ));
-        }
-        else if (this.values.gltf_multi===true) {
-          for (let i=0; i<gltfData.length; i++){
-            var blob = new Blob([gltfData[i]]);
-            var url = URL.createObjectURL(blob);
-        
-            tasks.push(SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
+          tasks.push(
+            SceneLoader.ImportMeshAsync('', url, '', scene, null, '.gltf').then(
               container => {
-        
                 container.meshes[0].rotation = new Vector3(
                   this.values.mesh_rotation[0],
                   this.values.mesh_rotation[1],
-                  this.values.mesh_rotation[2]);
+                  this.values.mesh_rotation[2]
+                );
                 container.meshes[0].scaling = new Vector3(
                   this.values.mesh_scale[0],
                   this.values.mesh_scale[1],
-                  this.values.mesh_scale[2]);
-                container.meshes[0].position.x = container.meshes[0].position.x + this.values.mesh_shift[0];
-                container.meshes[0].position.y = container.meshes[0].position.y + this.values.mesh_shift[1];
-                container.meshes[0].position.z = container.meshes[0].position.z + this.values.mesh_shift[2];
+                  this.values.mesh_scale[2]
+                );
+                container.meshes[0].position.x =
+                  container.meshes[0].position.x + this.values.mesh_shift[0];
+                container.meshes[0].position.y =
+                  container.meshes[0].position.y + this.values.mesh_shift[1];
+                container.meshes[0].position.z =
+                  container.meshes[0].position.z + this.values.mesh_shift[2];
               }
-            ));
+            )
+          );
+        } else if (this.values.gltf_multi === true) {
+          for (let i = 0; i < gltfData.length; i++) {
+            const blob = new Blob([gltfData[i]]);
+            const url = URL.createObjectURL(blob);
+
+            tasks.push(
+              SceneLoader.ImportMeshAsync(
+                '',
+                url,
+                '',
+                scene,
+                null,
+                '.gltf'
+              ).then(container => {
+                container.meshes[0].rotation = new Vector3(
+                  this.values.mesh_rotation[0],
+                  this.values.mesh_rotation[1],
+                  this.values.mesh_rotation[2]
+                );
+                container.meshes[0].scaling = new Vector3(
+                  this.values.mesh_scale[0],
+                  this.values.mesh_scale[1],
+                  this.values.mesh_scale[2]
+                );
+                container.meshes[0].position.x =
+                  container.meshes[0].position.x + this.values.mesh_shift[0];
+                container.meshes[0].position.y =
+                  container.meshes[0].position.y + this.values.mesh_shift[1];
+                container.meshes[0].position.z =
+                  container.meshes[0].position.z + this.values.mesh_shift[2];
+              })
+            );
           }
         }
-
       }
 
       // needed to force then synchronous
@@ -286,39 +335,39 @@ export class BabylonPointCloudView extends BabylonBaseView {
       await Promise.all(tasks);
 
       if (isTime || isClass) {
-
-        var advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
-          "UI",
+        const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI(
+          'UI',
           true,
-          scene);
+          scene
+        );
 
-        var panel = new StackPanel();
-        panel.width = "220px";
+        const panel = new StackPanel();
+        panel.width = '220px';
         panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
         panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
         advancedTexture.addControl(panel);
 
-        var header = new TextBlock();
-        header.height = "30px";
-        header.color = "white";
+        const header = new TextBlock();
+        header.height = '30px';
+        header.color = 'white';
 
-        var slider = new Slider("Slider");
+        const slider = new Slider('Slider');
         slider.minimum = 0;
         slider.step = 1;
-        slider.height = "20px";
-        slider.width = "200px";
+        slider.height = '20px';
+        slider.width = '200px';
 
         if (isTime) {
-          header.text = "Time: " + (offset + times[0]).toFixed(2);
+          header.text = 'Time: ' + (offset + times[0]).toFixed(2);
 
           slider.maximum = times.length - 1;
           slider.value = 0;
-
         }
+        let slider_classes: number[];
         if (isClass) {
-          header.text = "All";
+          header.text = 'All';
 
-          var slider_classes: number[] = Array.from(new Set(classification));
+          slider_classes = Array.from(new Set(classification));
           slider.maximum = slider_classes.length;
           slider.value = slider_classes[0];
         }
@@ -326,65 +375,70 @@ export class BabylonPointCloudView extends BabylonBaseView {
         panel.addControl(header);
 
         pcs.updateParticle = function (particle_3: any) {
-          if (doClear)
+          if (doClear) {
             particle_3.color = scene.clearColor;
-
-          else
+          } else {
             particle_3.color = new Color3(
-              data.Red[particle_3.idx]/ rgbMax,
-              data.Green[particle_3.idx]/ rgbMax,
-              data.Blue[particle_3.idx]/ rgbMax
+              data.Red[particle_3.idx] / rgbMax,
+              data.Green[particle_3.idx] / rgbMax,
+              data.Blue[particle_3.idx] / rgbMax
             );
+          }
 
           return particle_3;
         };
 
-        slider.onValueChangedObservable.add(
-          function (value: any) {
-            if (isTime) {
-              header.text = "Time: " + (offset + times[value]).toFixed(2);
+        slider.onValueChangedObservable.add((value: any) => {
+          if (isTime) {
+            header.text = 'Time: ' + (offset + times[value]).toFixed(2);
 
-              if (value > pcs.counter) {
-                doClear = false;
-                pcs.setParticles(pcs.counter, value);
-              } else {
-                doClear = true;
-                pcs.setParticles(value, pcs.counter);
-              }
-              pcs.counter = value;
-            }
-            if (isClass) {
-              var v: number = classes.numbers.indexOf(slider_classes[value]);
-              header.text = classes.names[v];
-
-              var start_1: number = classification.indexOf(slider_classes[value]);
-              var finish: number = classification.lastIndexOf(slider_classes[value]);
-
-              doClear = true;
-              pcs.setParticles(0, numCoords);
-
+            if (value > pcs.counter) {
               doClear = false;
-              pcs.setParticles(start_1, finish);
+              pcs.setParticles(pcs.counter, value);
+            } else {
+              doClear = true;
+              pcs.setParticles(value, pcs.counter);
             }
-          });
+            pcs.counter = value;
+          }
+          if (isClass) {
+            const v: number = classes.numbers.indexOf(slider_classes[value]);
+            header.text = classes.names[v];
+
+            const start_1: number = classification.indexOf(
+              slider_classes[value]
+            );
+            const finish: number = classification.lastIndexOf(
+              slider_classes[value]
+            );
+
+            doClear = true;
+            pcs.setParticles(0, numCoords);
+
+            doClear = false;
+            pcs.setParticles(start_1, finish);
+          }
+        });
 
         panel.addControl(slider);
       }
       if (isTopo) {
-
         const mapbox_img = this.values.mapbox_img;
-        var blob_1 = new Blob([mapbox_img]);
-        var url_1 = URL.createObjectURL(blob_1);
+        const blob_1 = new Blob([mapbox_img]);
+        const url_1 = URL.createObjectURL(blob_1);
 
-        const mat = new StandardMaterial("mat", scene);
+        const mat = new StandardMaterial('mat', scene);
         mat.emissiveColor = Color3.Random();
         mat.diffuseTexture = new Texture(url_1, scene);
         mat.ambientTexture = new Texture(url_1, scene);
 
         const options = { xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax };
-        const ground = MeshBuilder.CreateTiledGround("tiled ground", options, scene);
+        const ground = MeshBuilder.CreateTiledGround(
+          'tiled ground',
+          options,
+          scene
+        );
         ground.material = mat;
-
       }
 
       // create gizmos utility
@@ -422,15 +476,22 @@ export class BabylonPointCloudView extends BabylonBaseView {
             // toggle current camera
             if (kbInfo.event.key === 'c') {
               main._cameras[main._curr_camera].detachControl();
-              main._curr_camera = (main._curr_camera + 1) % main._cameras.length;
+              main._curr_camera =
+                (main._curr_camera + 1) % main._cameras.length;
               main._cameras[main._curr_camera].attachControl(true);
               const cam_name = main._cameras[main._curr_camera].name;
               main._scene.setActiveCameraByName(cam_name);
-              console.log('Current camera: [' + main._curr_camera + '] ' + cam_name);
+              console.log(
+                'Current camera: [' + main._curr_camera + '] ' + cam_name
+              );
               console.log(main._cameras[main._curr_camera].position);
-              console.log(main._cameras[main._curr_camera].minZ + " .. " + main._cameras[main._curr_camera].maxZ);
+              console.log(
+                main._cameras[main._curr_camera].minZ +
+                  ' .. ' +
+                  main._cameras[main._curr_camera].maxZ
+              );
             }
-            
+
             // perform clash detection
             if (kbInfo.event.key === '=') {
               this.values.distance_colors = true;
@@ -491,13 +552,18 @@ export class BabylonPointCloudView extends BabylonBaseView {
       //camera.panningInertia = 0.2;
       //camera._panningMouseButton = 0;
 
-      if (this.wheelPrecision > 0)
+      if (this.wheelPrecision > 0) {
         camera.wheelPrecision = this.wheelPrecision;
+      }
 
       camera.setTarget(new Vector3(center_x, center_z, center_y));
       this._cameras.push(camera);
 
-      const camera2 = new FreeCamera('free', new Vector3(center_x, center_z, center_y), scene);
+      const camera2 = new FreeCamera(
+        'free',
+        new Vector3(center_x, center_z, center_y),
+        scene
+      );
       camera2.minZ = camera.minZ;
       camera2.maxZ = camera.maxZ;
       if (this.moveSpeed > 0) {
@@ -517,11 +583,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
     });
   }
 
-
   // --------------------
   // Extras
   // --------------------
-
 
   // Add dragging axes to mesh
   addAxes(mesh: Mesh): DragGizmos {
@@ -545,7 +609,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
   // Unselect a mesh
   unselect(mesh: Mesh): void {
     const index = this._selected.findIndex(e => e === mesh);
-    if (index == undefined) {
+    if (index === undefined) {
       return;
     }
 
@@ -672,7 +736,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
   }
 }
 
-
 export class BabylonMBRSModel extends BabylonBaseModel {
   defaults(): any {
     return {
@@ -682,7 +745,7 @@ export class BabylonMBRSModel extends BabylonBaseModel {
       _model_module_version: BabylonMBRSModel.model_module_version,
       _view_name: BabylonMBRSModel.view_name,
       _view_module: BabylonMBRSModel.view_module,
-      _view_module_version: BabylonMBRSModel.view_module_version,
+      _view_module_version: BabylonMBRSModel.view_module_version
     };
   }
 
@@ -690,10 +753,9 @@ export class BabylonMBRSModel extends BabylonBaseModel {
   static view_name = 'BabylonMBRSView';
 }
 
-
 export class BabylonMBRSView extends BabylonBaseView {
   protected async createScene(): Promise<Scene> {
-    return super.createScene().then( ( scene ) => {
+    return super.createScene().then(scene => {
       const data = this.values.data;
       const extents = this.values.extents;
       const minx = extents[0];
@@ -701,12 +763,15 @@ export class BabylonMBRSView extends BabylonBaseView {
       const miny = extents[2];
       const maxy = extents[3];
       const minz = extents[4];
-      const xy_length = Math.min(Math.max(maxx)-Math.min(minx),Math.max(maxy)-Math.min(miny))
+      const xy_length = Math.min(
+        Math.max(maxx) - Math.min(minx),
+        Math.max(maxy) - Math.min(miny)
+      );
       const scale = this.zScale;
 
       // set up camera
-      scene.createDefaultCameraOrLight(true, true, true)
-      let camera = scene.activeCamera as ArcRotateCamera;
+      scene.createDefaultCameraOrLight(true, true, true);
+      const camera = scene.activeCamera as ArcRotateCamera;
       camera.alpha += Math.PI;
       camera.upperBetaLimit = Math.PI / 2;
       camera.panningAxis = new Vector3(1, 1, 0);
@@ -714,36 +779,54 @@ export class BabylonMBRSView extends BabylonBaseView {
       camera.panningInertia = 0.2;
       camera._panningMouseButton = 0;
 
-      if (this.wheelPrecision > 0)
+      if (this.wheelPrecision > 0) {
         camera.wheelPrecision = this.wheelPrecision;
+      }
 
-      camera.setTarget(new Vector3((((maxx+minx)/2) - minx) / xy_length, 0, (((maxy+miny)/2) - miny) / xy_length));
+      camera.setTarget(
+        new Vector3(
+          ((maxx + minx) / 2 - minx) / xy_length,
+          0,
+          ((maxy + miny) / 2 - miny) / xy_length
+        )
+      );
       camera.attachControl(this.canvas, false);
 
-      var mat = new StandardMaterial('mt1', scene);
+      const mat = new StandardMaterial('mt1', scene);
       mat.alpha = 0.85;
       mat.diffuseColor = new Color3(0, 0, 0);
       mat.emissiveColor = new Color3(0.5, 0.5, 0.5);
 
       // create initial particles
-      const SPS = new SolidParticleSystem("SPS", scene, {enableDepthSort: true});
-      const box = MeshBuilder.CreateBox("b", {height: 1, width: 1, depth: 1});
+      const SPS = new SolidParticleSystem('SPS', scene, {
+        enableDepthSort: true
+      });
+      const box = MeshBuilder.CreateBox('b', { height: 1, width: 1, depth: 1 });
       SPS.addShape(box, data.Xmin.length);
-      var mesh = SPS.buildMesh();
+      const mesh = SPS.buildMesh();
       mesh.material = mat;
-      box.dispose(); 
-      
+      box.dispose();
+
       // add dimensions and a random color to each of the particles
       SPS.initParticles = () => {
         for (let p = 0; p < SPS.nbParticles; p++) {
           const particle = SPS.particles[p];
-          particle.position.x = (((data.Xmax[p]+data.Xmin[p])/2) - minx) / xy_length;
-          particle.position.y = ((((data.Zmax[p]+data.Zmin[p])/2) - minz) / xy_length ) * scale;  
-          particle.position.z = (((data.Ymax[p]+data.Ymin[p])/2) - miny) / xy_length;
-          particle.scaling.x = (data.Xmax[p]-data.Xmin[p]) / xy_length;
-          particle.scaling.y = ((data.Zmax[p]-data.Zmin[p]) / xy_length) * scale;  
-          particle.scaling.z = (data.Ymax[p]-data.Ymin[p]) / xy_length;
-          particle.color = new Color4(0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6, 0.5 + Math.random() * 0.6,0.9);   
+          particle.position.x =
+            ((data.Xmax[p] + data.Xmin[p]) / 2 - minx) / xy_length;
+          particle.position.y =
+            (((data.Zmax[p] + data.Zmin[p]) / 2 - minz) / xy_length) * scale;
+          particle.position.z =
+            ((data.Ymax[p] + data.Ymin[p]) / 2 - miny) / xy_length;
+          particle.scaling.x = (data.Xmax[p] - data.Xmin[p]) / xy_length;
+          particle.scaling.y =
+            ((data.Zmax[p] - data.Zmin[p]) / xy_length) * scale;
+          particle.scaling.z = (data.Ymax[p] - data.Ymin[p]) / xy_length;
+          particle.color = new Color4(
+            0.5 + Math.random() * 0.6,
+            0.5 + Math.random() * 0.6,
+            0.5 + Math.random() * 0.6,
+            0.9
+          );
         }
       };
 
@@ -752,15 +835,14 @@ export class BabylonMBRSView extends BabylonBaseView {
       SPS.setParticles();
 
       // animation
-      scene.registerBeforeRender(function() {
+      scene.registerBeforeRender(() => {
         SPS.setParticles();
       });
-      
+
       return scene;
     });
   }
 }
-
 
 export class BabylonImageModel extends BabylonBaseModel {
   defaults(): any {
@@ -771,7 +853,7 @@ export class BabylonImageModel extends BabylonBaseModel {
       _model_module_version: BabylonImageModel.model_module_version,
       _view_name: BabylonImageModel.view_name,
       _view_module: BabylonImageModel.view_module,
-      _view_module_version: BabylonImageModel.view_module_version,
+      _view_module_version: BabylonImageModel.view_module_version
     };
   }
 
@@ -779,21 +861,19 @@ export class BabylonImageModel extends BabylonBaseModel {
   static view_name = 'BabylonImageView';
 }
 
-
 export class BabylonImageView extends BabylonBaseView {
-
   protected async createScene(): Promise<Scene> {
-    return super.createScene().then( ( scene ) => {
+    return super.createScene().then(scene => {
       const data = this.values.data;
       const bbox = this.values.xy_bbox;
 
       scene.createDefaultCameraOrLight(true, true, true);
       scene.clearColor = new Color4(0.95, 0.94, 0.92, 1);
-            
-      var blob = new Blob([data]);
-      var url = URL.createObjectURL(blob);
-      
-      const groundMaterial = new StandardMaterial("ground", scene);
+
+      const blob = new Blob([data]);
+      const url = URL.createObjectURL(blob);
+
+      const groundMaterial = new StandardMaterial('ground', scene);
       groundMaterial.diffuseTexture = new Texture(url, scene);
       groundMaterial.ambientTexture = new Texture(url, scene);
       groundMaterial.ambientColor = new Color3(0.5, 0.5, 0.5);
@@ -806,18 +886,27 @@ export class BabylonImageView extends BabylonBaseView {
       const ymin = bbox[2];
       const ymax = bbox[3];
 
-      const ground = MeshBuilder.CreateGround("ground", {height: (xmax-xmin)*0.005, width: (ymax-ymin)*0.005, subdivisions: 36}, scene);
+      const ground = MeshBuilder.CreateGround(
+        'ground',
+        {
+          height: (xmax - xmin) * 0.005,
+          width: (ymax - ymin) * 0.005,
+          subdivisions: 36
+        },
+        scene
+      );
       ground.material = groundMaterial;
-      
-      let camera = scene.activeCamera as ArcRotateCamera;
+
+      const camera = scene.activeCamera as ArcRotateCamera;
       camera.panningAxis = new Vector3(1, 1, 0);
       camera.upperBetaLimit = Math.PI / 2;
       camera.panningSensibility = 1;
       camera.panningInertia = 0.2;
       camera._panningMouseButton = 0;
-      
-      if (this.wheelPrecision > 0)
+
+      if (this.wheelPrecision > 0) {
         camera.wheelPrecision = this.wheelPrecision;
+      }
 
       camera.alpha += Math.PI;
       camera.attachControl(this.canvas, false);
@@ -826,7 +915,3 @@ export class BabylonImageView extends BabylonBaseView {
     });
   }
 }
-
-
-
-

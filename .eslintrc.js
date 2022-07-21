@@ -12,6 +12,8 @@ module.exports = {
   },
   plugins: ['@typescript-eslint'],
   rules: {
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-this-alias': 'off',
     '@typescript-eslint/naming-convention': [
       'error',
       {
