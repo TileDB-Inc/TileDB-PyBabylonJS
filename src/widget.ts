@@ -151,19 +151,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       const main = this;
       main._scene = scene;
 
-      // add button for fullscreen switching
-      const fullDiv = document.createElement('div');
-      fullDiv.style.cssText =
-        'position:absolute; bottom:32px; right:32px; color:#FFFF00';
-      const fullButton = document.createElement('button');
-      fullButton.onclick = function () {
-        main.canvas?.requestFullscreen();
-      };
-      fullButton.innerText = '[ ]';
-      fullButton.className = 'button';
-      fullDiv.appendChild(fullButton);
-      document.body.appendChild(fullDiv);
-
       const { isTime, isClass, isTopo, isGltf } = setPointCloudSwitches(
         this.values.mode
       );
