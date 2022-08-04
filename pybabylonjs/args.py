@@ -15,7 +15,7 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "wheel_precision": -1,
     "move_speed": -1,
     "point_size": 1,
-    "background_color": [0, 0, 0, 1],
+    "color_scheme": "dark",
     "bbox": None,
     "rgb_max": None,
     "time_offset": 0,
@@ -77,8 +77,8 @@ def check_point_cloud_data_dict(mode, data):
         == data["Y"].size
         == data["Z"].size
         == data["Red"].size
-        == data["Blue"].size
         == data["Green"].size
+        == data["Blue"].size
     ):
         raise ValueError("Attributes in data dictionary do not have the same length.")
 
@@ -87,7 +87,7 @@ def check_point_cloud_data_dict(mode, data):
             raise ValueError("Data dictionary does not contain 'GpsTime'")
 
         i = np.argsort(data["GpsTime"])
-        for key in ["X", "Y", "Z", "Red", "Green", "Blue", "GpsTime"]:
+        for key in ["Red", "Green", "Blue", "GpsTime", "X", "Y", "Z"]:
             data[key] = data[key][i]
 
     elif mode == "classes":
