@@ -29,7 +29,8 @@ import {
   UtilityLayerRenderer,
   FreeCamera,
   KeyboardEventTypes,
-  PointerEventTypes
+  PointerEventTypes,
+  HemisphericLight
 } from '@babylonjs/core';
 import {
   AdvancedDynamicTexture,
@@ -43,7 +44,7 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '../css/widget.css';
 
-import { setPointCloudSwitches, getPointCloud } from './data';
+import { setPointCloudSwitches, setSceneColors, getPointCloud } from './data';
 import { DragGizmos } from './drag_gizmos';
 
 export class BabylonBaseModel extends DOMWidgetModel {
@@ -155,6 +156,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
         this.values.mode
       );
 
+      const { backgroundColor, accentColor, secondColor, textColor } = setSceneColors(this.values.color_scheme);
+
       const { data, xmin, xmax, ymin, ymax, zmin, zmax, rgbMax } =
         await getPointCloud(this.values).then(results => {
           return results;
@@ -173,7 +176,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       const gltfData = this.values.gltf_data;
       const pointSize = this.values.point_size;
-      const backgroundColor = this.values.background_color;
       const offset = this.values.time_offset;
       const classes = this.values.classes;
       const topo_offset = this.values.topo_offset;
@@ -181,12 +183,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       let doClear = false;
 
-      scene.clearColor = new Color4(
-        backgroundColor[0],
-        backgroundColor[1],
-        backgroundColor[2],
-        backgroundColor[3]
-      );
+      scene.clearColor = backgroundColor;
       let pcs: PointsCloudSystem;
 
       if (isClass) {
@@ -208,6 +205,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         );
         if (isTime) {
           particle.color = scene.clearColor;
+          particle.position.y = ((data.Z[i] - topo_offset) * scale)-100;
         } else {
           particle.color = new Color3(
             data.Red[i] / rgbMax,
@@ -240,11 +238,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
               }
             }
           }
-
-          // color based on distance
-          //particle.color.r /= minDist;
-          //particle.color.g /= minDist;
-          //particle.color.b /= minDist;
         }
       };
 
@@ -336,27 +329,29 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
         const header = new TextBlock();
         header.height = '30px';
-        header.color = 'white';
+        header.color = textColor;
 
         const slider = new Slider('Slider');
         slider.minimum = 0;
         slider.step = 1;
         slider.height = '20px';
         slider.width = '200px';
+        slider.color = accentColor;
+        slider.background = secondColor;
 
         if (isTime) {
-          header.text = 'Time: ' + (offset + times[0]).toFixed(2);
+          header.text = 'Time: ' + (offset + times[0]).toFixed(0);
 
           slider.maximum = times.length - 1;
           slider.value = 0;
         }
         let slider_classes: number[];
         if (isClass) {
-          header.text = 'All';
+          header.text = classes.names[0];
 
           slider_classes = Array.from(new Set(classification));
-          slider.maximum = slider_classes.length;
-          slider.value = slider_classes[0];
+          slider.maximum = slider_classes.length-1;
+          slider.value = 0;
         }
 
         panel.addControl(header);
@@ -364,20 +359,21 @@ export class BabylonPointCloudView extends BabylonBaseView {
         pcs.updateParticle = function (particle_3: any) {
           if (doClear) {
             particle_3.color = scene.clearColor;
+            particle_3.position.y = ((data.Z[particle_3.idx] - topo_offset) * scale)-100;
           } else {
             particle_3.color = new Color3(
               data.Red[particle_3.idx] / rgbMax,
               data.Green[particle_3.idx] / rgbMax,
               data.Blue[particle_3.idx] / rgbMax
             );
+            particle_3.position.y = (data.Z[particle_3.idx] - topo_offset) * scale;
           }
-
           return particle_3;
         };
-
+        
         slider.onValueChangedObservable.add((value: any) => {
           if (isTime) {
-            header.text = 'Time: ' + (offset + times[value]).toFixed(2);
+            header.text = 'Time: ' + (offset + times[value]).toFixed(0);
 
             if (value > pcs.counter) {
               doClear = false;
@@ -415,9 +411,13 @@ export class BabylonPointCloudView extends BabylonBaseView {
         const url_1 = URL.createObjectURL(blob_1);
 
         const mat = new StandardMaterial('mat', scene);
-        mat.emissiveColor = Color3.Random();
+        //mat.emissiveColor = Color3.Random();
         mat.diffuseTexture = new Texture(url_1, scene);
-        mat.ambientTexture = new Texture(url_1, scene);
+        mat.diffuseTexture.wrapU = Texture.CLAMP_ADDRESSMODE;
+        mat.diffuseTexture.wrapV = Texture.CLAMP_ADDRESSMODE;
+        mat.specularColor = new Color3(0, 0, 0);
+        mat.backFaceCulling = false;
+        //mat.ambientTexture = new Texture(url_1, scene);
 
         const options = { xmin: xmin, zmin: ymin, xmax: xmax, zmax: ymax };
         const ground = MeshBuilder.CreateTiledGround(
@@ -468,15 +468,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
               main._cameras[main._curr_camera].attachControl(true);
               const cam_name = main._cameras[main._curr_camera].name;
               main._scene.setActiveCameraByName(cam_name);
-              console.log(
-                'Current camera: [' + main._curr_camera + '] ' + cam_name
-              );
-              console.log(main._cameras[main._curr_camera].position);
-              console.log(
-                main._cameras[main._curr_camera].minZ +
-                  ' .. ' +
-                  main._cameras[main._curr_camera].maxZ
-              );
             }
 
             // perform clash detection
@@ -530,6 +521,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
       });
 
       scene.createDefaultCameraOrLight(true, true, true);
+
+      var light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
+      light.intensity = 0.8;
 
       const camera = scene.activeCamera as ArcRotateCamera;
       camera.alpha += Math.PI;
@@ -826,7 +820,6 @@ export class BabylonMBRSView extends BabylonBaseView {
     });
   }
 }
-
 export class BabylonImageModel extends BabylonBaseModel {
   defaults(): any {
     return {
