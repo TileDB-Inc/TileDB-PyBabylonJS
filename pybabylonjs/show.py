@@ -9,7 +9,7 @@ from enum import Enum
 
 from .args import *
 from .data import *
-from .babylonjs import BabylonPointCloud, BabylonMBRS, BabylonImage
+from .babylonjs import BabylonPointCloud, BabylonParticles, BabylonMBRS, BabylonImage
 
 
 def create_dataviz(dataviz, d, **kwargs):
@@ -113,6 +113,52 @@ class Show:
             d = {**d, "mapbox_img": img}
 
         dataviz = BabylonPointCloud()
+        dataviz.value = {**d}
+        display(dataviz)
+
+    @classmethod
+    def particles(
+        self,
+        uri: Optional[str] = None,
+        data: Optional[dict] = {},
+        source: Optional[str] = "cloud",
+        mode: Optional[str] = "default",
+        **kwargs,
+    ):
+        """
+        Returns a solid particle system visualization widget
+
+        :param uri: when source is "cloud" or "local" specify the URI for the TileDB array
+        :param data: when source="dict" this dictionary contains the points to be visualized: {"X", "Y", "Z", "Red", "Green", "Blue"}
+        :param source: location of the data to be visualized, one of "cloud", "local" or "dict"
+        :param mode: sub-type of the visualization, one of "default", "time", "classes" or "topo"
+
+        """
+
+        particle_args_in = kwargs
+
+        if source == "dict":
+            data = check_point_cloud_data_dict(mode, data)
+        if source == "local":
+            data = check_point_cloud_data_local(mode, uri, particle_args_in)
+        if source == "cloud":
+            particle_args_in = check_point_cloud_data_cloud(uri, particle_args_in)
+
+        particle_args = check_particle_args(mode, particle_args_in)
+
+        d = {
+            **particle_args,
+            "uri": uri,
+            "data": data,
+            "source": source,
+            "mode": mode,
+        }
+
+        if mode == "topo":
+            img = create_mapbox_image(data, particle_args)
+            d = {**d, "mapbox_img": img}
+
+        dataviz = BabylonParticles()
         dataviz.value = {**d}
         display(dataviz)
 

@@ -25,6 +25,7 @@ export function setPointCloudSwitches(mode: string) {
 
 export function setSceneColors(colorScheme: string) {
 
+
   let backgroundColor: Color4;
   let accentColor: string;
   let secondColor: string;

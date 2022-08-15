@@ -37,7 +37,8 @@ import {
   Control,
   StackPanel,
   Slider,
-  TextBlock
+  TextBlock,
+  Button
 } from 'babylonjs-gui';
 import '@babylonjs/loaders/glTF';
 import '@babylonjs/core/Debug/debugLayer';
@@ -712,6 +713,176 @@ export class BabylonPointCloudView extends BabylonBaseView {
     return true;
   }
 }
+
+export class BabylonParticlesModel extends BabylonBaseModel {
+  defaults(): any {
+    return {
+      ...super.defaults(),
+      _model_name: BabylonParticlesModel.model_name,
+      _model_module: BabylonParticlesModel.model_module,
+      _model_module_version: BabylonParticlesModel.model_module_version,
+      _view_name: BabylonParticlesModel.view_name,
+      _view_module: BabylonParticlesModel.view_module,
+      _view_module_version: BabylonParticlesModel.view_module_version
+    };
+  }
+
+  static model_name = 'BabylonParticlesModel';
+  static view_name = 'BabylonParticlesView';
+}
+
+export class BabylonParticlesView extends BabylonBaseView {
+  protected async createScene(): Promise<Scene> {
+    return super.createScene().then(async scene => {
+
+      const { backgroundColor, accentColor, secondColor, textColor } = 
+        setSceneColors(this.values.color_scheme);
+
+      console.log(accentColor);
+      console.log(secondColor);
+      console.log(textColor);
+
+      const { data, xmin, xmax, ymin, ymax, zmin, zmax, rgbMax } =
+        await getPointCloud(this.values).then(results => {
+          return results;
+        });
+
+      const size_x = xmax - xmin;
+      const size_y = ymax - ymin;
+      const size_z = zmax - zmin;
+      const center_x = xmin + size_x / 2;
+      const center_y = ymin + size_y / 2;
+      const center_z = zmin + size_z / 2;
+
+      const numCoords = data.X.length;
+      //const times = data.GpsTime;
+      //const classification = data.Classification;
+
+      //const gltfData = this.values.gltf_data;
+      //const pointScale = this.values.point_scale;
+      //const offset = this.values.time_offset;
+      //const classes = this.values.classes; 
+      const topo_offset = this.values.topo_offset;
+      const scale = this.zScale;
+
+      //let doClear = false;
+
+      scene.clearColor = backgroundColor;
+
+      // set up camera
+      scene.createDefaultCameraOrLight(true, true, true);
+
+      var light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
+      light.intensity = 0.8;
+
+      const camera = scene.activeCamera as ArcRotateCamera;
+      camera.alpha += Math.PI;
+      camera.upperBetaLimit = Math.PI / 2;
+
+      if (this.wheelPrecision > 0) {
+        camera.wheelPrecision = this.wheelPrecision;
+      }
+
+      camera.setTarget(new Vector3(center_x, center_z, center_y));
+
+      const mat = new StandardMaterial('mt1', scene);
+      mat.alpha = 0.9;
+      mat.diffuseColor = new Color3(0, 0, 0);
+      mat.emissiveColor = new Color3(0.5, 0.5, 0.5);
+
+      // create store of particles
+      var stock = []; 
+      const SPS = new SolidParticleSystem('SPS', scene, {
+        enableDepthSort: true,
+        expandable: true,
+        isPickable: true,
+      });
+      const box = MeshBuilder.CreateBox('b', { height: 1, width: 1, depth: 1 });
+      SPS.addShape(box, numCoords);
+      const mesh = SPS.buildMesh();
+      mesh.material = mat;
+      box.dispose();
+
+      SPS.initParticles = () => {
+        for (let p = 0; p < SPS.nbParticles; p++) {
+          const particle = SPS.particles[p];
+          particle.position = new Vector3(
+            data.X[p],
+            (data.Z[p] - topo_offset) * scale,
+            data.Y[p]
+          );
+          particle.scaling.x = 10;
+          particle.scaling.y = 10;
+          particle.scaling.z = 10;
+          //particle.scaling.x = (data.Xmax[p] - data.Xmin[p]) / xy_length;
+          //particle.scaling.y =
+          //  ((data.Zmax[p] - data.Zmin[p]) / xy_length) * scale;
+          //particle.scaling.z = (data.Ymax[p] - data.Ymin[p]) / xy_length;
+          particle.color = new Color4(
+            data.Red[p] / rgbMax,
+            data.Green[p] / rgbMax,
+            data.Blue[p] / rgbMax,
+            1
+          );
+        }
+      };
+
+      // update SPS mesh
+      SPS.computeBoundingBox=true;
+      SPS.refreshVisibleSize();
+      SPS.initParticles();
+      SPS.setParticles();
+
+      SPS.computeParticleTexture = false;
+  
+      const clickValues = this.values.display_on_click;
+
+      scene.onPointerDown = function(evt, pickResult) {
+        let faceId = pickResult.faceId;
+        if (faceId == -1) {return;}
+        let picked = SPS.pickedParticle(pickResult);
+        let idx = picked!.idx;
+        
+        let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI(
+          "UI",
+          true,
+          scene
+        );
+        
+        var guiArray: string[];
+        guiArray = [];
+
+        for (const clickValue of clickValues) {
+          guiArray.push(clickValue + ": " + data[clickValue][idx]);
+        }
+        let guiText = guiArray.join('\n');
+        let guiButton = Button.CreateSimpleButton(
+          "guiButton", 
+          guiText
+        );
+        guiButton.width = "200px"
+        guiButton.height = "200px";
+        guiButton.color = "white";
+        guiButton.cornerRadius = 5;
+        guiButton.background = "green";
+        guiButton.onPointerUpObservable.add(function() {
+            guiCanvas.dispose();
+        });
+        guiButton.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+        guiCanvas.addControl(guiButton);
+
+      };
+
+      //scene.registerBeforeRender(function() {
+      //  SPS.mesh.rotation.y += 0.001;
+      //});
+
+      return scene;
+    });
+  }
+}
+
+
 
 export class BabylonMBRSModel extends BabylonBaseModel {
   defaults(): any {

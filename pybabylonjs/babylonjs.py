@@ -36,6 +36,15 @@ class BabylonPointCloud(BabylonBase):
 
 
 @register
+class BabylonParticles(BabylonBase):
+    """3D point cloud with BabylonJS"""
+
+    _model_name = Unicode("BabylonParticlesModel").tag(sync=True)
+    _view_name = Unicode("BabylonParticlesView").tag(sync=True)
+    value = Dict().tag(sync=True)
+
+
+@register
 class BabylonMBRS(BabylonBase):
     """MBRS outlines with BabylonJS"""
 

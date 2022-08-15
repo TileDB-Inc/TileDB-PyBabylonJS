@@ -38,6 +38,38 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "distance_colors": False,
 }
 
+PARTICLE_ARGS_DEFAULTS = {
+    "inspector": False,
+    "width": 800,
+    "height": 600,
+    "z_scale": 1,
+    "wheel_precision": -1,
+    "move_speed": -1,
+    "point_size": 1,
+    "color_scheme": "dark",
+    "bbox": None,
+    "rgb_max": None,
+    "time_offset": 0,
+    "classes": {"numbers": [], "names": []},
+    "mbtoken": None,
+    "mbstyle": "streets-v11",
+    "crs": "EPSG:2994",
+    "topo_offset": 0,
+    "gltf_data": None,
+    "gltf_multi": False,
+    "name_space": None,
+    "array_name": None,
+    "token": None,
+    "tiledb_env": None,
+    "show_fraction": None,
+    "point_shift": [None, None, None],
+    "mesh_shift": [0, 0, 0],
+    "mesh_rotation": [0, 0, 0],
+    "mesh_scale": [1, 1, 1],
+    "distance_colors": False,
+    "display_on_click": None,
+}
+
 
 def check_point_cloud_args(mode, point_cloud_args_in):
 
@@ -65,6 +97,36 @@ def check_point_cloud_args(mode, point_cloud_args_in):
             point_cloud_args[key] = point_cloud_args_in.pop(key)
 
     return point_cloud_args
+
+
+def check_particle_args(mode, particle_args_in):
+
+    # check if display values are in data
+
+    if mode == "classes":
+        if not "classes" in particle_args_in:
+            raise ValueError(
+                "The classes containing numbers and names is not specified"
+            )
+    elif mode == "topo":
+        if not "mbtoken" in particle_args_in:
+            raise ValueError("The Mapbox token is not specified")
+        if not "crs" in particle_args_in:
+            raise ValueError(
+                "The crs (coordinate reference system) of the data is not specified"
+            )
+        if not "bbox" in particle_args_in:
+            raise ValueError("The bbox is not specified")
+    elif mode == "gltf":
+        if not "gltf_data" in particle_args_in:
+            raise ValueError("gltf_data is not specified")
+
+    particle_args = dict(PARTICLE_ARGS_DEFAULTS)
+    for key in PARTICLE_ARGS_DEFAULTS.keys():
+        if key in particle_args_in:
+            particle_args[key] = particle_args_in.pop(key)
+
+    return particle_args
 
 
 def check_point_cloud_data_dict(mode, data):
