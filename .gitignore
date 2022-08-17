@@ -2,14 +2,18 @@
 lib/
 docs/
 node_modules/
+packages/jupyterlab-extension/node_modules/
 *.egg-info/
 .ipynb_checkpoints
 *.tsbuildinfo
-pybabylonjs/labextension
-pybabylonjs/version.py
+packages/jupyterlab-extension/pybabylonjs/labextension
+packages/jupyterlab-extension/pybabylonjs/version.py
+packages/babylonjs-core/lib
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
+
+.yarn/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

@@ -1,0 +1,14 @@
+{
+  "name": "@tiledb-inc/babylonjs-core",
+  "version": "1.0.6",
+  "description": "BabylonJS standalone library",
+  "main": "lib/index.js",
+  "types": "./lib/index.d.ts",
+  "packageManager": "yarn@3.2.2",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "~4.1.3"
+  }
+}

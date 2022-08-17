@@ -13,14 +13,12 @@
     "noUnusedLocals": true,
     "preserveWatchOutput": true,
     "resolveJsonModule": true,
-    "outDir": "lib",
-    "rootDir": "src",
     "strict": true,
     "strictNullChecks": true,
     "skipLibCheck": true,
     "target": "es2017",
     "types": []
   },
-  "include": ["src/*"],
+  "include": ["./packages/babylonjs-core/src"],
   "exclude": ["src/**/__tests__"]
 }
