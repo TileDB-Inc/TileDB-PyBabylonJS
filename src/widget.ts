@@ -157,7 +157,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
         this.values.mode
       );
 
-      const { backgroundColor, accentColor, secondColor, textColor } = setSceneColors(this.values.color_scheme);
+      const { backgroundColor, accentColor, secondColor, textColor } =
+        setSceneColors(this.values.color_scheme);
 
       const { data, xmin, xmax, ymin, ymax, zmin, zmax, rgbMax } =
         await getPointCloud(this.values).then(results => {
@@ -206,7 +207,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
         );
         if (isTime) {
           particle.color = scene.clearColor;
-          particle.position.y = ((data.Z[i] - topo_offset) * scale)-100;
+          particle.position.y = (data.Z[i] - topo_offset) * scale - 100;
         } else {
           particle.color = new Color3(
             data.Red[i] / rgbMax,
@@ -351,7 +352,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
           header.text = classes.names[0];
 
           slider_classes = Array.from(new Set(classification));
-          slider.maximum = slider_classes.length-1;
+          slider.maximum = slider_classes.length - 1;
           slider.value = 0;
         }
 
@@ -360,18 +361,20 @@ export class BabylonPointCloudView extends BabylonBaseView {
         pcs.updateParticle = function (particle_3: any) {
           if (doClear) {
             particle_3.color = scene.clearColor;
-            particle_3.position.y = ((data.Z[particle_3.idx] - topo_offset) * scale)-100;
+            particle_3.position.y =
+              (data.Z[particle_3.idx] - topo_offset) * scale - 100;
           } else {
             particle_3.color = new Color3(
               data.Red[particle_3.idx] / rgbMax,
               data.Green[particle_3.idx] / rgbMax,
               data.Blue[particle_3.idx] / rgbMax
             );
-            particle_3.position.y = (data.Z[particle_3.idx] - topo_offset) * scale;
+            particle_3.position.y =
+              (data.Z[particle_3.idx] - topo_offset) * scale;
           }
           return particle_3;
         };
-        
+
         slider.onValueChangedObservable.add((value: any) => {
           if (isTime) {
             header.text = 'Time: ' + (offset + times[value]).toFixed(0);
@@ -523,7 +526,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
 
       scene.createDefaultCameraOrLight(true, true, true);
 
-      var light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
+      const light = new HemisphericLight('light1', new Vector3(0, 1, 0), scene);
       light.intensity = 0.8;
 
       const camera = scene.activeCamera as ArcRotateCamera;
@@ -734,8 +737,7 @@ export class BabylonParticlesModel extends BabylonBaseModel {
 export class BabylonParticlesView extends BabylonBaseView {
   protected async createScene(): Promise<Scene> {
     return super.createScene().then(async scene => {
-
-      const { backgroundColor, accentColor, secondColor, textColor } = 
+      const { backgroundColor, accentColor, secondColor, textColor } =
         setSceneColors(this.values.color_scheme);
 
       console.log(accentColor);
@@ -761,7 +763,7 @@ export class BabylonParticlesView extends BabylonBaseView {
       //const gltfData = this.values.gltf_data;
       //const pointScale = this.values.point_scale;
       //const offset = this.values.time_offset;
-      //const classes = this.values.classes; 
+      //const classes = this.values.classes;
       const topo_offset = this.values.topo_offset;
       const scale = this.zScale;
 
@@ -772,7 +774,7 @@ export class BabylonParticlesView extends BabylonBaseView {
       // set up camera
       scene.createDefaultCameraOrLight(true, true, true);
 
-      var light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
+      const light = new HemisphericLight('light1', new Vector3(0, 1, 0), scene);
       light.intensity = 0.8;
 
       const camera = scene.activeCamera as ArcRotateCamera;
@@ -791,11 +793,11 @@ export class BabylonParticlesView extends BabylonBaseView {
       mat.emissiveColor = new Color3(0.5, 0.5, 0.5);
 
       // create store of particles
-      var stock = []; 
+      //var stock = [];
       const SPS = new SolidParticleSystem('SPS', scene, {
         enableDepthSort: true,
         expandable: true,
-        isPickable: true,
+        isPickable: true
       });
       const box = MeshBuilder.CreateBox('b', { height: 1, width: 1, depth: 1 });
       SPS.addShape(box, numCoords);
@@ -828,49 +830,48 @@ export class BabylonParticlesView extends BabylonBaseView {
       };
 
       // update SPS mesh
-      SPS.computeBoundingBox=true;
+      SPS.computeBoundingBox = true;
       SPS.refreshVisibleSize();
       SPS.initParticles();
       SPS.setParticles();
 
       SPS.computeParticleTexture = false;
-  
+
       const clickValues = this.values.display_on_click;
 
-      scene.onPointerDown = function(evt, pickResult) {
-        let faceId = pickResult.faceId;
-        if (faceId == -1) {return;}
-        let picked = SPS.pickedParticle(pickResult);
-        let idx = picked!.idx;
-        
-        let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI(
-          "UI",
+      scene.onPointerDown = function (evt, pickResult) {
+        const faceId = pickResult.faceId;
+        if (faceId === -1) {
+          return;
+        }
+        const picked = SPS.pickedParticle(pickResult);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const idx = picked!.idx;
+        const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI(
+          'UI',
           true,
           scene
         );
-        
-        var guiArray: string[];
+        let guiArray: string[];
+        // eslint-disable-next-line prefer-const
         guiArray = [];
 
         for (const clickValue of clickValues) {
-          guiArray.push(clickValue + ": " + data[clickValue][idx]);
+          guiArray.push(clickValue + ': ' + data[clickValue][idx]);
         }
-        let guiText = guiArray.join('\n');
-        let guiButton = Button.CreateSimpleButton(
-          "guiButton", 
-          guiText
-        );
-        guiButton.width = "200px"
-        guiButton.height = "200px";
-        guiButton.color = "white";
+        const guiText = guiArray.join('\n');
+        const guiButton = Button.CreateSimpleButton('guiButton', guiText);
+        guiButton.width = '200px';
+        guiButton.height = '200px';
+        guiButton.color = 'white';
         guiButton.cornerRadius = 5;
-        guiButton.background = "green";
-        guiButton.onPointerUpObservable.add(function() {
-            guiCanvas.dispose();
+        guiButton.background = 'green';
+        guiButton.onPointerUpObservable.add(() => {
+          guiCanvas.dispose();
         });
-        guiButton.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+        guiButton.verticalAlignment =
+          BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
         guiCanvas.addControl(guiButton);
-
       };
 
       //scene.registerBeforeRender(function() {
@@ -881,8 +882,6 @@ export class BabylonParticlesView extends BabylonBaseView {
     });
   }
 }
-
-
 
 export class BabylonMBRSModel extends BabylonBaseModel {
   defaults(): any {
