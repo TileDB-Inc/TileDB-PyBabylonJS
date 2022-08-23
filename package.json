@@ -56,14 +56,10 @@
     "watch:nbextension": "NODE_OPTIONS=--max-old-space-size=4096 webpack --watch --mode=development"
   },
   "dependencies": {
-    "@babylonjs/core": "^5.0.0",
-    "@babylonjs/inspector": "^5.0.0",
-    "@babylonjs/loaders": "^5.0.0",
-    "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4",
+    "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4 || ^5 || ^6",
     "@jupyterlab/application": "^3.2.0",
     "@tiledb-inc/tiledb-cloud": "^1.0.8",
-    "babylonjs-gui": "^4.2.1",
-    "babylonjs-materials": "^5.0.0"
+    "@tiledb-inc/visualizations": "file:<CHANGE_ME>"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.1.0",
