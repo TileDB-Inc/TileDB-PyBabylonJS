@@ -7,10 +7,10 @@
 
 def test_nbextension_path():
     # Check that magic function can be imported from package root:
-    from pybabylonjs import _jupyter_nbextension_paths
+    from pybabylonjs import _jupyter_labextension_paths
 
     # Ensure that it can be called without incident:
-    path = _jupyter_nbextension_paths()
+    path = _jupyter_labextension_paths()
     # Some sanity checks:
     assert len(path) == 1
     assert isinstance(path[0], dict)
