@@ -33,12 +33,18 @@ class TestShowPointCloudDict:
     def test_missing_y(self):
         with pytest.raises(ValueError) as excinfo:
             ser = pd.Series([0, 1, 2, 3, 4])
-            data = {"X": ser, "YY": ser, "Z": ser, "Red": ser, "Green": ser, "Blue": ser}
+            data = {
+                "X": ser,
+                "YY": ser,
+                "Z": ser,
+                "Red": ser,
+                "Green": ser,
+                "Blue": ser,
+            }
             Show.point_cloud(source="dict", data=data)
             # not printing and below should cause the test to fail
             print(excinfo)
             assert "Data dictionary does not contain Z" in str(excinfo.value)
-    
 
 
 # class TestShowPointCloudLocal:
