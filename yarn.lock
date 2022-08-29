@@ -37,6 +37,11 @@
   dependencies:
     tslib "^2.3.1"
 
+"@babylonjs/gui-editor@^5.0.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/gui-editor/-/gui-editor-5.21.0.tgz#6f3cb174332c71cadc1db5af821f9fba0ec821ca"
+  integrity sha512-K90nb3ONjEnYQO58/Jy+ZHKam13KUgFV07GV/y+ftvxGYkojRS4AdgkKwYYxKPF4EsW8iIff+coSRMHYeOjtFA==
+
 "@babylonjs/gui@^5.0.0":
   version "5.0.0"
   resolved "https://registry.npmjs.org/@babylonjs/gui/-/gui-5.0.0.tgz"
@@ -828,6 +833,22 @@
     capnpc-ts "^0.4.0"
     paralleljs "^1.1.0"
     save-file "^2.3.1"
+
+"@tiledb-inc/viz-core@^0.1.0-alpha.1":
+  version "0.1.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.0-alpha.1.tgz#7281b8093ea290193674f32c178174f50f50930c"
+  integrity sha512-pXFWks6H15wUWHojVWo2X494Id++9FxoRW/+3FKxTlST7HhRb+AiVM+hoFbPrUkNiF9qBnBx6Usxzu5S3/j2ng==
+  dependencies:
+    "@babylonjs/core" "^5.0.0"
+    "@babylonjs/gui" "^5.0.0"
+    "@babylonjs/gui-editor" "^5.0.0"
+    "@babylonjs/inspector" "^5.0.0"
+    "@babylonjs/loaders" "^5.0.0"
+    "@babylonjs/materials" "^5.0.0"
+    "@babylonjs/serializers" "^5.0.0"
+    "@tiledb-inc/tiledb-cloud" "^1.0.8"
+    babylonjs-gui "^4.2.1"
+    babylonjs-materials "^5.0.0"
 
 "@types/backbone@^1.4.1":
   version "1.4.10"
