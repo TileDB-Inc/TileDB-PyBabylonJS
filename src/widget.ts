@@ -29,7 +29,7 @@ export class BabylonBaseModel extends DOMWidgetModel {
 
 abstract class BabylonBaseView extends DOMWidgetView {
   canvas?: HTMLCanvasElement;
-  Visualization?: TileDBVisualization;
+  visualization?: TileDBVisualization;
   values = this.model.get('value');
   width = this.values.width;
   height = this.values.height;
@@ -39,7 +39,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
   inspector = this.values.inspector;
 
   protected resizeCanvas(): void {
-    this.Visualization?.resizeCanvas({
+    this.visualization?.resizeCanvas({
       width: this.width,
       height: this.height
     });
@@ -69,7 +69,7 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 
 export class BabylonPointCloudView extends BabylonBaseView {
   render() {
-    this.Visualization = new TileDBPointCloudVisualization({
+    this.visualization = new TileDBPointCloudVisualization({
       gltfData: this.values.gltf_data,
       data: this.values.data,
       mode: this.values.mode,
@@ -82,7 +82,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       rootElement: this.el
     });
 
-    this.Visualization.render();
+    this.visualization.render();
   }
 }
 
@@ -105,7 +105,7 @@ export class BabylonMBRSModel extends BabylonBaseModel {
 
 export class BabylonMBRSView extends BabylonBaseView {
   render() {
-    this.Visualization = new TileDBMBRSVisualization({
+    this.visualization = new TileDBMBRSVisualization({
       data: this.values.data,
       extents: this.values.extents,
       width: this.values.width,
@@ -116,7 +116,7 @@ export class BabylonMBRSView extends BabylonBaseView {
       inspector: this.values.inspector,
       rootElement: this.el
     });
-    this.Visualization.render();
+    this.visualization.render();
   }
 }
 export class BabylonImageModel extends BabylonBaseModel {
@@ -138,7 +138,7 @@ export class BabylonImageModel extends BabylonBaseModel {
 
 export class BabylonImageView extends BabylonBaseView {
   render() {
-    this.Visualization = new TileDBImageVisualization({
+    this.visualization = new TileDBImageVisualization({
       data: this.values.data,
       width: this.values.width,
       xyBbox: this.values.xy_bbox,
@@ -150,6 +150,6 @@ export class BabylonImageView extends BabylonBaseView {
       rootElement: this.el
     });
 
-    this.Visualization.render();
+    this.visualization.render();
   }
 }
