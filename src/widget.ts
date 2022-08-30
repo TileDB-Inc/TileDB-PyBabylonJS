@@ -80,6 +80,9 @@ export class BabylonPointCloudView extends BabylonBaseView {
       wheelPrecision: this.values.wheel_precision,
       moveSpeed: this.values.move_speed,
       zScale: this.values.z_scale,
+      meshShift: this.values.mesh_shift,
+      meshRotation: this.values.mesh_rotation,
+      meshScale: this.values.mesh_scale,
       inspector: this.values.inspector,
       rootElement: this.el
     });
