@@ -56,7 +56,6 @@
     "watch:nbextension": "NODE_OPTIONS=--max-old-space-size=4096 webpack --watch --mode=development"
   },
   "dependencies": {
-    "@babylonjs/core": "^5.0.0",
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4",
     "@jupyterlab/application": "^3.2.0",
     "@tiledb-inc/tiledb-cloud": "^1.0.8",
