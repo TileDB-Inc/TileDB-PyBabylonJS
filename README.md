@@ -5,7 +5,7 @@
 [![Build Status](https://dev.azure.com/TileDB-Inc/CI/_apis/build/status/TileDB-Inc.TileDB-PyBabylonJS?branchName=main)](https://dev.azure.com/TileDB-Inc/CI/_build/latest?definitionId=37&branchName=main)
 
 
-The TileDB-PyBabylonJS library is a geospatial data visualization Python library that interactively visualizes TileDB arrays with [Babylon.js](https://www.babylonjs.com) in a Jupyter notebook widget.
+The TileDB-PyBabylonJS library is a geospatial data visualization Python library that interactively visualizes TileDB arrays with [Babylon.js](https://www.babylonjs.com) in a Jupyter notebook widget. 
 
 ## Installation
 
@@ -90,9 +90,18 @@ If you make a change to the python code then you will need to restart the notebo
 
 ## Usage
 
-Jupyter notebooks are provided in the [Examples](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples).
+### Point clouds
 
-Create a default visualization from a local sparse array containing LiDAR data by specifying the bounding box (`bbox`) of the slice of the data in the array uri:
+Jupyter notebooks are provided in the [Examples folder](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples) for the following visualizations:
+
+* [Point cloud](/examples/point_cloud.ipynb)
+* [Point cloud with a time slider](/examples/point-cloud-time.ipynb)
+* [Point cloud with a classes slider](/examples/point-cloud-classes.ipynb)
+* [Point cloud with a Mapbox base map](/examples/point-cloud-topo.ipynb)
+* [Point cloud with gltf models](/examples/point-cloud-gltf.ipynb)
+* [MBRS of a point cloud](/examples/mbrs.ipynb)
+
+Display a point cloud visualization from a local sparse array by specifying the bounding box of a slice of the data:
 
 ```python
 from pybabylonjs import Show as show
@@ -103,13 +112,12 @@ bbox = {
     'Z': [406.14, 615.26]
 }
 
-show.point_cloud(source="local",
-                 mode="default",
-                 uri="./data/autzen",
-                 bbox=bbox)
-```
+lidar_array = "autzen-classified"
 
-This creates an interactive visualization in a notebook widget of which the below is a screenshot:
+show.point_cloud(source="local",
+                 uri=lidar_array,
+                 bbox = bbox)
+```
 
 <img src="examples/pointcloud.png"  width="400" height="300" />
 
