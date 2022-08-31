@@ -65,28 +65,21 @@ of those flags here.
 
 #### TypeScript
 
-If you use JupyterLab to develop then you can watch the source directory and run JupyterLab at the same time in different
-terminals to watch for changes in the extension's source and automatically rebuild the widget.
+The TypeScript code for the visualizations can be found in the [TileDB-Viz](https://github.com/TileDB-Inc/TileDB-Viz) package. After making changes in TileDB-Viz build the package with:
 
-```bash
-# Watch the source directory in one terminal, automatically rebuilding when needed
-yarn run watch
-# Run JupyterLab in another terminal
-jupyter lab
-```
+`yarn build`
 
-After a change wait for the build to finish and then refresh your browser and the changes should take effect.
+To then see these changes in TileDB-PyBabylonJS run:
 
-To add a TypeScript package use [yarn](https://classic.yarnpkg.com/lang/en/docs/cli/add/): 
+`yarn add file:/path/to/TileDB-Viz/packages/core`
 
-```bash
-yarn add <package-name>
-yarn add --dev <dev-package-name>
-``` 
+`yarn build`
+
+And restart the notebook kernel. 
 
 #### Python
 
-If you make a change to the python code then you will need to restart the notebook kernel to have it take effect.
+When you make a change to the Python code rebuild the package and restart the notebook kernel to see your changes.
 
 ## Usage
 
