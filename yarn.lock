@@ -30,57 +30,54 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@babylonjs/core@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/@babylonjs/core/-/core-5.0.0.tgz"
-  integrity sha512-AYzyQmVp7TjtNWYlLxQp5aVO+NooGWsSKHoTbYyBiizRLjYOpedQjx2nBVzJCxSiZQMD/yaXwSTwFaEd1/k+Nw==
+"@babylonjs/core@^5.21.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/core/-/core-5.21.0.tgz#6aa38a0b792bce98e7389251791ae7108806cd75"
+  integrity sha512-kJrjFEMMzOPlSShbh8i3c6S48+LsUFDkiQNGc6rRP92kmFBxlsL7MC3tfdAiRPpXIr4rf0agYXFf9+P29brqTA==
   dependencies:
-    tslib "^2.3.1"
+    tslib "^2.4.0"
 
-"@babylonjs/gui@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/@babylonjs/gui/-/gui-5.0.0.tgz"
-  integrity sha512-IhV9SDkdHuhdxj+3fvTeJO20RUBAoEjiR1B06orRzA1MricKCD7YibY6AoPZYstKmAtUgSmsU/InI/4/NV7HWQ==
-  dependencies:
-    "@babylonjs/core" "^5.0.0"
-    tslib "^2.3.1"
+"@babylonjs/gui-editor@^5.21.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/gui-editor/-/gui-editor-5.21.0.tgz#6f3cb174332c71cadc1db5af821f9fba0ec821ca"
+  integrity sha512-K90nb3ONjEnYQO58/Jy+ZHKam13KUgFV07GV/y+ftvxGYkojRS4AdgkKwYYxKPF4EsW8iIff+coSRMHYeOjtFA==
 
-"@babylonjs/inspector@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/@babylonjs/inspector/-/inspector-5.0.0.tgz"
-  integrity sha512-wS2hQZPXEDvwDrlmKL/FS+n2V6U+Ic86y299CeJsu+LdnQfa94XepOHJkr4fQ3jLmv+Xa+Kl5OFkE8W2gmqsqw==
+"@babylonjs/gui@^5.21.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/gui/-/gui-5.21.0.tgz#adf4dae17e6c55208daa0f942ab6537ae6bad570"
+  integrity sha512-b0sPVwB98PbTGn3azNMGWiONtrHG2WmXOVkMjlpjJFz5DNvy5P1w6eVcWWRXjeQgc2LIaZ6susiNTgikUGcjYQ==
   dependencies:
-    "@babylonjs/core" "^5.0.0"
-    "@babylonjs/gui" "^5.0.0"
-    "@babylonjs/loaders" "^5.0.0"
-    "@babylonjs/materials" "^5.0.0"
-    "@babylonjs/serializers" "^5.0.0"
+    tslib "^2.4.0"
 
-"@babylonjs/loaders@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/@babylonjs/loaders/-/loaders-5.0.0.tgz"
-  integrity sha512-vyScGr2iz2DGjP9ni+HlLB+/LbwBwSEc7lz9bTdc9MWKExfNxH4ZSBL/dgqEz0s+NVPAl9YfplCsv0dCX0qtBg==
+"@babylonjs/inspector@^5.21.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/inspector/-/inspector-5.21.0.tgz#cca32dff0108fbbb664c59264c59278b9f1f4b8b"
+  integrity sha512-BZlPpdsW8tAQRssaUCGmF6MAbd5KWci4Ll6os0WwcukCDu7rgdLQOaRTaVTQlPSNA2H2lLVDopvpXqb34/qkVg==
   dependencies:
-    "@babylonjs/core" "^5.0.0"
-    babylonjs-gltf2interface "^5.0.0"
-    tslib "^2.3.1"
+    "@fortawesome/fontawesome-svg-core" "^6.1.0"
+    "@fortawesome/free-regular-svg-icons" "^6.0.0"
+    "@fortawesome/free-solid-svg-icons" "^6.0.0"
 
-"@babylonjs/materials@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/@babylonjs/materials/-/materials-5.0.0.tgz"
-  integrity sha512-HlimCT3ftjUVHcr9Jm4U9M1LRph6dYqygcgU7YuXE1HPLvhav39Anz+tNH00xWTnlfDwnj4dE58aDufOzM+9AQ==
+"@babylonjs/loaders@^5.21.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/loaders/-/loaders-5.21.0.tgz#3efee6884467673fd6770e38165b8cf07fe2b0bf"
+  integrity sha512-ioKlZofZ9LpD4usneyygkryLkcaw3+wMaPNnEoeKesyVDD2l65q1pNX517h7xRu88m3xJ5oy5ek8M8OkeqjVGw==
   dependencies:
-    "@babylonjs/core" "^5.0.0"
-    tslib "^2.3.1"
+    tslib "^2.4.0"
 
-"@babylonjs/serializers@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/@babylonjs/serializers/-/serializers-5.0.0.tgz"
-  integrity sha512-mq0pEzCY3nT77JWwL+YzICE8cz+2+0ML9lECZ3jzomX/u9mRhREGA8WASIOO27OR8Eomgq4aSt7TazTHKe6B9w==
+"@babylonjs/materials@^5.21.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/materials/-/materials-5.21.0.tgz#d9d604a3a5b6a88579f7c9235290421f1b023417"
+  integrity sha512-EdOrf/+m7PnbP+sYVuR7YNxj99CU1Aj9kLh74MWCVVVSFyuKVQqFY5H/ickt/N2p6TpaqoDvSJ6dV/4d65fAPg==
   dependencies:
-    "@babylonjs/core" "^5.0.0"
-    babylonjs-gltf2interface "^5.0.0"
-    tslib "^2.3.1"
+    tslib "^2.4.0"
+
+"@babylonjs/serializers@^5.21.0":
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/serializers/-/serializers-5.21.0.tgz#eb2b367a3fba93809fa7aba7d847c634a4e06f61"
+  integrity sha512-+Fsh5R726HG0Kv+6UNxz7fO+DNfjw2lXxjnj+MokMS8twRWxJeza9LVoQfgKimLu7nA/iFn10fc9+mIzONVi5g==
+  dependencies:
+    tslib "^2.4.0"
 
 "@blueprintjs/colors@^4.0.0-alpha.1":
   version "4.0.0-alpha.1"
@@ -142,10 +139,36 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@fortawesome/fontawesome-common-types@6.1.2":
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-6.1.2.tgz#c1095b1bbabf19f37f9ff0719db38d92a410bcfe"
+  integrity sha512-wBaAPGz1Awxg05e0PBRkDRuTsy4B3dpBm+zreTTyd9TH4uUM27cAL4xWyWR0rLJCrRwzVsQ4hF3FvM6rqydKPA==
+
 "@fortawesome/fontawesome-free@^5.12.0":
   version "5.15.4"
   resolved "https://registry.npmjs.org/@fortawesome/fontawesome-free/-/fontawesome-free-5.15.4.tgz"
   integrity sha512-eYm8vijH/hpzr/6/1CJ/V/Eb1xQFW2nnUKArb3z+yUWv7HTwj6M7SP957oMjfZjAHU6qpoNc2wQvIxBLWYa/Jg==
+
+"@fortawesome/fontawesome-svg-core@^6.1.0":
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-svg-core/-/fontawesome-svg-core-6.1.2.tgz#11e2e8583a7dea75d734e4d0e53d91c63fae7511"
+  integrity sha512-853G/Htp0BOdXnPoeCPTjFrVwyrJHpe8MhjB/DYE9XjwhnNDfuBCd3aKc2YUYbEfHEcBws4UAA0kA9dymZKGjA==
+  dependencies:
+    "@fortawesome/fontawesome-common-types" "6.1.2"
+
+"@fortawesome/free-regular-svg-icons@^6.0.0":
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/free-regular-svg-icons/-/free-regular-svg-icons-6.1.2.tgz#9f04009098addcc11d0d185126f058ed042c3099"
+  integrity sha512-xR4hA+tAwsaTHGfb+25H1gVU/aJ0Rzu+xIUfnyrhaL13yNQ7TWiI2RvzniAaB+VGHDU2a+Pk96Ve+pkN3/+TTQ==
+  dependencies:
+    "@fortawesome/fontawesome-common-types" "6.1.2"
+
+"@fortawesome/free-solid-svg-icons@^6.0.0":
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/free-solid-svg-icons/-/free-solid-svg-icons-6.1.2.tgz#491d668b8a6603698d0ce1ac620f66fd22b74c84"
+  integrity sha512-lTgZz+cMpzjkHmCwOG3E1ilUZrnINYdqMmrkv30EC3XbRsGlbIOL8H9LaNp5SV4g0pNJDfQ4EdTWWaMvdwyLiQ==
+  dependencies:
+    "@fortawesome/fontawesome-common-types" "6.1.2"
 
 "@gar/promisify@^1.0.1":
   version "1.1.2"
@@ -829,6 +852,22 @@
     paralleljs "^1.1.0"
     save-file "^2.3.1"
 
+"@tiledb-inc/viz-core@^0.1.0-alpha.3":
+  version "0.1.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.0-alpha.3.tgz#28423958a64db4f1b8f1300371931468086af43a"
+  integrity sha512-/T+hiaaAX7YTryvUpeKC0+w0rNDMfc6ZtAR3+qhSGYwfJmSEe1TfdslaW/xjP1f/Yl1o6z5g5BKI59LMSVDtCA==
+  dependencies:
+    "@babylonjs/core" "^5.21.0"
+    "@babylonjs/gui" "^5.21.0"
+    "@babylonjs/gui-editor" "^5.21.0"
+    "@babylonjs/inspector" "^5.21.0"
+    "@babylonjs/loaders" "^5.21.0"
+    "@babylonjs/materials" "^5.21.0"
+    "@babylonjs/serializers" "^5.21.0"
+    "@tiledb-inc/tiledb-cloud" "^1.0.8"
+    babylonjs-gui "^4.2.2"
+    babylonjs-materials "^5.21.0"
+
 "@types/backbone@^1.4.1":
   version "1.4.10"
   resolved "https://registry.npmjs.org/@types/backbone/-/backbone-1.4.10.tgz"
@@ -1487,34 +1526,29 @@ axios@^0.21.1:
   dependencies:
     follow-redirects "^1.10.0"
 
-babylonjs-gltf2interface@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/babylonjs-gltf2interface/-/babylonjs-gltf2interface-5.0.0.tgz"
-  integrity sha512-y2TaMzVx5wIY9k+VBwBC4iLZKq5SNdKeO2NkiMNi4lx+fg8GqV6wCdSYqIM7cGKNRtOiDCcuGad1ULco6KebvA==
-
-babylonjs-gui@^4.2.1:
+babylonjs-gui@^4.2.2:
   version "4.2.2"
-  resolved "https://registry.npmjs.org/babylonjs-gui/-/babylonjs-gui-4.2.2.tgz"
+  resolved "https://registry.yarnpkg.com/babylonjs-gui/-/babylonjs-gui-4.2.2.tgz#73ce9e2ae6caba97475557e32e4961ff4d44482a"
   integrity sha512-LCjj9bZMR7TCJw5PizhS+lHRxhOWcQ6wGVEs6DjY5leT6Lb9jUD9LwqTemfd1KobZLOg5/TY89LqMzNLkDvtng==
   dependencies:
     babylonjs "4.2.2"
 
-babylonjs-materials@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/babylonjs-materials/-/babylonjs-materials-5.0.0.tgz"
-  integrity sha512-FBV5eYvAwho1yGaR5fZwL7JniqVDd5RJ6NB4zGHDs3gTvPKojLBBNS/xijEac0uyStvD1in9/u6nbrxTwGXNxw==
+babylonjs-materials@^5.21.0:
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/babylonjs-materials/-/babylonjs-materials-5.21.0.tgz#fa52700acc1a5a482e2fdbaa38010fbff0ebc416"
+  integrity sha512-IaX4YvxTfsq4q7pnT5Ks3bNPpDHWFNSPpXzHv51QGzDCKA4VuFBIA0PF0W6sSqGyA3j3k3ZOWG9wMWebNd97og==
   dependencies:
-    babylonjs "^5.0.0"
+    babylonjs "^5.21.0"
 
 babylonjs@4.2.2:
   version "4.2.2"
   resolved "https://registry.npmjs.org/babylonjs/-/babylonjs-4.2.2.tgz"
   integrity sha512-p7mTi6+nLuWJTLbwxEJxLOh/QMHMV2KA0bviEoQSK5VtsAq1F0JghoOZYRs4aEqAZF/deFPWvMQk1vbXJ+4eEA==
 
-babylonjs@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/babylonjs/-/babylonjs-5.0.0.tgz"
-  integrity sha512-j7hB7BBS/1E7KlCACKhTaie8GW/b+eurMZhIVIWqnHDFZndCGasr0KtYF502TUWR57wcMcakmWU+Ou+gDPGxbw==
+babylonjs@^5.21.0:
+  version "5.21.0"
+  resolved "https://registry.yarnpkg.com/babylonjs/-/babylonjs-5.21.0.tgz#2b7ade46a7ef55c097406e477815557be1089de7"
+  integrity sha512-0Gu30ReYz8VVo/JUsDrljmNGcN929refftm+v90F8M3PFbahkQgvtqBRldVxt9R86MhhmBv+43GCi/kKmj+y+Q==
 
 backbone@1.2.3:
   version "1.2.3"
@@ -5890,10 +5924,10 @@ tslib@^1.7.1, tslib@^1.8.1, tslib@^1.9.0:
   resolved "https://registry.npmjs.org/tslib/-/tslib-1.14.1.tgz"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.3.1:
-  version "2.3.1"
-  resolved "https://registry.npmjs.org/tslib/-/tslib-2.3.1.tgz"
-  integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
+tslib@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
+  integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
 
 tslib@~1.13.0:
   version "1.13.0"
