@@ -12,6 +12,7 @@ import '../css/widget.css';
 import {
   TileDBImageVisualization,
   TileDBMBRSVisualization,
+  TileDBParticlesVisualization,
   TileDBPointCloudVisualization,
   TileDBVisualization
 } from '@tiledb-inc/viz-core';
@@ -97,6 +98,41 @@ export class BabylonPointCloudView extends BabylonBaseView {
       meshShift: this.values.mesh_shift,
       meshRotation: this.values.mesh_rotation,
       meshScale: this.values.mesh_scale,
+      inspector: this.values.inspector,
+      rootElement: this.el
+    });
+
+    this.visualization.render();
+  }
+}
+
+export class BabylonParticlesModel extends BabylonBaseModel {
+  defaults(): any {
+    return {
+      ...super.defaults(),
+      _model_name: BabylonParticlesModel.model_name,
+      _model_module: BabylonParticlesModel.model_module,
+      _model_module_version: BabylonParticlesModel.model_module_version,
+      _view_name: BabylonParticlesModel.view_name,
+      _view_module: BabylonParticlesModel.view_module,
+      _view_module_version: BabylonParticlesModel.view_module_version
+    };
+  }
+
+  static model_name = 'BabylonParticlesCloudModel';
+  static view_name = 'BabylonParticlesCloudView';
+}
+
+export class BabylonParticlesView extends BabylonBaseView {
+  render() {
+    this.visualization = new TileDBParticlesVisualization({
+      data: this.values.data,
+      width: this.values.width,
+      height: this.values.height,
+      wheelPrecision: this.values.wheel_precision,
+      moveSpeed: this.values.move_speed,
+      colorScheme: this.values.color_scheme,
+      zScale: this.values.z_scale,
       inspector: this.values.inspector,
       rootElement: this.el
     });
