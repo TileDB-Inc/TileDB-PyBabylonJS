@@ -65,34 +65,36 @@ of those flags here.
 
 #### TypeScript
 
-If you use JupyterLab to develop then you can watch the source directory and run JupyterLab at the same time in different
-terminals to watch for changes in the extension's source and automatically rebuild the widget.
+The TypeScript code for the visualizations can be found in the [TileDB-Viz](https://github.com/TileDB-Inc/TileDB-Viz) package. After making changes in TileDB-Viz build the package with:
 
-```bash
-# Watch the source directory in one terminal, automatically rebuilding when needed
-yarn run watch
-# Run JupyterLab in another terminal
-jupyter lab
-```
+`yarn build`
 
-After a change wait for the build to finish and then refresh your browser and the changes should take effect.
+To then see these changes in TileDB-PyBabylonJS run:
 
-To add a TypeScript package use [yarn](https://classic.yarnpkg.com/lang/en/docs/cli/add/): 
+`yarn add file:/path/to/TileDB-Viz/packages/core`
 
-```bash
-yarn add <package-name>
-yarn add --dev <dev-package-name>
-``` 
+`yarn build`
+
+And restart the notebook kernel. 
 
 #### Python
 
-If you make a change to the python code then you will need to restart the notebook kernel to have it take effect.
+When you make a change to the Python code rebuild the package and restart the notebook kernel to see your changes.
 
 ## Usage
 
-Jupyter notebooks are provided in the [Examples](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples).
+### Point clouds
 
-Create a default visualization from a local sparse array containing LiDAR data by specifying the bounding box (`bbox`) of the slice of the data in the array uri:
+Jupyter notebooks are provided in the [Examples folder](https://github.com/TileDB-Inc/TileDB-PyBabylonJS/tree/main/examples) for the following visualizations:
+
+* [Point cloud](/examples/point_cloud.ipynb)
+* [Point cloud with a time slider](/examples/point-cloud-time.ipynb)
+* [Point cloud with a classes slider](/examples/point-cloud-classes.ipynb)
+* [Point cloud with a Mapbox base map](/examples/point-cloud-topo.ipynb)
+* [Point cloud with gltf models](/examples/point-cloud-gltf.ipynb)
+* [MBRS of a point cloud](/examples/mbrs.ipynb)
+
+Display a point cloud visualization from a local sparse array by specifying the bounding box of a slice of the data:
 
 ```python
 from pybabylonjs import Show as show
@@ -103,13 +105,12 @@ bbox = {
     'Z': [406.14, 615.26]
 }
 
-show.point_cloud(source="local",
-                 mode="default",
-                 uri="./data/autzen",
-                 bbox=bbox)
-```
+lidar_array = "autzen-classified"
 
-This creates an interactive visualization in a notebook widget of which the below is a screenshot:
+show.point_cloud(source="local",
+                 uri=lidar_array,
+                 bbox = bbox)
+```
 
 <img src="examples/pointcloud.png"  width="400" height="300" />
 
