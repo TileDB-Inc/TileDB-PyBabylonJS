@@ -53,6 +53,7 @@ class Show:
             data = check_point_cloud_data_dict(mode, data)
         if source == "local":
             data = check_point_cloud_data_local(mode, uri, point_cloud_args_in)
+            source = "dict"
         if source == "cloud":
             point_cloud_args_in = check_point_cloud_data_cloud(uri, point_cloud_args_in)
 
@@ -65,10 +66,6 @@ class Show:
             "source": source,
             "mode": mode,
         }
-
-        if mode == "topo":
-            img = create_mapbox_image(data, point_cloud_args)
-            d = {**d, "mapbox_img": img}
 
         dataviz = BabylonPointCloud()
         dataviz.value = {**d}
@@ -89,10 +86,6 @@ class Show:
 
         if time:
             mode = "time"
-        elif classes:
-            raise ValueError(
-                "This mode is not implemented for show.from_dict(), use show.point_cloud() instead"
-            )
         else:
             mode = "default"
 
@@ -107,10 +100,6 @@ class Show:
             "source": source,
             "mode": mode,
         }
-
-        if mode == "topo":
-            img = create_mapbox_image(data, point_cloud_args)
-            d = {**d, "mapbox_img": img}
 
         dataviz = BabylonPointCloud()
         dataviz.value = {**d}

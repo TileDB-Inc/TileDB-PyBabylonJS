@@ -70,36 +70,27 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 export class BabylonPointCloudView extends BabylonBaseView {
   render() {
     this.visualization = new TileDBPointCloudVisualization({
-      gltfData: this.values.gltf_data,
       data: this.values.data,
       mode: this.values.mode,
       width: this.values.width,
-      classes: this.values.classes,
       source: this.values.source,
       height: this.values.height,
-      topoOffset: this.values.topo_offset,
       wheelPrecision: this.values.wheel_precision,
-      pointSize: this.values.point_size,
-      gltfMulti: this.values.gltf_multi,
-      moveSpeed: this.values.move_speed,
-      mapboxImg: this.values.mapbox_img,
+      particleSize: this.values.particle_size,
       bbox: this.values.bbox,
       rgbMax: this.values.rgb_max,
       namespace: this.values.name_space,
       arrayName: this.values.array_name,
       token: this.values.token,
-      distanceColors: this.values.distance_colors,
-      timeOffset: this.values.time_offset,
       showFraction: this.values.show_fraction,
       colorScheme: this.values.color_scheme,
       pointShift: this.values.point_shift,
       zScale: this.values.z_scale,
-      meshShift: this.values.mesh_shift,
-      meshRotation: this.values.mesh_rotation,
-      meshScale: this.values.mesh_scale,
       inspector: this.values.inspector,
       rootElement: this.el
     });
+
+    console.log(this.visualization);
 
     this.visualization.render();
   }
@@ -130,7 +121,6 @@ export class BabylonMBRSView extends BabylonBaseView {
       width: this.values.width,
       height: this.values.height,
       wheelPrecision: this.values.wheel_precision,
-      moveSpeed: this.values.move_speed,
       zScale: this.values.z_scale,
       inspector: this.values.inspector,
       rootElement: this.el
@@ -163,8 +153,6 @@ export class BabylonImageView extends BabylonBaseView {
       xyBbox: this.values.xy_bbox,
       height: this.values.height,
       wheelPrecision: this.values.wheel_precision,
-      moveSpeed: this.values.move_speed,
-      zScale: this.values.z_scale,
       inspector: this.values.inspector,
       rootElement: this.el
     });
