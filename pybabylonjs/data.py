@@ -22,6 +22,7 @@ def create_point_cloud(mode, array_uri: str, bbox):
 
     return data
 
+
 def create_mbrs(array_uri: str):
     """Create a Dict to be passed on to BabylonMBRS to create MBRS outlines."""
     fragments_info = tiledb.array_fragments(array_uri, include_mbrs=True)
