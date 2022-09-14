@@ -13,19 +13,20 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "height": 600,
     "z_scale": 1,
     "wheel_precision": -1,
-    "move_speed": -1,
     "particle_size": 1,
+    "particle_type": "box",
+    "point_budget": 2000000,
+    "refresh_rate": 15,
+    "camera_radius": 25,
     "color_scheme": "dark",
     "bbox": None,
     "rgb_max": None,
-    "time_offset": 0,
     "name_space": None,
     "array_name": None,
     "token": None,
     "tiledb_env": None,
     "show_fraction": None,
     "point_shift": [None, None, None],
-    "distance_colors": False,
 }
 
 

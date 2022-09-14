@@ -34,8 +34,6 @@ abstract class BabylonBaseView extends DOMWidgetView {
   width = this.values.width;
   height = this.values.height;
   wheelPrecision = this.values.wheel_precision;
-  moveSpeed = this.values.move_speed;
-  zScale = this.values.z_scale;
   inspector = this.values.inspector;
 
   protected resizeCanvas(): void {
@@ -71,12 +69,18 @@ export class BabylonPointCloudView extends BabylonBaseView {
   render() {
     this.visualization = new TileDBPointCloudVisualization({
       data: this.values.data,
-      mode: this.values.mode,
       width: this.values.width,
-      source: this.values.source,
       height: this.values.height,
       wheelPrecision: this.values.wheel_precision,
+      inspector: this.values.inspector,
+      rootElement: this.el,
+      mode: this.values.mode,
+      source: this.values.source,
       particleSize: this.values.particle_size,
+      particleType: this.values.particle_type,
+      pointBudget: this.values.point_budget,
+      refreshRate: this.values.refresh_rate,
+      cameraRadius: this.values.camera_radius,
       bbox: this.values.bbox,
       rgbMax: this.values.rgb_max,
       namespace: this.values.name_space,
@@ -85,12 +89,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
       showFraction: this.values.show_fraction,
       colorScheme: this.values.color_scheme,
       pointShift: this.values.point_shift,
-      zScale: this.values.z_scale,
-      inspector: this.values.inspector,
-      rootElement: this.el
+      zScale: this.values.z_scale
     });
-
-    console.log(this.visualization);
 
     this.visualization.render();
   }
