@@ -841,21 +841,19 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
-"@tiledb-inc/tiledb-cloud@^1.0.8":
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/tiledb-cloud/-/tiledb-cloud-1.0.8.tgz#397b315f44c220b04ef203fb86cbaca301553069"
-  integrity sha512-d8Tb0VT/EomUlzpg9rJECQjC0EfhBAbMLi7WsMyP6cg64+bkcljstOydVFSpWuOrxwT7fxf9+wcupnxxC9pgcg==
+"@tiledb-inc/tiledb-cloud@1.0.10-alpha.2":
+  version "1.0.10-alpha.2"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/tiledb-cloud/-/tiledb-cloud-1.0.10-alpha.2.tgz#b21f4b806c2f4258a202ee2cb1e9726c56280a37"
+  integrity sha512-F48L6AvpOnp9UBTp1f7cPJ8bgrBqCzt4O+moN4r0KLu+nQqh9+VILgKOR9Eo6FgnCqvRiWaOlPeLAZSfyxJo/g==
   dependencies:
     axios "^0.21.1"
     capnp-ts "^0.4.0"
     capnpc-ts "^0.4.0"
-    paralleljs "^1.1.0"
+    paralleljs "github:SarantopoulosKon/parallel.js#node-mode-in-web-worker"
     save-file "^2.3.1"
 
-"@tiledb-inc/viz-core@^0.1.0-alpha.3":
-  version "0.1.0-alpha.3"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.0-alpha.3.tgz#28423958a64db4f1b8f1300371931468086af43a"
-  integrity sha512-/T+hiaaAX7YTryvUpeKC0+w0rNDMfc6ZtAR3+qhSGYwfJmSEe1TfdslaW/xjP1f/Yl1o6z5g5BKI59LMSVDtCA==
+"@tiledb-inc/viz-core@file:../TileDB-Viz/packages/core":
+  version "0.0.1"
   dependencies:
     "@babylonjs/core" "^5.21.0"
     "@babylonjs/gui" "^5.21.0"
@@ -864,9 +862,10 @@
     "@babylonjs/loaders" "^5.21.0"
     "@babylonjs/materials" "^5.21.0"
     "@babylonjs/serializers" "^5.21.0"
-    "@tiledb-inc/tiledb-cloud" "^1.0.8"
+    "@tiledb-inc/tiledb-cloud" "1.0.10-alpha.2"
     babylonjs-gui "^4.2.2"
     babylonjs-materials "^5.21.0"
+    idb "^7.0.2"
 
 "@types/backbone@^1.4.1":
   version "1.4.10"
@@ -3327,6 +3326,11 @@ icss-utils@^5.0.0, icss-utils@^5.1.0:
   resolved "https://registry.npmjs.org/icss-utils/-/icss-utils-5.1.0.tgz"
   integrity sha512-soFhflCVWLfRNOPU3iv5Z9VUdT44xFRbzjLsEzSr5AQmgqPMTHdU3PMT1Cf1ssx8fLNJDA1juftYl+PUcv3MqA==
 
+idb@^7.0.2:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/idb/-/idb-7.1.0.tgz#2cc886be57738419e57f9aab58f647e5e2160270"
+  integrity sha512-Wsk07aAxDsntgYJY4h0knZJuTxM73eQ4reRAO+Z1liOh8eMCJ/MoDS8fCui1vGT9mnjtl1sOu3I2i/W1swPYZg==
+
 ieee754@^1.1.13:
   version "1.2.1"
   resolved "https://registry.npmjs.org/ieee754/-/ieee754-1.2.1.tgz"
@@ -4607,10 +4611,9 @@ package-json@^6.5.0:
     registry-url "^5.0.0"
     semver "^6.2.0"
 
-paralleljs@^1.1.0:
+"paralleljs@github:SarantopoulosKon/parallel.js#node-mode-in-web-worker":
   version "1.1.0"
-  resolved "https://registry.yarnpkg.com/paralleljs/-/paralleljs-1.1.0.tgz#d0cd5540fe4dd8e80fa94d3cb6a530510dbe6e70"
-  integrity sha512-5sYLAEzM+qMDYzQeVWyNdqINU4h+/Fhr0CrZs3+HCYPIhOWuA2BCzn74js2qzX+LKFwRQR6sSJBZhgT+WWhbfw==
+  resolved "https://codeload.github.com/SarantopoulosKon/parallel.js/tar.gz/f68f6b1109f64b91b15a7827d1db439581b19e84"
 
 parent-module@^1.0.0:
   version "1.0.1"

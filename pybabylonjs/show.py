@@ -33,6 +33,7 @@ class Show:
         self,
         uri: Optional[str] = None,
         data: Optional[dict] = {},
+        streaming: Optional[bool] = False,
         source: Optional[str] = "cloud",
         mode: Optional[str] = "default",
         **kwargs,
@@ -54,7 +55,9 @@ class Show:
         if source == "local":
             data = check_point_cloud_data_local(mode, uri, point_cloud_args_in)
         if source == "cloud":
-            point_cloud_args_in = check_point_cloud_data_cloud(uri, point_cloud_args_in)
+            point_cloud_args_in = check_point_cloud_data_cloud(
+                streaming, uri, point_cloud_args_in
+            )
 
         point_cloud_args = check_point_cloud_args(mode, point_cloud_args_in)
 
@@ -62,6 +65,7 @@ class Show:
             **point_cloud_args,
             "uri": uri,
             "data": data,
+            "streaming": streaming,
             "source": source,
             "mode": mode,
         }
