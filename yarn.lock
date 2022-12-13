@@ -852,8 +852,10 @@
     paralleljs "github:SarantopoulosKon/parallel.js#node-mode-in-web-worker"
     save-file "^2.3.1"
 
-"@tiledb-inc/viz-core@file:../TileDB-Viz/packages/core":
-  version "0.0.1"
+"@tiledb-inc/viz-core@0.1.0-beta.0":
+  version "0.1.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.0-beta.0.tgz#f315d4cd26bbcbbfb1ead744d624a3e81d1c3ecc"
+  integrity sha512-sDn99C3UypFgAVrpkelXc2ars/iRMk/vMQKItf7NnuoYzRfFMQgwIS1DcozB/sJOwlCH3ZA2sdZ6aUYX+6a5Pw==
   dependencies:
     "@babylonjs/core" "^5.21.0"
     "@babylonjs/gui" "^5.21.0"
