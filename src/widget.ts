@@ -88,6 +88,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       bbox: this.values.bbox,
       namespace: this.values.name_space,
       arrayName: this.values.array_name,
+      tiledbEnv: this.values.tiledb_env,
       token: this.values.token,
       bufferSize: this.values.buffer_size,
       streaming: this.values.streaming,
@@ -107,7 +108,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       debug: this.values.debug,
       workerPoolSize: this.values.worker_pool_size
     });
-    console.log(this.values);
     this.visualization.render();
   }
 }
