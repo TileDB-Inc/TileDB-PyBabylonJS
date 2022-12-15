@@ -108,7 +108,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       debug: this.values.debug,
       workerPoolSize: this.values.worker_pool_size
     });
-    console.log(this.visualization);
     this.visualization.render();
   }
 }
