@@ -35,15 +35,7 @@ abstract class BabylonBaseView extends DOMWidgetView {
   height = this.values.height;
   wheelPrecision = this.values.wheel_precision;
   moveSpeed = this.values.move_speed;
-  zScale = this.values.z_scale;
   inspector = this.values.inspector;
-
-  protected resizeCanvas(): void {
-    this.visualization?.resizeCanvas({
-      width: this.width,
-      height: this.height
-    });
-  }
 
   protected query_changed(): void {
     // TODO
@@ -70,37 +62,52 @@ export class BabylonPointCloudModel extends BabylonBaseModel {
 export class BabylonPointCloudView extends BabylonBaseView {
   render() {
     this.visualization = new TileDBPointCloudVisualization({
-      gltfData: this.values.gltf_data,
-      data: this.values.data,
-      mode: this.values.mode,
       width: this.values.width,
-      classes: this.values.classes,
-      source: this.values.source,
       height: this.values.height,
-      topoOffset: this.values.topo_offset,
       wheelPrecision: this.values.wheel_precision,
-      pointSize: this.values.point_size,
-      gltfMulti: this.values.gltf_multi,
       moveSpeed: this.values.move_speed,
-      mapboxImg: this.values.mapbox_img,
-      bbox: this.values.bbox,
+      inspector: this.values.inspector,
+      rootElement: this.el,
+      mode: this.values.mode,
+      colorScheme: this.values.color_scheme,
+      data: this.values.data,
+      zScale: this.values.z_scale,
+      gltfData: this.values.gltf_data,
+      topoOffset: this.values.topo_offset,
+      classes: this.values.classes,
+      timeOffset: this.values.time_offset,
+      distanceColors: this.values.distance_colors,
+      meshRotation: this.values.mesh_rotation,
+      meshShift: this.values.mesh_shift,
+      meshScale: this.values.mesh_scale,
+      gltfMulti: this.values.gltf_multi,
+      source: this.values.source,
+      showFraction: this.values.show_fraction,
+      pointShift: this.values.point_shift,
       rgbMax: this.values.rgb_max,
+      bbox: this.values.bbox,
       namespace: this.values.name_space,
       arrayName: this.values.array_name,
+      tiledbEnv: this.values.tiledb_env,
       token: this.values.token,
-      distanceColors: this.values.distance_colors,
-      timeOffset: this.values.time_offset,
-      showFraction: this.values.show_fraction,
-      colorScheme: this.values.color_scheme,
-      pointShift: this.values.point_shift,
-      zScale: this.values.z_scale,
-      meshShift: this.values.mesh_shift,
-      meshRotation: this.values.mesh_rotation,
-      meshScale: this.values.mesh_scale,
-      inspector: this.values.inspector,
-      rootElement: this.el
+      bufferSize: this.values.buffer_size,
+      streaming: this.values.streaming,
+      maxLevel: this.values.max_levels,
+      pointType: this.values.point_type,
+      pointSize: this.values.point_size,
+      pointScale: this.values.point_scale,
+      pointBudget: this.values.point_budget,
+      cameraRadius: this.values.camera_radius,
+      edlStrength: this.values.edl_strength,
+      edlRadius: this.values.edl_radius,
+      edlNeighbours: this.values.edl_neightbours,
+      maxNumCacheBlocks: this.values.max_num_cache_blocks,
+      fanOut: this.values.fan_out,
+      useShader: this.values.use_shader,
+      useGUI: this.values.use_gui,
+      debug: this.values.debug,
+      workerPoolSize: this.values.worker_pool_size
     });
-
     this.visualization.render();
   }
 }
@@ -164,7 +171,6 @@ export class BabylonImageView extends BabylonBaseView {
       height: this.values.height,
       wheelPrecision: this.values.wheel_precision,
       moveSpeed: this.values.move_speed,
-      zScale: this.values.z_scale,
       inspector: this.values.inspector,
       rootElement: this.el
     });

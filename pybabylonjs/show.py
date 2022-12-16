@@ -33,6 +33,7 @@ class Show:
         self,
         uri: Optional[str] = None,
         data: Optional[dict] = {},
+        streaming: Optional[bool] = False,
         source: Optional[str] = "cloud",
         mode: Optional[str] = "default",
         **kwargs,
@@ -42,6 +43,7 @@ class Show:
 
         :param uri: when source is "cloud" or "local" specify the URI for the TileDB array
         :param data: when source="dict" this dictionary contains the points to be visualized: {"X", "Y", "Z", "Red", "Green", "Blue"}
+        :param streaming: when true all data will be streamed from the TileDB array
         :param source: location of the data to be visualized, one of "cloud", "local" or "dict"
         :param mode: sub-type of the visualization, one of "default", "time", "classes" or "topo"
 
@@ -54,7 +56,9 @@ class Show:
         if source == "local":
             data = check_point_cloud_data_local(mode, uri, point_cloud_args_in)
         if source == "cloud":
-            point_cloud_args_in = check_point_cloud_data_cloud(uri, point_cloud_args_in)
+            point_cloud_args_in = check_point_cloud_data_cloud(
+                streaming, uri, point_cloud_args_in
+            )
 
         point_cloud_args = check_point_cloud_args(mode, point_cloud_args_in)
 
@@ -62,6 +66,7 @@ class Show:
             **point_cloud_args,
             "uri": uri,
             "data": data,
+            "streaming": streaming,
             "source": source,
             "mode": mode,
         }
