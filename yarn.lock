@@ -841,20 +841,20 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
-"@tiledb-inc/tiledb-cloud@1.0.10-alpha.5":
-  version "1.0.10-alpha.5"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/tiledb-cloud/-/tiledb-cloud-1.0.10-alpha.5.tgz#c389aab1adc97f44796ffb99063ee9754c6519f7"
-  integrity sha512-CsGSFwP626Tmu86NWvZNjLrNpN0DrPLIyFtjg4+8jSut1S66UJ4+oLw4SP/nIfmSVv0mMmE5lJcXy218yGytVg==
+"@tiledb-inc/tiledb-cloud@1.0.10-alpha.6":
+  version "1.0.10-alpha.6"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/tiledb-cloud/-/tiledb-cloud-1.0.10-alpha.6.tgz#0a48cf81960d57b5919d2ea8e177b2b148cc7c79"
+  integrity sha512-rt3JNeZwCDkmKeCa7nvWJ8m/QGKgrbNaK0raGQ5ct2pnEXpJdIOQTp/htIxxPwCHMa66avWlysJgnyO/rRK9DQ==
   dependencies:
     axios "^0.21.1"
     capnp-ts "^0.4.0"
     paralleljs "github:SarantopoulosKon/parallel.js#node-mode-in-web-worker"
     save-file "^2.3.1"
 
-"@tiledb-inc/viz-core@0.1.0-alpha.5":
-  version "0.1.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.0-alpha.5.tgz#c00da9b2815ff7c9e4ff6c5553f41f7d0a463a6d"
-  integrity sha512-pT63X6RkP8nBetSnfJr76895Q49Z95b1wvRTBn8oFiQQU2jcMwzmZQJDTU7dpi17sTG2VDjRe8iAwTvfEs8jyg==
+"@tiledb-inc/viz-core@0.1.0-alpha.6":
+  version "0.1.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.0-alpha.6.tgz#e9d0cf78668bef822e5e37d549deffa640ba7caa"
+  integrity sha512-X2IB7RORQWtfXb79furj5pzllC4r9wq+dVZQ4Dv+Hx3FJyd+ewmWtbSTgu8WaovHpfobQamf55u4jE6R3+giVA==
   dependencies:
     "@babylonjs/core" "^5.21.0"
     "@babylonjs/gui" "^5.21.0"
@@ -863,7 +863,7 @@
     "@babylonjs/loaders" "^5.21.0"
     "@babylonjs/materials" "^5.21.0"
     "@babylonjs/serializers" "^5.21.0"
-    "@tiledb-inc/tiledb-cloud" "1.0.10-alpha.5"
+    "@tiledb-inc/tiledb-cloud" "1.0.10-alpha.6"
     babylonjs-gui "^4.2.2"
     babylonjs-materials "^5.21.0"
     idb "^7.0.2"
