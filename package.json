@@ -58,7 +58,7 @@
   "dependencies": {
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3 || ^4",
     "@jupyterlab/application": "^3.2.0",
-    "@tiledb-inc/viz-core": "0.1.0"
+    "@tiledb-inc/viz-core": "0.1.1"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.1.0",
