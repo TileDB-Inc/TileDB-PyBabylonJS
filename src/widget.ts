@@ -95,7 +95,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       maxLevel: this.values.max_levels,
       pointType: this.values.point_type,
       pointSize: this.values.point_size,
-      pointScale: this.values.point_scale,
       pointBudget: this.values.point_budget,
       cameraRadius: this.values.camera_radius,
       edlStrength: this.values.edl_strength,
@@ -104,7 +103,7 @@ export class BabylonPointCloudView extends BabylonBaseView {
       maxNumCacheBlocks: this.values.max_num_cache_blocks,
       fanOut: this.values.fan_out,
       useShader: this.values.use_shader,
-      useGUI: this.values.use_gui,
+      useSPS: this.values.use_sps,
       debug: this.values.debug,
       workerPoolSize: this.values.worker_pool_size
     });
