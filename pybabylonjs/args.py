@@ -40,7 +40,6 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "max_levels": None,
     "point_type": None,
     "point_size": None,
-    "point_scale": None,
     "point_budget": None,
     "camera_radius": None,
     "edl_strength": None,
@@ -49,6 +48,7 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "max_num_cache_blocks": None,
     "fan_out": None,
     "use_shader": None,
+    "use_sps": None,
     "debug": False,
     "worker_pool_size": None,
 }
@@ -83,6 +83,10 @@ def check_point_cloud_args(mode, point_cloud_args_in):
         if key in point_cloud_args_in:
             if key is not None:
                 point_cloud_args[key] = point_cloud_args_in.pop(key)
+
+    if not "height" in point_cloud_args:
+        point_cloud_args["height"] = 600
+        point_cloud_args["width"] = 800
 
     return point_cloud_args
 
