@@ -24,11 +24,11 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "mesh_shift": [None, None, None],
     "mesh_scale": [None, None, None],
     "gltf_multi": False,
-    "show_fraction": None,
     "point_shift": [None, None, None],
     "rgb_max": None,
     "bbox": None,
     "name_space": None,
+    "group_name": None,
     "array_name": None,
     "token": None,
     "tiledb_env": None,
@@ -37,11 +37,12 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "crs": None,
     "buffer_size": None,
     "streaming": None,
-    "max_levels": None,
     "point_type": None,
     "point_size": None,
     "point_budget": None,
-    "camera_radius": None,
+    "camera_location": None,
+    "camera_zoom": [None, None, None],
+    "camera_up": None,
     "edl_strength": None,
     "edl_radius": None,
     "edl_neighbours": None,
@@ -144,18 +145,23 @@ def check_point_cloud_data_cloud(streaming, uri, point_cloud_args):
             )
         point_cloud_args = {**point_cloud_args, "token": token}
 
+    o = urlparse(uri)
+
     if not streaming:
         if not "bbox" in point_cloud_args:
             raise ValueError(
                 "The bbox for slicing data from the array is not specified"
             )
-
-    o = urlparse(uri)
-
-    point_cloud_args = {
-        **point_cloud_args,
-        "name_space": o.netloc,
-        "array_name": o.path[1:],
-    }
+        point_cloud_args = {
+            **point_cloud_args,
+            "name_space": o.netloc,
+            "array_name": o.path[1:],
+        }
+    else:
+        point_cloud_args = {
+            **point_cloud_args,
+            "name_space": o.netloc,
+            "group_name": o.path[1:],
+        }
 
     return point_cloud_args
