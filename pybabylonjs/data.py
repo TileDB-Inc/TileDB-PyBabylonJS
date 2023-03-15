@@ -10,7 +10,6 @@ import tiledb
 
 
 def create_point_cloud(mode, array_uri: str, bbox):
-
     if mode == "time":
         attrs = ["Red", "Green", "Blue", "GpsTime"]
     elif mode == "classes":
