@@ -13,10 +13,10 @@ stages:
     strategy:
       matrix:
         mac_38:
-          imageName: 'macOS-10.15'
+          imageName: 'macOS-12'
           python.version: '3.8'
         mac_37:
-          imageName: 'macOS-10.15'
+          imageName: 'macOS-12'
           python.version: '3.7'
         linux_py38:
           imageName: 'ubuntu-20.04'
@@ -37,7 +37,7 @@ stages:
         echo $(node -v)
         npm install --global yarn
       displayName: 'Install NodeJS and yarn'
-      condition: eq(variables['imageName'], 'macOS-10.15')
+      condition: eq(variables['imageName'], 'macOS-12')
 
     - script: |
         sudo apt-get install curl
