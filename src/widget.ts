@@ -101,8 +101,6 @@ export class BabylonPointCloudView extends BabylonBaseView {
       edlStrength: this.values.edl_strength,
       edlRadius: this.values.edl_radius,
       edlNeighbours: this.values.edl_neightbours,
-      maxNumCacheBlocks: this.values.max_num_cache_blocks,
-      fanOut: this.values.fan_out,
       useShader: this.values.use_shader,
       useSPS: this.values.use_sps,
       debug: this.values.debug,

@@ -46,8 +46,6 @@ POINT_CLOUD_ARGS_DEFAULTS = {
     "edl_strength": None,
     "edl_radius": None,
     "edl_neighbours": None,
-    "max_num_cache_blocks": None,
-    "fan_out": None,
     "use_shader": None,
     "use_sps": None,
     "debug": False,
