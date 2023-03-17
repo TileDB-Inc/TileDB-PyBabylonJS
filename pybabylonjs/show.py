@@ -89,7 +89,6 @@ class Show:
         uri: Optional[str] = None,
         **kwargs,
     ):
-
         source = "dict"
 
         if time:
@@ -150,7 +149,6 @@ class BabylonJS:
         self.height = None
 
     def _ipython_display_(self):
-
         kwargs = check_point_cloud_args("default", {})
 
         kwargs["source"] = "dict"

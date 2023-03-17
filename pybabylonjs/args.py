@@ -56,7 +56,6 @@ POINT_CLOUD_ARGS_DEFAULTS = {
 
 
 def check_point_cloud_args(mode, point_cloud_args_in):
-
     if mode == "time":
         raise ValueError("This mode will be implemented soon")
     if mode == "classes":
@@ -94,7 +93,6 @@ def check_point_cloud_args(mode, point_cloud_args_in):
 
 
 def check_point_cloud_data_dict(mode, data):
-
     for var in ["X", "Y", "Z", "Red", "Green", "Blue"]:
         if not var in data:
             raise ValueError("Data dictionary does not contain " + var)
@@ -124,7 +122,6 @@ def check_point_cloud_data_dict(mode, data):
 
 
 def check_point_cloud_data_local(mode, uri, point_cloud_args):
-
     if os.path.isdir(uri) == False:
         raise ValueError("uri: " + uri + " does not exist.")
     if not "bbox" in point_cloud_args:
@@ -136,7 +133,6 @@ def check_point_cloud_data_local(mode, uri, point_cloud_args):
 
 
 def check_point_cloud_data_cloud(streaming, uri, point_cloud_args):
-
     if not "token" in point_cloud_args:
         token = os.getenv("TILEDB_REST_TOKEN")
         if token == None:
