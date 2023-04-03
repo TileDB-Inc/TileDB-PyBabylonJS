@@ -806,10 +806,10 @@
     paralleljs "github:SarantopoulosKon/parallel.js#node-mode-in-web-worker"
     save-file "^2.3.1"
 
-"@tiledb-inc/viz-core@0.1.2-beta.8":
-  version "0.1.2-beta.8"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.2-beta.8.tgz#8509ff09b9129ed94f73dcd6d7a3ac8d29c168ac"
-  integrity sha512-IFfDpVVpGNQ5sVTPTu8zXMNhZyidYBnz2Syqb/SNOiNyRXq323CfLqvhfhSemQL2kiN4ZnYhsz2g3ddWGa1JZw==
+"@tiledb-inc/viz-core@0.1.2-beta.11":
+  version "0.1.2-beta.11"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-0.1.2-beta.11.tgz#be8b78300ddd74c9cad48d69d165b932b6a38ed4"
+  integrity sha512-P4WmSrhrqoW4BCwgjk+D1Uds3DlF8Ky433N2Kuz9BKxReGHJGkmO80BtbCYL8RIJlGzX4LCZPJSnuWWrafG+Ig==
   dependencies:
     "@babylonjs/core" "^5.42.0"
     "@babylonjs/gui" "^5.42.0"

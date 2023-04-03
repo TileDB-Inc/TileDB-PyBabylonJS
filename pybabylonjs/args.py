@@ -1,4 +1,4 @@
-# Copyright 2022 TileDB Inc.
+# Copyright 2023 TileDB Inc.
 # Licensed under the MIT License.
 """Functions to format and check the data and keyword arguments for each data source and visualization mode."""
 
@@ -66,10 +66,6 @@ def check_point_cloud_args(mode, point_cloud_args_in):
             )
         if not "bbox" in point_cloud_args_in:
             raise ValueError("The bbox is not specified")
-    elif mode == "gltf":
-        raise ValueError("This mode will be implemented soon")
-        if not "gltf_data" in point_cloud_args_in:
-            raise ValueError("gltf_data is not specified")
 
     point_cloud_args = {}
     for key in POINT_CLOUD_ARGS_DEFAULTS.keys():
