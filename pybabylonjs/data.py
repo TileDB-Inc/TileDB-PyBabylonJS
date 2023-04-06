@@ -1,4 +1,4 @@
-# Copyright 2022 TileDB Inc.
+# Copyright 2023 TileDB Inc.
 # Licensed under the MIT License.
 """Functions to format data from the arrays to be used in the visualization."""
 
