@@ -73,9 +73,20 @@ def check_point_cloud_args(source, mode, point_cloud_args_in):
             if key is not None:
                 point_cloud_args[key] = point_cloud_args_in.pop(key)
 
-    if not "height" in point_cloud_args:
-        point_cloud_args["height"] = 600
-        point_cloud_args["width"] = 800
+    def in_pixels(h, default):
+        if h is None:
+            return default
+        if isinstance(h, str):
+            if "px" in h:
+                return h
+            return h + "px"
+        if isinstance(h, int):
+            return str(h) + "px"
+        if isinstance(h, float):
+            return str(int(h)) + "px"
+
+    point_cloud_args["height"] = in_pixels(point_cloud_args.get("height"), "500px")
+    point_cloud_args["width"] = in_pixels(point_cloud_args.get("width"), "700px")
 
     if not "token" in point_cloud_args:
         try:
