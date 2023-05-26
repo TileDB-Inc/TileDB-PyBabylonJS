@@ -60,7 +60,9 @@ class Show:
                 streaming, uri, point_cloud_args_in
             )
 
-        point_cloud_args = check_point_cloud_args(mode, point_cloud_args_in)
+        point_cloud_args = check_point_cloud_args(
+            source, streaming, point_cloud_args_in
+        )
 
         d = {
             **point_cloud_args,

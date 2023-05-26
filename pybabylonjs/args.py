@@ -47,7 +47,7 @@ POINT_CLOUD_ARGS_DEFAULTS = {
 }
 
 
-def check_point_cloud_args(mode, point_cloud_args_in):
+def check_point_cloud_args(source, mode, point_cloud_args_in):
     if mode == "time":
         raise ValueError("This mode will be implemented soon")
     if mode == "classes":
@@ -73,9 +73,30 @@ def check_point_cloud_args(mode, point_cloud_args_in):
             if key is not None:
                 point_cloud_args[key] = point_cloud_args_in.pop(key)
 
-    if not "height" in point_cloud_args:
-        point_cloud_args["height"] = 600
-        point_cloud_args["width"] = 800
+    def in_pixels(h, default):
+        if h is None:
+            return default
+        if isinstance(h, str):
+            if "px" in h:
+                return h
+            return h + "px"
+        if isinstance(h, int):
+            return str(h) + "px"
+        if isinstance(h, float):
+            return str(int(h)) + "px"
+
+    point_cloud_args["height"] = in_pixels(point_cloud_args.get("height"), "500px")
+    point_cloud_args["width"] = in_pixels(point_cloud_args.get("width"), "700px")
+
+    if not "token" in point_cloud_args:
+        try:
+            token = os.getenv("TILEDB_REST_TOKEN")
+        except:
+            if source == "cloud" & token == None:
+                raise ValueError(
+                    "The TileDB Cloud token needed to access the array is not specified or cannot be accessed"
+                )
+        point_cloud_args = {**point_cloud_args, "token": token}
 
     return point_cloud_args
 
@@ -121,14 +142,6 @@ def check_point_cloud_data_local(mode, uri, point_cloud_args):
 
 
 def check_point_cloud_data_cloud(streaming, uri, point_cloud_args):
-    if not "token" in point_cloud_args:
-        token = os.getenv("TILEDB_REST_TOKEN")
-        if token == None:
-            raise ValueError(
-                "The TileDB Cloud token needed to access the array is not specified or cannot be accessed"
-            )
-        point_cloud_args = {**point_cloud_args, "token": token}
-
     o = urlparse(uri)
 
     if not streaming:
