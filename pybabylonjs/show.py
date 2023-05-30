@@ -104,12 +104,13 @@ class Show:
 
         data = check_point_cloud_data_dict(mode, data)
 
-        point_cloud_args = check_point_cloud_args(mode, kwargs)
+        point_cloud_args = check_point_cloud_args(mode, False, kwargs)
 
         d = {
             **point_cloud_args,
             "uri": uri,
             "data": data,
+            "streaming": False,
             "source": source,
             "mode": mode,
         }
@@ -147,22 +148,14 @@ class BabylonJS:
     def __init__(self):
         self.value = None
         self.z_scale = None
-        self.width = None
-        self.height = None
 
     def _ipython_display_(self):
-        kwargs = check_point_cloud_args("default", {})
+        kwargs = check_point_cloud_args("default", False, {})
 
         kwargs["source"] = "dict"
 
         if self.z_scale:
             kwargs["z_scale"] = self.z_scale
-
-        if self.width:
-            kwargs["width"] = self.width
-
-        if self.height:
-            kwargs["height"] = self.height
 
         d = {"data": self.value}
 
