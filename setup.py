@@ -70,7 +70,7 @@ setup_args = dict(
     platforms="Linux, Mac OS X, Windows",
     keywords=["Jupyter", "JupyterLab", "JupyterLab3"],
     install_requires=[
-        "ipywidgets>=7.0.0",
+        "ipywidgets>=7,<9",
     ],
     classifiers=[
         "License :: OSI Approved :: MIT License",
