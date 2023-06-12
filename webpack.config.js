@@ -8,7 +8,7 @@ const rules = [
 ];
 
 // Packages that shouldn't be bundled but loaded at runtime
-const externals = ['@jupyter-widgets/base'];
+const externals = ['@jupyter-widgets/base', 'module'];
 
 const resolve = {
   // Add '.ts' and '.tsx' as resolvable extensions.
