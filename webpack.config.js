@@ -1,5 +1,4 @@
 const path = require('path');
-const version = require('./package.json').version;
 
 // Custom webpack rules
 const rules = [
@@ -28,13 +27,13 @@ module.exports = [
    * the custom widget embedder.
    */
   {
-    entry: './src/embed.ts',
+    entry: ['./amd-public-path.js', './src/embed.ts'],
     output: {
         filename: 'index.js',
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'amd',
         library: "@tiledb-inc/pybabylonjs",
-        publicPath: 'https://unpkg.com/@tiledb-inc/pybabylonjs@' + version + '/dist/'
+        publicPath: '', // Set in amd-public-path.js
     },
     devtool: 'source-map',
     module: {
