@@ -12,7 +12,10 @@ const externals = ['@jupyter-widgets/base', 'module'];
 
 const resolve = {
   // Add '.ts' and '.tsx' as resolvable extensions.
-  extensions: [".webpack.js", ".web.js", ".ts", ".js"]
+  extensions: [".webpack.js", ".web.js", ".ts", ".js"],
+  fallback: {
+    os: false,
+  }
 };
 
 module.exports = [
