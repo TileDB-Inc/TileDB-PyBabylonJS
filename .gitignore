@@ -112,3 +112,6 @@ dmypy.json
 
 # OSX files
 .DS_Store
+
+# Yarn files
+.yarn/

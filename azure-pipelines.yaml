@@ -12,18 +12,22 @@ stages:
   - job: Build
     strategy:
       matrix:
-        mac_38:
-          imageName: 'macOS-12'
+        linux_py38_jlab3:
+          imageName: 'ubuntu-22.04'
           python.version: '3.8'
-        mac_37:
-          imageName: 'macOS-12'
-          python.version: '3.7'
-        linux_py38:
-          imageName: 'ubuntu-20.04'
+          jupyterlab.version: '3.6.5'
+        linux_py39_jlab3:
+          imageName: 'ubuntu-22.04'
+          python.version: '3.9'
+          jupyterlab.version: '3.6.5'
+        linux_py38_jlab4:
+          imageName: 'ubuntu-22.04'
           python.version: '3.8'
-        linux_py37:
-          imageName: 'ubuntu-20.04'
-          python.version: '3.7'
+          jupyterlab.version: '4.0.3'
+        linux_py39_jlab4:
+          imageName: 'ubuntu-22.04'
+          python.version: '3.9'
+          jupyterlab.version: '4.0.3'
     pool:
       vmImage: $(imageName)
 
@@ -44,30 +48,30 @@ stages:
         curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
         sudo apt-get install nodejs
       displayName: 'Install NodeJS'
-      condition: eq(variables['imageName'], 'ubuntu-20.04')
+      condition: eq(variables['imageName'], 'ubuntu-22.04')
 
     - script: |
         curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
         echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
         sudo apt update && sudo apt install yarn
       displayName: 'Install yarn'
-      condition: eq(variables['imageName'], 'ubuntu-20.04')
+      condition: eq(variables['imageName'], 'ubuntu-22.04')
 
-    - script: python -m pip install --upgrade ipywidgets traitlets pytest build jupyter-packaging==0.10.6 jupyterlab==3.3.2
+    - script: python -m pip install --upgrade ipywidgets traitlets pytest build jupyter-packaging==0.10.6 jupyterlab==$(jupyterlab.version)
       # pip installs release candidates by default:
       #   https://github.com/pypa/pip/issues/4969
       displayName: 'Install dependencies'
 
     - script: python -m pip install --upgrade black
       displayName: 'Install black (linter)'
-      condition: eq(variables['python.version'], '3.7')
+      condition: eq(variables['python.version'], '3.8')
     - script: black --check .
       displayName: 'Test Formating'
-      condition: eq(variables['python.version'], '3.7')
+      condition: eq(variables['python.version'], '3.8')
 
     - task: NodeTool@0
       inputs:
-        versionSpec: '14.x'
+        versionSpec: '18.x'
     - script: yarn
       displayName: 'Install labextension dependencies'
       env:
@@ -108,7 +112,7 @@ stages:
   jobs:
   - job: Deploy_package
     pool:
-      vmImage: 'ubuntu-20.04'
+      vmImage: 'ubuntu-22.04'
 
     steps:
     - task: UsePythonVersion@0
@@ -116,12 +120,12 @@ stages:
         versionSpec: '3.8'
         architecture: 'x64'
 
-    - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==3.3.2'
+    - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==3.6.5'
       displayName: 'Install twine/build'
 
     - task: NodeTool@0
       inputs:
-        versionSpec: '14.x'
+        versionSpec: '18.x'
     - script: |
         echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         yarn

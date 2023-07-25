@@ -2,9 +2,9 @@ const path = require('path');
 
 // Custom webpack rules
 const rules = [
-  { test: /\.ts$/, loader: 'ts-loader' },
-  { test: /\.js$/, loader: 'source-map-loader' },
-  { test: /\.css$/, use: ['style-loader', 'css-loader']}
+  { test: /\.ts$/, loader: 'ts-loader', type: 'javascript/auto' },
+  { test: /\.js$/, loader: 'source-map-loader', type: 'javascript/auto' },
+  { test: /\.css$/, use: ['style-loader', 'css-loader'], type: 'javascript/auto'}
 ];
 
 // Packages that shouldn't be bundled but loaded at runtime
