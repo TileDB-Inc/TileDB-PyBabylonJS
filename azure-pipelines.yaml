@@ -37,26 +37,6 @@ stages:
         versionSpec: '$(python.version)'
         architecture: 'x64'
 
-    - script: |
-        echo $(node -v)
-        npm install --global yarn
-      displayName: 'Install NodeJS and yarn'
-      condition: eq(variables['imageName'], 'macOS-12')
-
-    - script: |
-        sudo apt-get install curl
-        curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-        sudo apt-get install nodejs
-      displayName: 'Install NodeJS'
-      condition: eq(variables['imageName'], 'ubuntu-22.04')
-
-    - script: |
-        curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-        echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-        sudo apt update && sudo apt install yarn
-      displayName: 'Install yarn'
-      condition: eq(variables['imageName'], 'ubuntu-22.04')
-
     - script: python -m pip install --upgrade ipywidgets traitlets pytest build jupyter-packaging==0.10.6 jupyterlab==$(jupyterlab.version)
       # pip installs release candidates by default:
       #   https://github.com/pypa/pip/issues/4969
@@ -72,7 +52,7 @@ stages:
     - task: NodeTool@0
       inputs:
         versionSpec: '18.x'
-    - script: yarn
+    - script: jlpm
       displayName: 'Install labextension dependencies'
       env:
         NPM_TOKEN: $(NPM_TOKEN)
