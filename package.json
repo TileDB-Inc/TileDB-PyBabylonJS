@@ -89,6 +89,7 @@
   "jupyterlab": {
     "extension": "lib/plugin",
     "outputDir": "pybabylonjs/labextension",
+    "webpackConfig": "./webpack.lab.config.js",
     "sharedPackages": {
       "@jupyter-widgets/base": {
         "bundled": false,
