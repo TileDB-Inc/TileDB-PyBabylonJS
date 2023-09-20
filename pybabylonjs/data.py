@@ -9,13 +9,8 @@ import cv2
 import tiledb
 
 
-def create_point_cloud(mode, array_uri: str, bbox):
-    if mode == "time":
-        attrs = ["Red", "Green", "Blue", "GpsTime"]
-    elif mode == "classes":
-        attrs = ["Red", "Green", "Blue", "Classification"]
-    else:
-        attrs = ["Red", "Green", "Blue"]
+def create_point_cloud(array_uri: str, bbox):
+    attrs = ["Red", "Green", "Blue"]
 
     with tiledb.open(array_uri) as arr:
         data = arr.query(attrs=attrs, dims=["X", "Y", "Z"])[
@@ -24,73 +19,7 @@ def create_point_cloud(mode, array_uri: str, bbox):
             bbox["Z"][0] : bbox["Z"][1],
         ]
 
-    if mode == "time":
-        i = np.argsort(data["GpsTime"])
-        for key in ["Red", "Green", "Blue", "GpsTime", "X", "Y", "Z"]:
-            data[key] = data[key][i]
-
     return data
-
-
-def create_mapbox_image(data: dict, point_cloud_args):
-    """Create a Dict with an additional topographic image from mapbox
-
-    Parameters:
-    """
-    import requests
-    from rasterio.coords import BoundingBox
-    from rasterio.warp import transform_bounds
-
-    mbtoken = point_cloud_args["mbtoken"]
-    style_id = point_cloud_args["mbstyle"]
-    data_crs = point_cloud_args["crs"]
-    bbox_in = point_cloud_args["bbox"]
-
-    dst_crs = {"init": "EPSG:4326"}  # lat/lon
-
-    if bbox_in:
-        bbox = BoundingBox(
-            bbox_in["X"][0], bbox_in["Y"][0], bbox_in["X"][1], bbox_in["Y"][1]
-        )
-    else:
-        bbox = BoundingBox(
-            data["X"].min(), data["Y"].min(), data["X"].max(), data["Y"].max()
-        )
-
-    dst_bbox = transform_bounds(data_crs, dst_crs, *bbox)
-
-    w = bbox[2] - bbox[0]
-    h = bbox[3] - bbox[1]
-
-    if w > h:
-        ww = 1280
-        hh = int(h / w * 1280)
-    elif h > w:
-        hh = 1280
-        ww = int(w / h * 1280)
-
-    f = requests.get(
-        (
-            "https://api.mapbox.com/styles/v1/mapbox/"
-            + style_id
-            + "/static/["
-            + str(dst_bbox[0])
-            + ","
-            + str(dst_bbox[1])
-            + ","
-            + str(dst_bbox[2])
-            + ","
-            + str(dst_bbox[3])
-            + "]/"
-            + str(ww)
-            + "x"
-            + str(hh)
-            + "?access_token="
-            + mbtoken
-        )
-    )
-
-    return f.content
 
 
 def create_mbrs(array_uri: str):
