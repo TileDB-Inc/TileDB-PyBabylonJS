@@ -1,7 +1,7 @@
 module.exports = {
   resolve: {
     fallback: {
-      os: false
-    }
+      os: false,
+    },
   }
 };
