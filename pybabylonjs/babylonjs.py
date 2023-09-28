@@ -46,8 +46,8 @@ class BabylonMBRS(BabylonBase):
 
 @register
 class BabylonImage(BabylonBase):
-    """Ground surface as 2D array with BabylonJS"""
+    """Images with BabylonJS"""
 
-    _model_name = Unicode("BabylonImageModel").tag(sync=True)
-    _view_name = Unicode("BabylonImageView").tag(sync=True)
+    _model_name = Unicode("BabylonTileImageModel").tag(sync=True)
+    _view_name = Unicode("BabylonTileImageView").tag(sync=True)
     value = Dict().tag(sync=True)

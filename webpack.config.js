@@ -15,6 +15,7 @@ const resolve = {
   extensions: [".webpack.js", ".web.js", ".ts", ".js"],
   fallback: {
     os: false,
+    util: false,
   }
 };
 

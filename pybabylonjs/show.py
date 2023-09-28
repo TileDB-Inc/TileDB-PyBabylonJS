@@ -102,11 +102,17 @@ class Show:
     @classmethod
     def image(
         self,
-        array_uri: str,
         **kwargs,
     ):
-        d = create_image(array_uri, **kwargs)
-        create_dataviz(BabylonImage(), d, **kwargs)
+        image_args = check_image_args(kwargs)
+
+        # d = {**image_args}
+
+        # d = create_image(array_uri, **kwargs)
+        dataviz = BabylonImage()
+        dataviz.value = {**image_args}
+        display(dataviz)
+        # create_dataviz(BabylonImage(), **image_args)
 
     @classmethod
     def mbrs(
