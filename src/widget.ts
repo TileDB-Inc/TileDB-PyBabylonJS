@@ -169,7 +169,8 @@ export class BabylonTileImageView extends BabylonBaseView {
       height: this.values.height,
       wheelPrecision: this.values.wheel_precision,
       moveSpeed: this.values.move_speed,
-      rootElement: this.el
+      rootElement: this.el,
+      defaultChannels: this.values.default_channels
     });
 
     console.log(this.visualization);
