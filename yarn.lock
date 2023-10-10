@@ -1049,7 +1049,8 @@ __metadata:
     "@jupyter-widgets/base": ^2 || ^3 || ^4 || ^5 || ^6
     "@jupyterlab/application": ^3 || ^4
     "@jupyterlab/builder": ^3 || ^4
-    "@tiledb-inc/viz-core": 1.0.2-alpha.11
+    "@tiledb-inc/viz-components": "file:/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/components"
+    "@tiledb-inc/viz-core": "file:/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/core"
     "@types/node": ^10.11.6
     "@types/webpack-env": ^1.16.3
     "@typescript-eslint/eslint-plugin": ^4.8.1
@@ -1089,16 +1090,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiledb-inc/viz-components@npm:1.0.2-alpha.11":
-  version: 1.0.2-alpha.11
-  resolution: "@tiledb-inc/viz-components@npm:1.0.2-alpha.11"
-  checksum: f4174b5cee5880e7f5307a701819b95ceb3868eb27150893ea053d2a3b80764da4e6d3508e1140372d7a899cc1447baebebb9b6d945c6b20d378c752961cbb36
+"@tiledb-inc/viz-components@file:/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/components::locator=%40tiledb-inc%2Fpybabylonjs%40workspace%3A.":
+  version: 0.0.1
+  resolution: "@tiledb-inc/viz-components@file:/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/components#/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/components::hash=5c9b0a&locator=%40tiledb-inc%2Fpybabylonjs%40workspace%3A."
+  checksum: 2d4a3e9d8d5b92c7f600515962dc717ab9850ddd3a761b786bf1e77fe4ac2c176acedf3f565f9dc1c9e94d2ddb812a20954453f659ef351dbc406af73603481e
   languageName: node
   linkType: hard
 
-"@tiledb-inc/viz-core@npm:1.0.2-alpha.11":
-  version: 1.0.2-alpha.11
-  resolution: "@tiledb-inc/viz-core@npm:1.0.2-alpha.11"
+"@tiledb-inc/viz-core@file:/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/core::locator=%40tiledb-inc%2Fpybabylonjs%40workspace%3A.":
+  version: 0.0.1
+  resolution: "@tiledb-inc/viz-core@file:/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/core#/home/xanthos/repos/testing/components/rebase/deleteme/TileDB-Viz/packages/core::hash=f84583&locator=%40tiledb-inc%2Fpybabylonjs%40workspace%3A."
   dependencies:
     "@babylonjs/core": ^6.20.2
     "@babylonjs/gui": ^6.20.2
@@ -1108,7 +1109,6 @@ __metadata:
     "@babylonjs/materials": ^6.20.2
     "@babylonjs/serializers": ^6.20.2
     "@tiledb-inc/tiledb-cloud": 1.0.14
-    "@tiledb-inc/viz-components": 1.0.2-alpha.11
     "@tiledb-inc/wkx": "https://github.com/TileDB-Inc/wkx"
     axios: ^0.21.1
     babylonjs-gui: ^6.20.2
@@ -1117,7 +1117,9 @@ __metadata:
     geometry-extrude: 0.2.1
     idb: ^7.0.2
     proj4: ^2.9.0
-  checksum: f019f306466bc054bd6308e93d7e4a48318cb0695afb3ff58ed1defc5752dc6d92c74a8566ebfcef1c252bc863ad21209b47392f085ec4fc0b83fe29749bdd5f
+  peerDependencies:
+    "@tiledb-inc/viz-components": "workspace:packages/components"
+  checksum: f68c252dd3477df13201a24f37ac7843723794a88023c35798d819ae9ca28fb60bfe63d122f1a9d5e1b61cb72155c16e81bf12c2a23b46ece7f2697cc5851d69
   languageName: node
   linkType: hard
 
