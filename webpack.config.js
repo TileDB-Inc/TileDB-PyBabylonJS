@@ -14,7 +14,7 @@ const resolve = {
   // Add '.ts' and '.tsx' as resolvable extensions.
   extensions: [".webpack.js", ".web.js", ".ts", ".js"],
   fallback: {
-    os: false,
+    os: false
   }
 };
 

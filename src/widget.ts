@@ -10,7 +10,7 @@ import {
 import { MODULE_NAME, MODULE_VERSION } from './version';
 import '../css/widget.css';
 import {
-  TileDBImageVisualization,
+  TileDBTileImageVisualization,
   TileDBMBRSVisualization,
   TileDBPointCloudVisualization,
   TileDBVisualization
@@ -68,15 +68,15 @@ export class BabylonPointCloudView extends BabylonBaseView {
       moveSpeed: this.values.move_speed,
       inspector: this.values.inspector,
       rootElement: this.el,
-      mode: this.values.mode,
+      //mode: this.values.mode,
       colorScheme: this.values.color_scheme,
       data: this.values.data,
       zScale: this.values.z_scale,
-      topoOffset: this.values.topo_offset,
-      classes: this.values.classes,
-      timeOffset: this.values.time_offset,
+      //topoOffset: this.values.topo_offset,
+      //classes: this.values.classes,
+      //timeOffset: this.values.time_offset,
       source: this.values.source,
-      pointShift: this.values.point_shift,
+      //pointShift: this.values.point_shift,
       rgbMax: this.values.rgb_max,
       bbox: this.values.bbox,
       namespace: this.values.name_space,
@@ -137,36 +137,43 @@ export class BabylonMBRSView extends BabylonBaseView {
     this.visualization.render();
   }
 }
-export class BabylonImageModel extends BabylonBaseModel {
+
+export class BabylonTileImageModel extends BabylonBaseModel {
   defaults(): any {
     return {
       ...super.defaults(),
-      _model_name: BabylonImageModel.model_name,
-      _model_module: BabylonImageModel.model_module,
-      _model_module_version: BabylonImageModel.model_module_version,
-      _view_name: BabylonImageModel.view_name,
-      _view_module: BabylonImageModel.view_module,
-      _view_module_version: BabylonImageModel.view_module_version
+      _model_name: BabylonTileImageModel.model_name,
+      _model_module: BabylonTileImageModel.model_module,
+      _model_module_version: BabylonTileImageModel.model_module_version,
+      _view_name: BabylonTileImageModel.view_name,
+      _view_module: BabylonTileImageModel.view_module,
+      _view_module_version: BabylonTileImageModel.view_module_version
     };
   }
 
-  static model_name = 'BabylonImageModel';
-  static view_name = 'BabylonImageView';
+  static model_name = 'BabylonTileImageModel';
+  static view_name = 'BabylonTileImageView';
 }
 
-export class BabylonImageView extends BabylonBaseView {
+export class BabylonTileImageView extends BabylonBaseView {
   render() {
-    this.visualization = new TileDBImageVisualization({
-      data: this.values.data,
+    this.visualization = new TileDBTileImageVisualization({
+      namespace: this.values.name_space,
+      arrayID: this.values.array_name,
+      groupID: this.values.group_name,
+      geometryArrayID: this.values.geometry_array_name,
+      baseGroup: this.values.base_group,
+      token: this.values.token,
+      tiledbEnv: this.values.tiledb_env,
       width: this.values.width,
-      xyBbox: this.values.xy_bbox,
       height: this.values.height,
       wheelPrecision: this.values.wheel_precision,
       moveSpeed: this.values.move_speed,
-      inspector: this.values.inspector,
-      rootElement: this.el
+      rootElement: this.el,
+      defaultChannels: this.values.default_channels
     });
 
+    console.log(this.visualization);
     this.visualization.render();
   }
 }

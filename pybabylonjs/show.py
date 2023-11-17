@@ -33,7 +33,6 @@ class Show:
         self,
         uri: Optional[str] = None,
         source: Optional[str] = "cloud",
-        mode: Optional[str] = "default",
         streaming: Optional[bool] = False,
         data: Optional[dict] = {},
         **kwargs,
@@ -43,7 +42,6 @@ class Show:
 
         :param uri: when source is "cloud" or "local" specify the URI for the TileDB array
         :param source: location of the data to be visualized, one of "cloud", "local" or "dict"
-        :param mode: sub-type of the visualization, one of "default", "time", "classes" or "topo"
         :param streaming: when true all data will be streamed from the TileDB array
         :param data: when source="dict" this dictionary contains the points to be visualized: {"X", "Y", "Z", "Red", "Green", "Blue"}
 
@@ -52,9 +50,9 @@ class Show:
         point_cloud_args_in = kwargs
 
         if source == "dict":
-            data = check_point_cloud_data_dict(mode, data)
+            data = check_point_cloud_data_dict(data)
         if source == "local":
-            data = check_point_cloud_data_local(mode, uri, point_cloud_args_in)
+            data = check_point_cloud_data_local(uri, point_cloud_args_in)
         if source == "cloud":
             point_cloud_args_in = check_point_cloud_data_cloud(
                 streaming, uri, point_cloud_args_in
@@ -70,12 +68,7 @@ class Show:
             "data": data,
             "streaming": streaming,
             "source": source,
-            "mode": mode,
         }
-
-        if mode == "topo":
-            img = create_mapbox_image(data, point_cloud_args)
-            d = {**d, "mapbox_img": img}
 
         dataviz = BabylonPointCloud()
         dataviz.value = {**d}
@@ -85,26 +78,14 @@ class Show:
     def from_dict(
         self,
         data: dict,
-        time: Optional[bool] = False,
-        classes: Optional[bool] = False,
-        topo: Optional[bool] = False,
         uri: Optional[str] = None,
         **kwargs,
     ):
         source = "dict"
 
-        if time:
-            mode = "time"
-        elif classes:
-            raise ValueError(
-                "This mode is not implemented for show.from_dict(), use show.point_cloud() instead"
-            )
-        else:
-            mode = "default"
+        data = check_point_cloud_data_dict(data)
 
-        data = check_point_cloud_data_dict(mode, data)
-
-        point_cloud_args = check_point_cloud_args(mode, False, kwargs)
+        point_cloud_args = check_point_cloud_args(False, kwargs)
 
         d = {
             **point_cloud_args,
@@ -112,12 +93,7 @@ class Show:
             "data": data,
             "streaming": False,
             "source": source,
-            "mode": mode,
         }
-
-        if mode == "topo":
-            img = create_mapbox_image(data, point_cloud_args)
-            d = {**d, "mapbox_img": img}
 
         dataviz = BabylonPointCloud()
         dataviz.value = {**d}
@@ -126,11 +102,17 @@ class Show:
     @classmethod
     def image(
         self,
-        array_uri: str,
         **kwargs,
     ):
-        d = create_image(array_uri, **kwargs)
-        create_dataviz(BabylonImage(), d, **kwargs)
+        image_args = check_image_args(kwargs)
+
+        # d = {**image_args}
+
+        # d = create_image(array_uri, **kwargs)
+        dataviz = BabylonImage()
+        dataviz.value = {**image_args}
+        display(dataviz)
+        # create_dataviz(BabylonImage(), **image_args)
 
     @classmethod
     def mbrs(
@@ -150,7 +132,7 @@ class BabylonJS:
         self.z_scale = None
 
     def _ipython_display_(self):
-        kwargs = check_point_cloud_args("default", False, {})
+        kwargs = check_point_cloud_args("dict", False, {})
 
         kwargs["source"] = "dict"
 
