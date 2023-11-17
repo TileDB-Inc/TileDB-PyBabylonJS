@@ -52,7 +52,7 @@ IMAGE_ARGS_DEFAULTS = {
     "base_group": None,
     "token": None,
     "tiledb_env": None,
-    "default_channels": None
+    "default_channels": None,
 }
 
 
