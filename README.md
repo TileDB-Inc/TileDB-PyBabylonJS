@@ -45,7 +45,7 @@ When developing extensions you need to manually enable the extensions with the n
 ```bash
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
 yarn run build
-jupyter labextension install .
+jupyter labextension develop . --overwrite
 ```
 
 For a classic notebook you need to run:
