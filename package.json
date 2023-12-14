@@ -100,6 +100,5 @@
       }
     }
   },
-  "styleModule": "style/index.js",
-  "packageManager": "yarn@3.6.3"
+  "styleModule": "style/index.js"
 }
