@@ -158,23 +158,23 @@ export class BabylonTileImageModel extends BabylonBaseModel {
 export class BabylonTileImageView extends BabylonBaseView {
   render() {
     this.visualization = new TileDBTileImageVisualization({
+      engineAPI: this.values.engine_api,
       namespace: this.values.name_space,
       arrayID: this.values.array_name,
       groupID: this.values.group_name,
       geometryArrayID: this.values.geometry_array_names,
       pointGroupID: this.values.point_group_names,
+      tileUris: this.values.tile_uris,
       baseGroup: this.values.base_group,
       token: this.values.token,
       tiledbEnv: this.values.tiledb_env,
       width: this.values.width,
       height: this.values.height,
-      wheelPrecision: this.values.wheel_precision,
-      moveSpeed: this.values.move_speed,
       rootElement: this.el,
-      defaultChannels: this.values.default_channels
+      defaultChannels: this.values.default_channels,
+      sceneConfig: this.values.scene_config
     });
 
-    console.log(this.visualization);
     this.visualization.render();
   }
 }
