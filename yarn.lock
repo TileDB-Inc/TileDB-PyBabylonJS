@@ -35,44 +35,44 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@babylonjs/core@^6.20.2":
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/@babylonjs/core/-/core-6.40.0.tgz#a84b5760ae7a2a574cb24c127c0db1fd58f7a399"
-  integrity sha512-WyMDi0xmc3JsSNTJhm0VXnBMtQSzqRq4dZwoQ918lKufvwKy0/FTzv+Y7h6sWeBsijG1q74p85U8dVAG0jiIIg==
+"@babylonjs/core@^7.26.0":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/core/-/core-7.27.0.tgz#9f3baa48a10fd081f03fe48b1a3b25e1bed2bb15"
+  integrity sha512-/GyZe1b0y/LfxAxX+i20Wtkr76fqah+OJZi2F5pgF/MSpm2KfJnSObeWqZDi01CAYM9zLXTfPiMupDdhUv54vw==
 
-"@babylonjs/gui-editor@^6.20.2":
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/@babylonjs/gui-editor/-/gui-editor-6.40.0.tgz#9d6799e4adccfe94f1ad2d178c47cd19b2461995"
-  integrity sha512-CB82JopAhUzASUP3bfk7+hA69/dVboW4/e5eNZe0izVI5de/UZsOU8CZfNaZz8Kizh91XGzrpZetwBFvlg8f+Q==
+"@babylonjs/gui-editor@^7.26.0":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/gui-editor/-/gui-editor-7.27.0.tgz#8155fb70b041d8a0113438bb1db66d1debbb5888"
+  integrity sha512-PenKRJIZbG+sVSXuVfayjjiDbpwcw4atZIQgrVJN4GqkQA6anC/YjXebMjob4pe+Qt8KkvjVjfgKYuUtGLNkXA==
 
-"@babylonjs/gui@^6.20.2":
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/@babylonjs/gui/-/gui-6.40.0.tgz#f833f8fddd13622d70b0d463939940d784c91585"
-  integrity sha512-4qAxIHo2AwnFBmhCVANbY9a9QiL8lah0mny4DMt9F9BNC0mFJBMvOReW4Ygd81plI7AQKWJXDTiHYb4cayDrXg==
+"@babylonjs/gui@^7.26.0":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/gui/-/gui-7.27.0.tgz#bcffd958020b715c33381c2ca596ac32e61d8638"
+  integrity sha512-j3C8VZOcs9J6jNeF9WQTYJegLb+Vdjz7sFius7D5piz1aWsqS/MxehAjcHPzyJn6PS/7KNF+b3IdOoV7worElw==
 
-"@babylonjs/inspector@^6.20.2":
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/@babylonjs/inspector/-/inspector-6.40.0.tgz#b0e0c0df85a4a6331ee6b4757fd02969f3695b53"
-  integrity sha512-YNNM243PbIQ2rUFvZuRATAQ1Rbg67kKglnceEAUyBH5g8zDl6ssXj3ts6kwsJ2Hja3aT2msDDS6Xo77q5E40Uw==
+"@babylonjs/inspector@^7.26.0":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/inspector/-/inspector-7.27.0.tgz#cd445bf2f30e89652652660319a573859ac841f1"
+  integrity sha512-91pCyK+0NdPFQvTW4d11Wevm/DsTHvBBNTalq5/KgCYuqjpsNr3C8G0RMDLW4EOH6jllLGuu76lPgCKj+EblIQ==
   dependencies:
     "@fortawesome/fontawesome-svg-core" "^6.1.0"
     "@fortawesome/free-regular-svg-icons" "^6.0.0"
     "@fortawesome/free-solid-svg-icons" "^6.0.0"
 
-"@babylonjs/loaders@^6.20.2":
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/@babylonjs/loaders/-/loaders-6.40.0.tgz#676461ffc26b25e70c6c181a9b094e73cc2da975"
-  integrity sha512-NvCOFD7FjED4+DZVWfVgjGLZZwTmkn2RMI7HdOd0Y8lrDcjfpKq1yEuyIOexQEWYzjGmrPfsm/5313EJRRSeaA==
+"@babylonjs/loaders@^7.26.0":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/loaders/-/loaders-7.27.0.tgz#6ed1132f905d9bb318d62bcc96b47dbfdb81fac4"
+  integrity sha512-xBlVQ/m+UWhaMEn6q1j3ktu/GcrIxHEc9ybGOkOHst4Fk+5ebvFymjbscaQ20MEWa42Eue4x55rntDGUnCjYsw==
 
-"@babylonjs/materials@^6.20.2":
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/@babylonjs/materials/-/materials-6.40.0.tgz#ba77df5c56ed7e70704b9f88f89c79ba36032a88"
-  integrity sha512-1tNPZnC8epyQF3fcQ6tQTfI94lcLblZFTYoeFMtD8jY7UxMhOZl0zdMiGLoswcTCDlI9FN3VEZMiHAFGcRnnPw==
+"@babylonjs/materials@^7.26.0":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/materials/-/materials-7.27.0.tgz#99b23bfb87cbcd4066200dff3ca9ceeae44f7d3e"
+  integrity sha512-GbvOD/57UuI6u+6vdTwSIv/GlSdz0+EaR0CuEAvoopAIMiyRZAwrZgXYrXvsUo059cigh9t+wLDUMRDEjTjBnw==
 
-"@babylonjs/serializers@^6.20.2":
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/@babylonjs/serializers/-/serializers-6.40.0.tgz#d790cd8346e77b76048b558d2b8c347c96b0e688"
-  integrity sha512-8cCExn7mV0OKd2fhRQmanhZlSLuyyLPwMNeGhyH+sHhL7mHzSli4qhoto6bloTy8gIojbxi9vY7KCWMwcnMKJg==
+"@babylonjs/serializers@^7.26.0":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@babylonjs/serializers/-/serializers-7.27.0.tgz#3df81178c690087ab516b3aa0cd46aee59157200"
+  integrity sha512-ERx2a5iY5tnptwv4NVY4skwRAp7e/DZSWr7VpHEdVWXZ6QTN11WHeDLrJroo+F/S2tfnDubj+YB2G9I5SVG93Q==
 
 "@codemirror/state@^6.2.0":
   version "6.4.0"
@@ -824,34 +824,45 @@
     paralleljs "github:SarantopoulosKon/parallel.js#use-globalThis"
     save-file "^2.3.1"
 
-"@tiledb-inc/viz-components@1.0.3-alpha.2":
-  version "1.0.3-alpha.2"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-components/-/viz-components-1.0.3-alpha.2.tgz#75f5310ee3e0fb4ce5cfeb2a628645be5d2553f8"
-  integrity sha512-rVQwp+Wx9xbmUJqjBMoobSDcZ9YQDncXGiwfJLyqBoBp6FpRrmQYcwWuse9Gpbmzr+aoXtDKC3eAUp+F5iJkKA==
-
-"@tiledb-inc/viz-core@^1.0.3-alpha.2":
-  version "1.0.3-alpha.2"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-1.0.3-alpha.2.tgz#b5bfb8f981fd432a851c9f0777bb9eee36be0290"
-  integrity sha512-YeGYCqz5RDxcVk2rADpPhVCSlNKh6v8EuyJulIIoaxgcT9oaMSkM5dbKkhXcWsuSot5mqZxUQAOVktxvAzYFsg==
+"@tiledb-inc/viz-common@1.0.3-alpha.7":
+  version "1.0.3-alpha.7"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-common/-/viz-common-1.0.3-alpha.7.tgz#e9e4ffd01c361ed81da9cc25d20b12cb65433cdd"
+  integrity sha512-SQgEln5AnBF5/LsR2QjiOMvyM8s5foPzyXWurq7c9kc7TrwtsSPo5iS1vAsQ1Tcq5oiIUamAKaFvP5Z//X+xnQ==
   dependencies:
-    "@babylonjs/core" "^6.20.2"
-    "@babylonjs/gui" "^6.20.2"
-    "@babylonjs/gui-editor" "^6.20.2"
-    "@babylonjs/inspector" "^6.20.2"
-    "@babylonjs/loaders" "^6.20.2"
-    "@babylonjs/materials" "^6.20.2"
-    "@babylonjs/serializers" "^6.20.2"
+    "@babylonjs/core" "^7.26.0"
     "@tiledb-inc/tiledb-cloud" "1.0.15-alpha.1"
-    "@tiledb-inc/viz-components" "1.0.3-alpha.2"
+
+"@tiledb-inc/viz-components@1.0.3-alpha.7":
+  version "1.0.3-alpha.7"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-components/-/viz-components-1.0.3-alpha.7.tgz#30fec6462002380991eab4db4191c9ee469c327f"
+  integrity sha512-Tfg18WmxOam0gnuLIire7ZzPj9iq0RCpoj9lGyUXyKBWfeo8jW8exbbF1hDS3xs/bOS1BT9zK/Ft4momlm1XSg==
+  dependencies:
+    "@tiledb-inc/viz-common" "1.0.3-alpha.7"
+
+"@tiledb-inc/viz-core@^1.0.3-alpha.7":
+  version "1.0.3-alpha.7"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-1.0.3-alpha.7.tgz#375a874b73ff96c9bab1fc931c6e3c8e0358baaf"
+  integrity sha512-lHApuYXQZCi5GsruFXeZqKuiZZ4ulR6iuIzVWwEFQpAT6/4KfaMolIOjFiDjqDBq6R4YMhHd4AGd4DrR4QLcvw==
+  dependencies:
+    "@babylonjs/core" "^7.26.0"
+    "@babylonjs/gui" "^7.26.0"
+    "@babylonjs/gui-editor" "^7.26.0"
+    "@babylonjs/inspector" "^7.26.0"
+    "@babylonjs/loaders" "^7.26.0"
+    "@babylonjs/materials" "^7.26.0"
+    "@babylonjs/serializers" "^7.26.0"
+    "@tiledb-inc/tiledb-cloud" "1.0.15-alpha.1"
+    "@tiledb-inc/viz-common" "1.0.3-alpha.7"
+    "@tiledb-inc/viz-components" "1.0.3-alpha.7"
     "@tiledb-inc/wkx" "https://github.com/TileDB-Inc/wkx"
     axios "^0.21.1"
-    babylonjs-gui "^6.20.2"
-    babylonjs-materials "^6.20.2"
+    babylonjs-gui "^7.26.0"
+    babylonjs-materials "^7.26.0"
     earcut "2.2.4"
     geometry-extrude "0.2.1"
     idb "^7.0.2"
     mathjs "^12.1.0"
-    proj4 "^2.9.0"
+    proj4 "^2.9.2"
 
 "@tiledb-inc/wkx@https://github.com/TileDB-Inc/wkx":
   version "0.6.0"
@@ -1335,24 +1346,24 @@ axios@^0.21.1:
   dependencies:
     follow-redirects "^1.14.0"
 
-babylonjs-gui@^6.20.2:
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/babylonjs-gui/-/babylonjs-gui-6.40.0.tgz#d3605a37166ba59916344a5a33c80c30e724ea66"
-  integrity sha512-HO7VzPVTbv+RFfR6iPC4po0eySzxwjvJeYds/Q0ACDu6AvzmTD9KSPc90LLYpCQdnMSNujVpQNs7XM+P/dcsvg==
+babylonjs-gui@^7.26.0:
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/babylonjs-gui/-/babylonjs-gui-7.27.0.tgz#1d7fcba6a01503dfb918eb9ff56362603b9fa615"
+  integrity sha512-yem1PwftHg0EWiYx87Caep/9Vu58c7RA5dZuwXYB+l0urLgHjO45ekbDOV5q9sRgSi8w4u5ewcdKWCLMUNpMbw==
   dependencies:
-    babylonjs "^6.40.0"
+    babylonjs "^7.27.0"
 
-babylonjs-materials@^6.20.2:
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/babylonjs-materials/-/babylonjs-materials-6.40.0.tgz#d8c5f6f1d31b859fe98bf1bde0a17484c477e1a3"
-  integrity sha512-jIgBDKpffukGDhLpqR4NNxfPpZbvCkB/SlkXSRNuZDg9B0poz1kNAuN+DzN6fCtSHeXI7TtrrvzvMKKPRmByEw==
+babylonjs-materials@^7.26.0:
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/babylonjs-materials/-/babylonjs-materials-7.27.0.tgz#0a522b18ca2c45d887645badf4d64646be108833"
+  integrity sha512-yQriZYLrOjVcv4rH5qORQfkEJg17ea2pBtE+OmQQKZq0iIDbntAnPqOqcOOba6CjRjWbRj/BrrCRzI5nxWZh3A==
   dependencies:
-    babylonjs "^6.40.0"
+    babylonjs "^7.27.0"
 
-babylonjs@^6.40.0:
-  version "6.40.0"
-  resolved "https://registry.yarnpkg.com/babylonjs/-/babylonjs-6.40.0.tgz#b3915b0fe1cd9c0cce8a15e02a0cd3650fe127fb"
-  integrity sha512-sKgiWmf/qtHAtLiww88FaTLD41NodB3ZJhujgf9k7AclW2h6xMMpb0HUYbK+eigJgBTTJYECEJzxAfbIZzTmvQ==
+babylonjs@^7.27.0:
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/babylonjs/-/babylonjs-7.27.0.tgz#3252c929660805c552594264bf0b0535bfaec8cd"
+  integrity sha512-0Qtog3mCKyBTzMTM7+pASizYvv3EyV2gOwR5jjM8d/PgHZ9s09t+Q4HRx00j/SaK04JQHiUHOlwjpGkfKaqWUA==
 
 backbone@1.4.0:
   version "1.4.0"
@@ -3227,10 +3238,10 @@ progress@^2.0.0:
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.3.tgz#7e8cf8d8f5b8f239c1bc68beb4eb78567d572ef8"
   integrity sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==
 
-proj4@^2.9.0:
-  version "2.10.0"
-  resolved "https://registry.yarnpkg.com/proj4/-/proj4-2.10.0.tgz#f6f5391b0f1b1fa4518d9ead150ea6b66e7ce9de"
-  integrity sha512-0eyB8h1PDoWxucnq88/EZqt7UZlvjhcfbXCcINpE7hqRN0iRPWE/4mXINGulNa/FAvK+Ie7F+l2OxH/0uKV36A==
+proj4@^2.9.2:
+  version "2.11.0"
+  resolved "https://registry.yarnpkg.com/proj4/-/proj4-2.11.0.tgz#795a5790aed30a7535d6a4c5775c0ce2a763cc41"
+  integrity sha512-SasuTkAx8HnWQHfIyhkdUNJorSJqINHAN3EyMWYiQRVorftz9DHz650YraFgczwgtHOxqnfuDxSNv3C8MUnHeg==
   dependencies:
     mgrs "1.0.0"
     wkt-parser "^1.3.3"

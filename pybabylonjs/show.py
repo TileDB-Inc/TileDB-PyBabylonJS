@@ -21,6 +21,13 @@ class PyBabylonJSError(Exception):
     pass
 
 
+class ImageFeatureType(Enum):
+    NON_RENDERABLE = (0,)
+    RGB = (1,)
+    CATEGORICAL = (2,)
+    FLAT_COLOR = 3
+
+
 class Show:
     """Create a N-D visualization."""
 

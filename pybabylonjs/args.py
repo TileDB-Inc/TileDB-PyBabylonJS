@@ -41,19 +41,20 @@ POINT_CLOUD_ARGS_DEFAULTS = {
 }
 
 IMAGE_ARGS_DEFAULTS = {
+    "engine_api": None,
     "width": None,
     "height": None,
-    "wheel_precision": None,  # used? in base class?
-    "move_speed": None,  # used?
     "name_space": None,
     "array_name": None,
     "group_name": None,
     "geometry_array_names": None,
     "point_group_names": None,
+    "tile_uris": None,
     "base_group": None,
     "token": None,
     "tiledb_env": None,
     "default_channels": None,
+    "scene_config": None,
 }
 
 
