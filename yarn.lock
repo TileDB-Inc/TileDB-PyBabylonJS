@@ -824,25 +824,25 @@
     paralleljs "github:SarantopoulosKon/parallel.js#use-globalThis"
     save-file "^2.3.1"
 
-"@tiledb-inc/viz-common@1.0.3-alpha.7":
-  version "1.0.3-alpha.7"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-common/-/viz-common-1.0.3-alpha.7.tgz#e9e4ffd01c361ed81da9cc25d20b12cb65433cdd"
-  integrity sha512-SQgEln5AnBF5/LsR2QjiOMvyM8s5foPzyXWurq7c9kc7TrwtsSPo5iS1vAsQ1Tcq5oiIUamAKaFvP5Z//X+xnQ==
+"@tiledb-inc/viz-common@1.0.3-alpha.8":
+  version "1.0.3-alpha.8"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-common/-/viz-common-1.0.3-alpha.8.tgz#231d0322cd8815634ca48f5042decb4450cbc65c"
+  integrity sha512-TT3RVj2f7oD92GW2xKguvqsPnK6HW4lpjX6MFVRbb7TjQBD32UZoS9v0lWgE6K9c5f4z43VwZ3YtbVruYEUuTg==
   dependencies:
     "@babylonjs/core" "^7.26.0"
     "@tiledb-inc/tiledb-cloud" "1.0.15-alpha.1"
 
-"@tiledb-inc/viz-components@1.0.3-alpha.7":
-  version "1.0.3-alpha.7"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-components/-/viz-components-1.0.3-alpha.7.tgz#30fec6462002380991eab4db4191c9ee469c327f"
-  integrity sha512-Tfg18WmxOam0gnuLIire7ZzPj9iq0RCpoj9lGyUXyKBWfeo8jW8exbbF1hDS3xs/bOS1BT9zK/Ft4momlm1XSg==
+"@tiledb-inc/viz-components@1.0.3-alpha.8":
+  version "1.0.3-alpha.8"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-components/-/viz-components-1.0.3-alpha.8.tgz#2c83a3c22307046883983f623ee64ea097a016ca"
+  integrity sha512-s2iF1FrkN6jDVex1YpYUWKR4G6yWnkNbjphw0kGfuFluwoJstYJ53uH5tpDAsOejWL5QDJ/H1jG+w0a3+lCbkQ==
   dependencies:
-    "@tiledb-inc/viz-common" "1.0.3-alpha.7"
+    "@tiledb-inc/viz-common" "1.0.3-alpha.8"
 
-"@tiledb-inc/viz-core@^1.0.3-alpha.7":
-  version "1.0.3-alpha.7"
-  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-1.0.3-alpha.7.tgz#375a874b73ff96c9bab1fc931c6e3c8e0358baaf"
-  integrity sha512-lHApuYXQZCi5GsruFXeZqKuiZZ4ulR6iuIzVWwEFQpAT6/4KfaMolIOjFiDjqDBq6R4YMhHd4AGd4DrR4QLcvw==
+"@tiledb-inc/viz-core@^1.0.3-alpha.8":
+  version "1.0.3-alpha.8"
+  resolved "https://registry.yarnpkg.com/@tiledb-inc/viz-core/-/viz-core-1.0.3-alpha.8.tgz#c30e501cb3931f98fa2fe6ffc66f0a10136be4da"
+  integrity sha512-x3AreA8ku7GtmVr+9iokn/F8H+YJZURp9X29wBbWruNEIxd9AmdpXhY1RCaITsuGtMy8E9FQiiSM+IoHQo4iBA==
   dependencies:
     "@babylonjs/core" "^7.26.0"
     "@babylonjs/gui" "^7.26.0"
@@ -852,8 +852,8 @@
     "@babylonjs/materials" "^7.26.0"
     "@babylonjs/serializers" "^7.26.0"
     "@tiledb-inc/tiledb-cloud" "1.0.15-alpha.1"
-    "@tiledb-inc/viz-common" "1.0.3-alpha.7"
-    "@tiledb-inc/viz-components" "1.0.3-alpha.7"
+    "@tiledb-inc/viz-common" "1.0.3-alpha.8"
+    "@tiledb-inc/viz-components" "1.0.3-alpha.8"
     "@tiledb-inc/wkx" "https://github.com/TileDB-Inc/wkx"
     axios "^0.21.1"
     babylonjs-gui "^7.26.0"
