@@ -40,6 +40,11 @@ abstract class BabylonBaseView extends DOMWidgetView {
   protected query_changed(): void {
     // TODO
   }
+
+  remove() {
+    this.visualization?.destroy();
+    super.remove();
+  }
 }
 
 export class BabylonPointCloudModel extends BabylonBaseModel {
