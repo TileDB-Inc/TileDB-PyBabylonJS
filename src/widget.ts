@@ -84,7 +84,8 @@ export class BabylonPointCloudView extends BabylonBaseView {
       //pointShift: this.values.point_shift,
       rgbMax: this.values.rgb_max,
       bbox: this.values.bbox,
-      namespace: this.values.name_space,
+      workspace: this.values.workspace,
+      teamspace: this.values.teamspace,
       arrayName: this.values.array_name,
       groupName: this.values.group_name,
       tiledbEnv: this.values.tiledb_env,
@@ -164,7 +165,8 @@ export class BabylonTileImageView extends BabylonBaseView {
   render() {
     this.visualization = new TileDBTileImageVisualization({
       engineAPI: this.values.engine_api,
-      namespace: this.values.name_space,
+      workspace: this.values.workspace,
+      teamspace: this.values.teamspace,
       arrayID: this.values.array_name,
       groupID: this.values.group_name,
       geometryArrayID: this.values.geometry_array_names,
