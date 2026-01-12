@@ -3096,6 +3096,10 @@ p-try@^2.0.0:
   version "1.1.0"
   resolved "https://codeload.github.com/TileDB-Inc/parallel.js/tar.gz/4d36278cbcc5ff7bd257bacb22f3f06c97d65977"
 
+"paralleljs@https://github.com/TileDB-Inc/parallel.js.git":
+  version "1.1.0"
+  resolved "https://github.com/TileDB-Inc/parallel.js.git#4d36278cbcc5ff7bd257bacb22f3f06c97d65977"
+
 parent-module@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/parent-module/-/parent-module-1.0.1.tgz#691d2709e78c79fae3a156622452d00762caaaa2"
