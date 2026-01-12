@@ -49,9 +49,9 @@ stages:
       displayName: 'Test Formating'
       condition: eq(variables['python.version'], '3.8')
 
-    - task: NodeTool@0
+    - task: UseNode@1
       inputs:
-        versionSpec: '18.x'
+        version: '20.x'
     - script: jlpm
       displayName: 'Install labextension dependencies'
       env:
@@ -103,9 +103,9 @@ stages:
     - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==3.6.5'
       displayName: 'Install twine/build'
 
-    - task: NodeTool@0
+    - task: UseNode@1
       inputs:
-        versionSpec: '18.x'
+        version: '20.x'
     - script: |
         echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         jlpm
