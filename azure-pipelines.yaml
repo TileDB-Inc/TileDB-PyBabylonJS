@@ -28,6 +28,10 @@ stages:
           imageName: 'ubuntu-22.04'
           python.version: '3.9'
           jupyterlab.version: '4.0.3'
+        linux_py312_jlab4:
+          imageName: 'ubuntu-22.04'
+          python.version: '3.12'
+          jupyterlab.version: '4.0.3'
     pool:
       vmImage: $(imageName)
 
@@ -52,9 +56,6 @@ stages:
     - task: UseNode@1
       inputs:
         version: '20.x'
-    - script: yarn cache clean
-      displayName: 'Clear yarn cache'
-      
     - script: jlpm
       displayName: 'Install labextension dependencies'
       env:
