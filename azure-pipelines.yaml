@@ -28,6 +28,10 @@ stages:
           imageName: 'ubuntu-22.04'
           python.version: '3.9'
           jupyterlab.version: '4.0.3'
+        linux_py312_jlab4:
+          imageName: 'ubuntu-22.04'
+          python.version: '3.12'
+          jupyterlab.version: '4.0.3'
     pool:
       vmImage: $(imageName)
 
@@ -49,9 +53,9 @@ stages:
       displayName: 'Test Formating'
       condition: eq(variables['python.version'], '3.8')
 
-    - task: NodeTool@0
+    - task: UseNode@1
       inputs:
-        versionSpec: '18.x'
+        version: '24.x'
     - script: jlpm
       displayName: 'Install labextension dependencies'
       env:
@@ -97,15 +101,15 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: '3.8'
+        versionSpec: '3.12'
         architecture: 'x64'
 
-    - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==3.6.5'
+    - script: 'pip install twine build setuptools setuptools_scm jupyter-packaging==0.10.6 jupyterlab==4.0.3'
       displayName: 'Install twine/build'
 
-    - task: NodeTool@0
+    - task: UseNode@1
       inputs:
-        versionSpec: '18.x'
+        version: '24.x'
     - script: |
         echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         jlpm

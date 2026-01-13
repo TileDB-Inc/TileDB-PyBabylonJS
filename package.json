@@ -1,6 +1,6 @@
 {
   "name": "@tiledb-inc/pybabylonjs",
-  "version": "1.0.6",
+  "version": "2.0.0-alpha.2",
   "description": "BabylonJS widget",
   "keywords": [
     "jupyter",
@@ -58,7 +58,9 @@
   "dependencies": {
     "@jupyter-widgets/base": "^2 || ^3 || ^4 || ^5 || ^6",
     "@jupyterlab/application": "^3 || ^4",
-    "@tiledb-inc/viz-core": "^1.0.3-alpha.9"
+    "@tiledb-inc/tiledb-cloud": "^2.0.0-alpha.4",
+    "@tiledb-inc/viz-core": "^2.0.0-alpha.8",
+    "paralleljs": "https://github.com/TileDB-Inc/parallel.js.git"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3 || ^4",
@@ -85,9 +87,6 @@
     "typescript": "~5.1.6",
     "webpack": "^5.88.1",
     "webpack-cli": "^5.1.4"
-  },
-  "resolutions": {
-    "capnp-ts": "0.4.0"
   },
   "jupyterlab": {
     "extension": "lib/plugin",
